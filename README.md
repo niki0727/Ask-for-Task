@@ -9,7 +9,7 @@ This is the public company/product home for ASK FOR TASK LTD, the operator behin
 For the static pages:
 
 ```bash
-python3 -m http.server 8788
+python3 -m http.server 8788 --directory public
 ```
 
 Then visit `http://localhost:8788`.
@@ -17,7 +17,7 @@ Then visit `http://localhost:8788`.
 For the Worker API and D1 binding:
 
 ```bash
-npx wrangler pages dev . --compatibility-date=2026-05-03
+npx wrangler dev
 ```
 
 ## Cloudflare setup
@@ -28,7 +28,7 @@ Create the D1 database:
 npx wrangler d1 create askfortask_messages
 ```
 
-Copy the returned database ID into `wrangler.jsonc`, replacing `REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID`.
+Copy the returned database ID into `wrangler.jsonc` if it changes.
 
 Apply the migration:
 
