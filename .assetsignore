@@ -1,0 +1,12 @@
+.git
+.git/**
+.wrangler
+.wrangler/**
+node_modules
+node_modules/**
+src
+src/**
+migrations
+migrations/**
+wrangler.jsonc
+.DS_Store

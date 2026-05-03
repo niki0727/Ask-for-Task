@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ask for Task | Practical Digital Products</title>
+  <meta name="description" content="ASK FOR TASK LTD builds practical digital products for everyday coordination, starting with Pinglo, a safer lost and found app." />
+  <meta property="og:title" content="Ask for Task" />
+  <meta property="og:description" content="The company behind Pinglo and practical tools for everyday coordination." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://askfortask.co.uk/" />
+  <meta property="og:image" content="/assets/pinglo-appicon.svg" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="/" aria-label="Ask for Task home">
+        <span class="brand-mark">A</span>
+        <span>Ask for Task</span>
+      </a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#products">Products</a>
+        <a href="#company">Company</a>
+        <a href="/safety">Safety</a>
+        <a href="/privacy">Privacy</a>
+      </nav>
+      <a class="top-action" href="#contact">Contact</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">ASK FOR TASK LTD</div>
+          <h1>Practical digital products for everyday coordination.</h1>
+          <p class="hero-copy">
+            Ask for Task builds focused tools that help people report, match, verify, and resolve
+            small real-world problems with less friction and more trust.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#products">See Pinglo</a>
+            <a class="button button-secondary" href="#contact">Get in touch</a>
+          </div>
+        </div>
+
+        <aside class="product-card" aria-label="Pinglo product preview">
+          <div class="app-strip">
+            <img src="/assets/pinglo-appicon.svg" alt="Pinglo app icon" />
+            <div>
+              <strong>Pinglo</strong>
+              <span>Lost and found made simple</span>
+            </div>
+          </div>
+          <div class="preview-panel">
+            <img src="/assets/pinglo-logo.svg" alt="Pinglo logo" />
+            <p>Report lost or found items, connect safely, and coordinate returns with privacy-minded flows.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" id="products">
+      <div class="container">
+        <div class="section-header">
+          <div class="section-kicker">Current product</div>
+          <h2>Pinglo is the first product from Ask for Task.</h2>
+          <p class="lead">
+            Pinglo is designed around safer item recovery: public reports, claim verification,
+            private proof photos, reporting, blocking, and clearer return coordination.
+          </p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <span class="number">01</span>
+            <h3>Report clearly</h3>
+            <p>Create lost or found reports without exposing sensitive personal information in public feeds.</p>
+          </article>
+          <article class="card">
+            <span class="number">02</span>
+            <h3>Verify claims</h3>
+            <p>Use structured claim steps and optional proof photos before sensitive handoff details are shared.</p>
+          </article>
+          <article class="card">
+            <span class="number">03</span>
+            <h3>Return safely</h3>
+            <p>Coordinate through product flows that support reporting, blocking, moderation, and safer handoffs.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="company">
+      <div class="container">
+        <div class="quiet-panel">
+          <div class="note">
+            <strong>Company</strong>
+            <p>ASK FOR TASK LTD is the operator of Pinglo and related digital services.</p>
+          </div>
+          <div class="note">
+            <strong>Operating principle</strong>
+            <p>Build small, practical products with clear privacy expectations and accountable safety flows.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="contact">
+      <div class="container">
+        <div class="contact-block">
+          <div>
+            <div class="section-kicker">Contact</div>
+            <h2>Questions, partnerships, or product support.</h2>
+            <p>
+              Send a message and the team will reply from the appropriate Ask for Task or Pinglo mailbox.
+            </p>
+          </div>
+          <form class="contact-form" id="contact-form">
+            <label for="contact-name">
+              Name
+              <input id="contact-name" name="name" autocomplete="name" required />
+            </label>
+            <label for="contact-email">
+              Email
+              <input id="contact-email" name="email" type="email" autocomplete="email" required />
+            </label>
+            <label for="contact-topic">
+              Topic
+              <select id="contact-topic" name="topic">
+                <option>Pinglo support</option>
+                <option>Business enquiry</option>
+                <option>Privacy request</option>
+                <option>Other</option>
+              </select>
+            </label>
+            <label for="contact-message">
+              Message
+              <textarea id="contact-message" name="message" rows="5" required></textarea>
+            </label>
+            <label class="consent" for="contact-consent">
+              <input id="contact-consent" name="consent" type="checkbox" required />
+              <span>I agree that Ask for Task may use these details to respond to my message.</span>
+            </label>
+            <div class="submit-row">
+              <button class="button button-primary" type="submit">Send message</button>
+              <a class="button button-secondary" href="mailto:support@askfortask.co.uk">Email instead</a>
+            </div>
+            <p class="form-status" id="contact-status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-inner">
+      <span>Ask for Task is operated by ASK FOR TASK LTD.</span>
+      <nav class="footer-links" aria-label="Legal links">
+        <a href="/history">History</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/terms">Terms</a>
+        <a href="/safety">Safety</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
