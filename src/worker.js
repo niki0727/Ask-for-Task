@@ -19,6 +19,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    if (url.hostname === "www.askfortask.co.uk") {
+      url.hostname = "askfortask.co.uk";
+      return Response.redirect(url.toString(), 301);
+    }
+
     if (url.pathname === "/api/contact") {
       if (request.method !== "POST") {
         return json({ ok: false, error: "Method not allowed." }, 405);
