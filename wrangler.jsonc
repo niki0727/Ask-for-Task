@@ -15,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "askfortask_messages",
-      "database_id": "REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID"
+      "database_id": "c7f3f21b-47f7-487a-a17e-4c700fbac38f"
     }
   ]
 }
