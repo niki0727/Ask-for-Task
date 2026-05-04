@@ -1,0 +1,150 @@
+.hero {
+  padding: 112px 0 96px;
+}
+
+.section {
+  padding: 104px 0;
+}
+
+.section-header {
+  margin-bottom: 40px;
+}
+
+.command-panel {
+  min-height: 0;
+  gap: 28px;
+  padding: 28px;
+}
+
+.pathway-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pathway-list a {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 4px 16px;
+  padding: 18px;
+  border: 1px solid var(--stroke);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  text-decoration: none;
+}
+
+.pathway-list a:hover {
+  border-color: rgba(213, 255, 95, 0.5);
+  background: rgba(213, 255, 95, 0.055);
+}
+
+.pathway-list span {
+  grid-row: span 2;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.pathway-list strong {
+  color: var(--text);
+  font-size: 18px;
+}
+
+.pathway-list p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.service-grid {
+  gap: 22px;
+}
+
+.service-card,
+.card {
+  padding: 30px;
+}
+
+.card {
+  min-height: 300px;
+}
+
+.subhero {
+  padding: 104px 0 32px;
+}
+
+.subhero-inner {
+  max-width: 960px;
+}
+
+.subhero h1 {
+  font-size: clamp(44px, 6vw, 78px);
+}
+
+.subhero p {
+  max-width: 720px;
+  margin: 26px 0 0;
+  color: var(--muted);
+  font-size: 21px;
+  line-height: 1.6;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.about-panel {
+  min-height: 360px;
+  display: grid;
+  align-content: space-between;
+  gap: 34px;
+  padding: 34px;
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.about-panel span {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.about-panel h2 {
+  margin-top: auto;
+}
+
+.about-panel p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+@media (max-width: 980px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .command-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .hero {
+    padding: 70px 0 58px;
+  }
+
+  .section {
+    padding: 68px 0;
+  }
+
+  .command-panel {
+    padding: 18px;
+  }
+}
