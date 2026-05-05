@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 110" role="img" aria-label="Pinglo">
+  <g transform="translate(6 13)">
+    <rect width="84" height="84" rx="20" fill="#111114"/>
+    <circle cx="42" cy="42" r="26" fill="#f12549"/>
+    <circle cx="42" cy="42" r="12" fill="#ffffff"/>
+    <circle cx="42" cy="42" r="5" fill="#178f50"/>
+  </g>
+  <text x="112" y="62" fill="#f8f5ed" font-family="Space Grotesk,Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="52" font-weight="760">Pinglo</text>
+  <text x="115" y="89" fill="#aeb7c3" font-family="Space Grotesk,Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" font-size="16" font-weight="560">Lost items, easier returns</text>
+</svg>
