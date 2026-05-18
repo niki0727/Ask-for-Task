@@ -1,3 +1,5 @@
+import { EmailMessage } from "cloudflare:email";
+
 const jsonHeaders = {
   "content-type": "application/json; charset=utf-8",
   "cache-control": "no-store"
@@ -13,6 +15,44 @@ function clean(value, max = 4000) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function escapeHeader(value) {
+  return clean(value, 300).replace(/[\r\n"]/g, " ");
+}
+
+function makeEmailBody({ name, email, topic, message }) {
+  return [
+    `New Ask for Task enquiry`,
+    ``,
+    `Name: ${name}`,
+    `Email: ${email}`,
+    `Topic: ${topic || "Not specified"}`,
+    ``,
+    `Message:`,
+    message
+  ].join("\n");
+}
+
+function makeRawEmail({ name, email, topic, message }) {
+  const sender = "Ask for Task <no-reply@askfortask.co.uk>";
+  const recipient = "admin@askfortask.co.uk";
+  const safeName = escapeHeader(name);
+  const safeEmail = escapeHeader(email);
+  const subjectTopic = topic ? ` - ${escapeHeader(topic)}` : "";
+  const subject = `New Ask for Task enquiry${subjectTopic}`;
+  const body = makeEmailBody({ name, email, topic, message });
+
+  return [
+    `From: ${sender}`,
+    `To: ${recipient}`,
+    `Reply-To: "${safeName}" <${safeEmail}>`,
+    `Subject: ${subject}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Transfer-Encoding: 8bit`,
+    ``,
+    body
+  ].join("\r\n");
 }
 
 export default {
@@ -60,6 +100,19 @@ export default {
       )
         .bind(name, email, topic || null, message, 1, "askfortask.co.uk", new Date().toISOString())
         .run();
+
+      if (!env.EMAIL) {
+        return json({ ok: false, error: "Email sending is not configured yet." }, 500);
+      }
+
+      const rawEmail = makeRawEmail({ name, email, topic, message });
+      const notification = new EmailMessage(
+        "no-reply@askfortask.co.uk",
+        "admin@askfortask.co.uk",
+        rawEmail
+      );
+
+      await env.EMAIL.send(notification);
 
       return json({ ok: true });
     }

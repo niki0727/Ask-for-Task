@@ -31,7 +31,7 @@ form?.addEventListener("submit", (event) => {
       }
 
       form.reset();
-      status.textContent = "Message received. We will reply as soon as we can.";
+      status.textContent = "Message sent. We will reply as soon as we can.";
     })
     .catch((error) => {
       status.textContent = error.message;
