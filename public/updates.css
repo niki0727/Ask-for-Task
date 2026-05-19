@@ -7,7 +7,8 @@ body {
 .brand-mark {
   color: transparent;
   font-size: 0;
-  background: #f7f6f0 url("/assets/a4t-logo.png") center / cover no-repeat;
+  content: url("/assets/a4t-mark.svg");
+  background: none;
 }
 
 h1 {
