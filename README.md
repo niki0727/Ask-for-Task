@@ -55,4 +55,6 @@ The included `_redirects` file redirects `www` to the root domain when served th
 
 ## Contact
 
-The contact form stores submissions in D1 through `/api/contact`. The fallback email link uses `support@askfortask.co.uk`.
+The contact form opens the visitor's email client with a pre-filled message to `admin@askfortask.co.uk`. This keeps the website aligned with Microsoft 365 email hosting and avoids depending on Cloudflare Email Routing for outbound form notifications.
+
+The `/api/contact` endpoint still validates and stores submissions in D1 if called directly, but the public form uses email so enquiries arrive in the Microsoft 365 mailbox.

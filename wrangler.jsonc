@@ -17,11 +17,5 @@
       "database_name": "askfortask_messages",
       "database_id": "9ae0b4d3-9310-4956-af90-c8d691b0d463"
     }
-  ],
-  "send_email": [
-    {
-      "name": "EMAIL",
-      "destination_address": "admin@askfortask.co.uk"
-    }
   ]
 }
