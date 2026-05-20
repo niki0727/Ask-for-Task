@@ -94,6 +94,16 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
 
+    if (url.pathname === "/api/contact-config") {
+      return json({
+        ok: true,
+        resendConfigured: Boolean(env.RESEND_API_KEY),
+        contactToConfigured: Boolean(env.CONTACT_TO),
+        contactFromConfigured: Boolean(env.CONTACT_FROM),
+        dbConfigured: Boolean(env.DB)
+      });
+    }
+
     if (url.pathname === "/api/contact") {
       if (request.method !== "POST") {
         return json({ ok: false, error: "Method not allowed." }, 405);
