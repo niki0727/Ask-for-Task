@@ -139,7 +139,14 @@ export default {
         console.error("Failed to store contact message", error);
       }
 
-      const emailResult = await sendContactEmail(env, { name, email, topic, message });
+      let emailResult;
+      try {
+        emailResult = await sendContactEmail(env, { name, email, topic, message });
+      } catch (error) {
+        console.error("Failed to send contact email", error);
+        return json({ ok: false, error: "Email service failed to send the message." }, 500);
+      }
+
       if (!emailResult.ok) {
         return json({ ok: false, error: emailResult.error }, 500);
       }
