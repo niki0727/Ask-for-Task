@@ -155,10 +155,25 @@ h2 {
   color: var(--text);
 }
 
+.venture-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.venture-appicon {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  flex: 0 0 auto;
+}
+
 .venture-card .venture-logo {
-  width: min(100%, 260px);
+  width: min(100%, 248px);
   height: auto;
   border-radius: 0;
+  min-width: 0;
 }
 
 .venture-card p {
