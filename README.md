@@ -55,6 +55,12 @@ The included `_redirects` file redirects `www` to the root domain when served th
 
 ## Contact
 
-The contact form opens the visitor's email client with a pre-filled message to `admin@askfortask.co.uk`. This keeps the website aligned with Microsoft 365 email hosting and avoids depending on Cloudflare Email Routing for outbound form notifications.
+The contact form posts to `/api/contact`. The Worker validates the message, stores a copy in D1 when available, and sends the enquiry to `admin@askfortask.co.uk` through the Resend email API.
 
-The `/api/contact` endpoint still validates and stores submissions in D1 if called directly, but the public form uses email so enquiries arrive in the Microsoft 365 mailbox.
+Set these Worker variables/secrets in Cloudflare:
+
+- Secret: `RESEND_API_KEY`
+- Optional variable: `CONTACT_TO=admin@askfortask.co.uk`
+- Optional variable: `CONTACT_FROM=Ask for Task <contact@askfortask.co.uk>`
+
+The sending domain used in `CONTACT_FROM` must be verified in Resend.

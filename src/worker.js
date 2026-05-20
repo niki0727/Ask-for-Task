@@ -15,6 +15,73 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function escapeHtml(value) {
+  return clean(value).replace(/[&<>"']/g, (char) => (
+    {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;"
+    }[char]
+  ));
+}
+
+function makeEmailText({ name, email, topic, message }) {
+  return [
+    "New Ask for Task enquiry",
+    "",
+    `Name: ${name}`,
+    `Email: ${email}`,
+    `Topic: ${topic || "Not specified"}`,
+    "",
+    "Message:",
+    message
+  ].join("\n");
+}
+
+function makeEmailHtml({ name, email, topic, message }) {
+  return `
+    <h2>New Ask for Task enquiry</h2>
+    <p><strong>Name:</strong> ${escapeHtml(name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(email)}</p>
+    <p><strong>Topic:</strong> ${escapeHtml(topic || "Not specified")}</p>
+    <p><strong>Message:</strong></p>
+    <p style="white-space: pre-line;">${escapeHtml(message)}</p>
+  `;
+}
+
+async function sendContactEmail(env, payload) {
+  if (!env.RESEND_API_KEY) {
+    throw new Error("Email service is not configured yet.");
+  }
+
+  const to = env.CONTACT_TO || "admin@askfortask.co.uk";
+  const from = env.CONTACT_FROM || "Ask for Task <contact@askfortask.co.uk>";
+  const subject = `New Ask for Task enquiry${payload.topic ? ` - ${payload.topic}` : ""}`;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      text: makeEmailText(payload),
+      html: makeEmailHtml(payload),
+      reply_to: payload.email
+    })
+  });
+
+  if (!response.ok) {
+    const details = await response.text().catch(() => "");
+    throw new Error(`Email provider rejected the message. ${details}`.trim());
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -54,12 +121,18 @@ export default {
         return json({ ok: false, error: "Consent is required." }, 400);
       }
 
-      await env.DB.prepare(
-        `INSERT INTO contact_messages (name, email, topic, message, consent, source, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
-      )
-        .bind(name, email, topic || null, message, 1, "askfortask.co.uk", new Date().toISOString())
-        .run();
+      try {
+        await env.DB.prepare(
+          `INSERT INTO contact_messages (name, email, topic, message, consent, source, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`
+        )
+          .bind(name, email, topic || null, message, 1, "askfortask.co.uk", new Date().toISOString())
+          .run();
+      } catch (error) {
+        console.error("Failed to store contact message", error);
+      }
+
+      await sendContactEmail(env, { name, email, topic, message });
 
       return json({ ok: true });
     }

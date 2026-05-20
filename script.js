@@ -1,22 +1,5 @@
 const form = document.getElementById("contact-form");
 const status = document.getElementById("contact-status");
-const recipient = "admin@askfortask.co.uk";
-
-function buildMailto({ name, email, topic, message }) {
-  const subject = `Ask for Task enquiry${topic ? ` - ${topic}` : ""}`;
-  const body = [
-    "New Ask for Task enquiry",
-    "",
-    `Name: ${name}`,
-    `Email: ${email}`,
-    `Topic: ${topic || "Not specified"}`,
-    "",
-    "Message:",
-    message
-  ].join("\n");
-
-  return `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-}
 
 form?.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -39,6 +22,23 @@ form?.addEventListener("submit", (event) => {
     return;
   }
 
-  status.textContent = "Opening your email app...";
-  window.location.href = buildMailto(payload);
+  status.textContent = "Sending message...";
+
+  fetch("/api/contact", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(payload)
+  })
+    .then(async (response) => {
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Something went wrong. Please try again.");
+      }
+
+      form.reset();
+      status.textContent = "Message sent. We will reply as soon as we can.";
+    })
+    .catch((error) => {
+      status.textContent = error.message;
+    });
 });
