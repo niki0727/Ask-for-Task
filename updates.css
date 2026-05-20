@@ -90,24 +90,26 @@ h2 {
 .service-card,
 .card,
 .about-panel {
-  border-color: rgba(17, 17, 20, 0.08);
-  background: #f8fafc;
-  color: #111114;
-  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.18);
+  border-color: rgba(213, 255, 95, 0.18);
+  background:
+    linear-gradient(145deg, rgba(213, 255, 95, 0.13), rgba(125, 211, 252, 0.09)),
+    #f3f7ef;
+  color: #11161d;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.15);
 }
 
 .service-card span {
-  color: #5f7d00;
+  color: #6b8f00;
 }
 
 .service-card p,
 .card p,
 .about-panel p {
-  color: #4c5562;
+  color: #52606c;
 }
 
 .card .number {
-  color: #0f6f8f;
+  color: #17728f;
 }
 
 .card {
@@ -146,12 +148,12 @@ h2 {
   align-content: space-between;
   gap: 34px;
   padding: 34px;
-  border: 1px solid rgba(17, 17, 20, 0.08);
+  border: 1px solid rgba(213, 255, 95, 0.18);
   border-radius: var(--radius-xl);
 }
 
 .about-panel span {
-  color: #5f7d00;
+  color: #6b8f00;
   font-size: 13px;
   font-weight: 820;
   text-transform: uppercase;
@@ -170,10 +172,12 @@ h2 {
 .venture-card {
   gap: 22px;
   padding: 30px;
-  border-color: rgba(17, 17, 20, 0.08);
-  background: #ffffff;
-  color: #111114;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  border-color: rgba(213, 255, 95, 0.2);
+  background:
+    linear-gradient(155deg, rgba(213, 255, 95, 0.16), rgba(125, 211, 252, 0.10)),
+    #f6f8f1;
+  color: #11161d;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
 }
 
 .venture-brand {
@@ -205,12 +209,12 @@ h2 {
 
 .venture-card p {
   margin: 0;
-  color: #4c5562;
+  color: #52606c;
   line-height: 1.55;
 }
 
 .venture-card a {
-  color: #111114;
+  color: #11161d;
   border-bottom-color: currentColor;
 }
 
