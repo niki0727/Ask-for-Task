@@ -53,7 +53,7 @@ function makeEmailHtml({ name, email, topic, message }) {
 
 async function sendContactEmail(env, payload) {
   if (!env.RESEND_API_KEY) {
-    throw new Error("Email service is not configured yet.");
+    return { ok: false, error: "Email service is not configured yet." };
   }
 
   const to = env.CONTACT_TO || "admin@askfortask.co.uk";
@@ -78,8 +78,11 @@ async function sendContactEmail(env, payload) {
 
   if (!response.ok) {
     const details = await response.text().catch(() => "");
-    throw new Error(`Email provider rejected the message. ${details}`.trim());
+    console.error("Email provider rejected the message", details);
+    return { ok: false, error: "Email provider rejected the message." };
   }
+
+  return { ok: true };
 }
 
 export default {
@@ -122,6 +125,10 @@ export default {
       }
 
       try {
+        if (!env.DB) {
+          throw new Error("DB binding is not configured.");
+        }
+
         await env.DB.prepare(
           `INSERT INTO contact_messages (name, email, topic, message, consent, source, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?)`
@@ -132,7 +139,10 @@ export default {
         console.error("Failed to store contact message", error);
       }
 
-      await sendContactEmail(env, { name, email, topic, message });
+      const emailResult = await sendContactEmail(env, { name, email, topic, message });
+      if (!emailResult.ok) {
+        return json({ ok: false, error: emailResult.error }, 500);
+      }
 
       return json({ ok: true });
     }
