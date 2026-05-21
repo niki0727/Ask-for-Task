@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Pinglo">
-  <rect width="1024" height="1024" rx="220" fill="#111114"/>
-  <circle cx="512" cy="512" r="292" fill="#f12549"/>
-  <circle cx="512" cy="512" r="150" fill="#ffffff"/>
-  <circle cx="512" cy="512" r="62" fill="#178f50"/>
-  <path d="M512 96c172 0 318 104 380 252H744c-50-71-134-116-232-116-154 0-280 126-280 280s126 280 280 280c98 0 182-45 232-116h148c-62 148-208 252-380 252-230 0-416-186-416-416S282 96 512 96Z" fill="#ffffff" opacity=".16"/>
-</svg>
