@@ -454,6 +454,30 @@ h3 {
   border-bottom: 1px solid currentColor;
 }
 
+.venture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.venture-actions a {
+  width: auto;
+}
+
+.venture-actions .venture-primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid rgba(17, 22, 29, 0.14);
+  border-radius: 999px;
+  background: #11161d;
+  color: #f6f8f1;
+  box-shadow: 0 14px 28px rgba(17, 22, 29, 0.18);
+}
+
 .proof-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
