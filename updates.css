@@ -7,7 +7,8 @@ body {
 .brand-mark {
   color: transparent;
   font-size: 0;
-  background: none;
+  background: #fff;
+  object-fit: contain;
 }
 
 h1 {
@@ -189,6 +190,7 @@ h2 {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .venture-appicon {
@@ -238,6 +240,24 @@ h2 {
 
   .command-panel {
     padding: 18px;
+  }
+
+  .venture-card {
+    padding: 22px;
+  }
+
+  .venture-brand {
+    gap: 12px;
+  }
+
+  .venture-appicon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  .venture-card .venture-logo {
+    width: min(100%, 190px);
   }
 
   h1 {

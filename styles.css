@@ -66,13 +66,15 @@ a { color: inherit; }
   height: 42px;
   display: block;
   border-radius: 14px;
+  background: #fff;
+  object-fit: contain;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
 .nav-links {
   display: inline-flex;
   align-items: center;
-  gap: 26px;
+  gap: 20px;
   color: var(--muted);
   font-size: 14px;
   font-weight: 640;
@@ -381,6 +383,127 @@ h3 {
   line-height: 1.56;
 }
 
+.photography-section {
+  border-top: 1px solid var(--stroke);
+  border-bottom: 1px solid var(--stroke);
+  background:
+    linear-gradient(180deg, rgba(125, 211, 252, 0.055), rgba(213, 255, 95, 0.035)),
+    rgba(255, 255, 255, 0.018);
+}
+
+.photo-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.7fr);
+  gap: 34px;
+  align-items: center;
+}
+
+.photo-copy {
+  max-width: 760px;
+}
+
+.photo-copy .lead {
+  margin-top: 20px;
+}
+
+.photo-board {
+  min-height: 440px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  grid-auto-rows: minmax(122px, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--stroke-strong);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.photo-frame {
+  position: relative;
+  min-height: 122px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.86), rgba(220, 228, 236, 0.92)),
+    #f7f8f2;
+}
+
+.photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(17, 22, 29, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(213, 255, 95, 0.45), transparent 52%),
+    linear-gradient(315deg, rgba(125, 211, 252, 0.36), transparent 58%),
+    rgba(17, 22, 29, 0.04);
+}
+
+.photo-frame span {
+  position: absolute;
+  left: 18px;
+  bottom: 16px;
+  z-index: 1;
+  color: #11161d;
+  font-size: 13px;
+  font-weight: 820;
+  text-transform: uppercase;
+}
+
+.photo-frame-large {
+  grid-row: span 2;
+}
+
+.photo-frame-tall {
+  grid-row: span 2;
+  background:
+    linear-gradient(145deg, rgba(213, 255, 95, 0.22), rgba(255, 255, 255, 0.88)),
+    #f7f8f2;
+}
+
+.photo-frame-accent {
+  background:
+    linear-gradient(145deg, rgba(125, 211, 252, 0.32), rgba(255, 255, 255, 0.9)),
+    #f7f8f2;
+}
+
+.photo-packages {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.photo-package {
+  min-height: 250px;
+  display: grid;
+  align-content: space-between;
+  gap: 22px;
+  padding: 26px;
+  border: 1px solid rgba(213, 255, 95, 0.18);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(236, 243, 235, 0.98)),
+    #f5f7ef;
+  color: #11161d;
+  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.15);
+}
+
+.photo-package span {
+  color: #6b8f00;
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.photo-package p {
+  margin: 14px 0 0;
+  color: #52606c;
+  line-height: 1.56;
+}
+
 .venture {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 360px;
@@ -419,6 +542,7 @@ h3 {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  overflow: hidden;
 }
 
 .venture-appicon {
@@ -643,7 +767,7 @@ footer {
 }
 
 .legal-main {
-  padding: 52px 0 70px;
+  padding: 82px 0 92px;
 }
 
 .subhero {
@@ -706,6 +830,17 @@ footer {
   max-width: 980px;
   padding: 30px;
   line-height: 1.6;
+}
+
+.legal-card-hero {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.legal-card-hero p {
+  max-width: 760px;
+  margin: 18px 0 0;
 }
 
 .legal-card h1 {
@@ -850,6 +985,8 @@ footer {
   .split,
   .cards,
   .service-grid,
+  .photo-shell,
+  .photo-packages,
   .venture,
   .about-grid,
   .proof-strip,
@@ -869,13 +1006,29 @@ footer {
   .proof-strip div:last-child {
     border-bottom: 0;
   }
+
+  .photo-packages {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
 }
 
 @media (max-width: 680px) {
   .container { width: min(100vw - 30px, var(--max)); }
   .nav-inner { min-height: 68px; }
   .nav-links { display: none; }
-  .brand span:last-child { display: none; }
+  .brand { gap: 10px; }
+  .brand span:last-child {
+    display: inline;
+    max-width: 112px;
+    font-size: 16px;
+    line-height: 1;
+  }
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+  }
   .top-action { min-height: 40px; padding: 0 13px; font-size: 13px; }
   .hero { min-height: auto; padding: 70px 0 58px; }
   .hero-shell { gap: 34px; }
@@ -883,6 +1036,39 @@ footer {
   .section { padding: 68px 0; }
   .button { width: 100%; }
   .command-panel { padding: 18px; }
+  .photo-board {
+    min-height: 360px;
+    grid-auto-rows: minmax(104px, 1fr);
+    padding: 10px;
+  }
+  .photo-frame {
+    min-height: 104px;
+    border-radius: 14px;
+  }
+  .photo-frame::before {
+    inset: 12px;
+  }
+  .photo-packages {
+    grid-template-columns: 1fr;
+  }
+  .photo-package {
+    min-height: 210px;
+    padding: 22px;
+  }
+  .venture-card {
+    padding: 22px;
+  }
+  .venture-brand {
+    gap: 12px;
+  }
+  .venture-appicon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+  }
+  .venture-logo {
+    width: min(100%, 190px);
+  }
   .submit-row { align-items: stretch; }
   .history-main { padding: 50px 0 64px; }
   .timeline-section { gap: 20px; }
