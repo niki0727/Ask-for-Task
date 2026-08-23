@@ -1,7 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import worker, { makeEmailHtml, validateContactPayload } from "./worker.js";
+import worker, {
+  makeEmailHtml,
+  PARTNER_DESTINATIONS,
+  runRetentionCleanup,
+  validateContactPayload
+} from "./worker.js";
 
 function createEnv(overrides = {}) {
   return {
@@ -38,6 +43,20 @@ function createRecordingDb() {
       }
     }
   };
+}
+
+function assertSecurityHeaders(response) {
+  const csp = response.headers.get("content-security-policy") || "";
+  assert.match(csp, /frame-ancestors 'none'/);
+  assert.match(csp, /object-src 'none'/);
+  assert.match(csp, /base-uri 'self'/);
+  assert.match(csp, /form-action 'self'/);
+  assert.match(csp, /script-src-attr 'none'/);
+  assert.match(csp, /style-src-attr 'none'/);
+  assert.doesNotMatch(csp, /unsafe-inline/);
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(response.headers.get("x-frame-options"), "DENY");
+  assert.equal(response.headers.get("set-cookie"), null);
 }
 
 const validPayload = {
@@ -295,4 +314,254 @@ test("accepts a valid professional profile with a PDF CV", async (t) => {
   assert.equal(emailPayload.reply_to, "professional@example.com");
   assert.equal(emailPayload.attachments[0].filename, "professional-cv.pdf");
   assert.match(emailPayload.attachments[0].content, /^JVBERi0/);
+});
+
+for (const [slug, destination] of Object.entries(PARTNER_DESTINATIONS)) {
+  test(`redirects the approved ${slug} partner route`, async () => {
+    const db = createRecordingDb();
+    const response = await worker.fetch(
+      new Request(`https://askfortask.co.uk/go/${slug}?source=home`),
+      createEnv({ DB: db.binding })
+    );
+
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("location"), destination);
+    assert.equal(response.headers.get("cache-control"), "private, no-store");
+    assert.equal(db.calls.length, 1);
+    assert.match(db.calls[0].sql, /ON CONFLICT\(partner_slug, source_page, click_date\)/);
+    assert.match(db.calls[0].sql, /request_count = request_count \+ 1/);
+    assert.equal(db.calls[0].values[0], slug);
+    assert.equal(db.calls[0].values[1], "home");
+    assert.match(db.calls[0].values[2], /^\d{4}-\d{2}-\d{2}$/);
+    assertSecurityHeaders(response);
+  });
+}
+
+test("returns 404 for an unknown partner slug", async () => {
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/go/not-approved?source=home"),
+    createEnv()
+  );
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get("location"), null);
+  assertSecurityHeaders(response);
+});
+
+test("does not accept an arbitrary redirect destination", async () => {
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/go/pinglo?source=home&url=https://example.net/steal"),
+    createEnv()
+  );
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), PARTNER_DESTINATIONS.pinglo);
+  assert.notEqual(response.headers.get("location"), "https://example.net/steal");
+});
+
+test("normalises an invalid partner source to the controlled direct label", async () => {
+  const db = createRecordingDb();
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/go/nk-sports?source=../../private"),
+    createEnv({ DB: db.binding })
+  );
+
+  assert.equal(response.status, 302);
+  assert.equal(db.calls[0].values[1], "direct");
+});
+
+test("still redirects when partner counting fails", async (t) => {
+  t.mock.method(console, "error", () => {});
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/go/dmar-international?source=services"),
+    createEnv({
+      DB: {
+        prepare() {
+          return {
+            bind() {
+              return { run: async () => { throw new Error("D1 unavailable"); } };
+            }
+          };
+        }
+      }
+    })
+  );
+
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), PARTNER_DESTINATIONS["dmar-international"]);
+});
+
+test("does not count HEAD requests to partner routes", async () => {
+  const db = createRecordingDb();
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/go/pinglo?source=home", { method: "HEAD" }),
+    createEnv({ DB: db.binding })
+  );
+
+  assert.equal(response.status, 302);
+  assert.equal(db.calls.length, 0);
+});
+
+test("silently accepts a filled contact honeypot without storing or emailing", async (t) => {
+  let emailCalled = false;
+  t.mock.method(globalThis, "fetch", async () => {
+    emailCalled = true;
+    return new Response(null, { status: 202 });
+  });
+  const db = createRecordingDb();
+  const response = await worker.fetch(
+    contactRequest({ website: "spam.example", consent: false }),
+    createEnv({ DB: db.binding })
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.equal(emailCalled, false);
+  assert.equal(db.calls.length, 0);
+});
+
+test("rejects an oversized review field instead of truncating it", async () => {
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/reviews", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Client",
+        email: "client@example.com",
+        service: "Managed project delivery",
+        relationship: "Client",
+        reviewText: "x".repeat(2001),
+        contactConsent: true,
+        website: ""
+      })
+    }),
+    createEnv({ DB: createRecordingDb().binding })
+  );
+
+  assert.equal(response.status, 400);
+});
+
+test("requires multipart form data for professional applications", async () => {
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/professionals", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}"
+    }),
+    createEnv({ DB: createRecordingDb().binding })
+  );
+
+  assert.equal(response.status, 415);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    error: "Content-Type must be multipart/form-data."
+  });
+});
+
+test("rejects a professional CV with a misleading MIME type", async () => {
+  const formData = new FormData();
+  formData.append("name", "Professional Name");
+  formData.append("email", "professional@example.com");
+  formData.append("location", "London, UK");
+  formData.append("categories", "Brand development");
+  formData.append("specialisms", "Product and brand design");
+  formData.append("responsibility", "Workstream owner");
+  formData.append("availability", "Open to the right project");
+  formData.append("projectInterest", "A suitable project.");
+  formData.append("consent", "on");
+  formData.append("cv", new Blob(["%PDF-1.4\n"], { type: "text/plain" }), "cv.pdf");
+
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/professionals", { method: "POST", body: formData }),
+    createEnv({ DB: createRecordingDb().binding })
+  );
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { ok: false, error: "Your CV must be a PDF file." });
+});
+
+test("rejects a professional CV without a PDF signature", async () => {
+  const formData = new FormData();
+  formData.append("name", "Professional Name");
+  formData.append("email", "professional@example.com");
+  formData.append("location", "London, UK");
+  formData.append("categories", "Brand development");
+  formData.append("specialisms", "Product and brand design");
+  formData.append("responsibility", "Workstream owner");
+  formData.append("availability", "Open to the right project");
+  formData.append("projectInterest", "A suitable project.");
+  formData.append("consent", "on");
+  formData.append("cv", new Blob(["not a pdf"], { type: "application/pdf" }), "cv.pdf");
+
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/professionals", { method: "POST", body: formData }),
+    createEnv({ DB: createRecordingDb().binding })
+  );
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    error: "The attached file is not a valid PDF."
+  });
+});
+
+test("applies security and no-cookie headers to static and API responses", async () => {
+  const pageResponse = await worker.fetch(
+    new Request("https://askfortask.co.uk/about/"),
+    createEnv()
+  );
+  const apiResponse = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/contact-config"),
+    createEnv()
+  );
+
+  assertSecurityHeaders(pageResponse);
+  assertSecurityHeaders(apiResponse);
+  assert.equal(apiResponse.headers.get("cache-control"), "no-store");
+  assert.equal(apiResponse.headers.get("set-cookie"), null);
+});
+
+test("retention cleanup uses explicit cutoffs and protects held or published records", async () => {
+  const prepared = [];
+  let batchStatements;
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          const statement = { sql, values };
+          prepared.push(statement);
+          return statement;
+        }
+      };
+    },
+    async batch(statements) {
+      batchStatements = statements;
+      return statements.map(() => ({ success: true }));
+    }
+  };
+
+  await runRetentionCleanup(db, new Date("2026-08-24T12:00:00.000Z"));
+
+  assert.equal(prepared.length, 4);
+  assert.equal(batchStatements.length, 4);
+  assert.match(prepared[0].sql, /DELETE FROM contact_messages/);
+  assert.match(prepared[0].sql, /retention_hold = 0/);
+  assert.match(prepared[0].sql, /COALESCE\(retention_reference_at, created_at\) < \?1/);
+  assert.equal(prepared[0].values[0], "2024-08-24T12:00:00.000Z");
+  assert.match(prepared[1].sql, /moderation_status IN \('approved', 'published'\)/);
+  assert.equal(prepared[1].values[0], "2024-08-24T12:00:00.000Z");
+  assert.match(prepared[2].sql, /DELETE FROM professional_applications/);
+  assert.equal(prepared[2].values[0], "2025-08-24T12:00:00.000Z");
+  assert.match(prepared[3].sql, /DELETE FROM partner_click_daily/);
+  assert.equal(prepared[3].values[0], "2024-08-24");
+});
+
+test("does not expose retention cleanup as a public API", async () => {
+  const response = await worker.fetch(
+    new Request("https://askfortask.co.uk/api/retention-cleanup", { method: "POST" }),
+    createEnv()
+  );
+
+  assert.equal(response.status, 404);
+  assertSecurityHeaders(response);
 });

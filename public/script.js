@@ -23,10 +23,10 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const pageProgress = document.createElement("div");
 pageProgress.className = "page-progress";
 pageProgress.setAttribute("aria-hidden", "true");
-pageProgress.innerHTML = "<i></i>";
+pageProgress.innerHTML = '<progress max="1" value="0"></progress>';
 document.body.prepend(pageProgress);
 
-const pageProgressBar = pageProgress.querySelector("i");
+const pageProgressBar = pageProgress.querySelector("progress");
 let scrollFrame = 0;
 
 const updatePagePosition = () => {
@@ -38,7 +38,7 @@ const updatePagePosition = () => {
   const progress = Math.min(Math.max(window.scrollY / scrollable, 0), 1);
 
   if (pageProgressBar) {
-    pageProgressBar.style.transform = `scaleX(${progress})`;
+    pageProgressBar.value = progress;
   }
   pageNavigation?.classList.toggle("is-scrolled", window.scrollY > 12);
 };
@@ -65,8 +65,7 @@ const cleanSubhero = document.querySelector(".clean-subhero");
 
 if (cleanSubhero && pageRouteSteps) {
   const pageRoute = document.createElement("div");
-  pageRoute.className = "page-route";
-  pageRoute.style.setProperty("--route-count", pageRouteSteps.length);
+  pageRoute.className = `page-route page-route-count-${pageRouteSteps.length}`;
   pageRoute.innerHTML = `
     <div class="container page-route-inner">
       <span class="page-route-label">Typical project route</span>
@@ -159,7 +158,7 @@ const staggerGroups = document.querySelectorAll([
 staggerGroups.forEach((group) => {
   [...group.children].slice(0, 12).forEach((item, index) => {
     item.dataset.revealItem = "";
-    item.style.setProperty("--reveal-order", index);
+    item.classList.add(`reveal-order-${index}`);
   });
 });
 
@@ -318,6 +317,7 @@ form?.addEventListener("submit", async (event) => {
     budget: budgetField?.value.trim() || "",
     targetDate: targetDateField?.value || "",
     message: projectMessage,
+    website: String(new FormData(form).get("website") || "").trim(),
     consent: document.getElementById("contact-consent").checked
   };
 
@@ -378,7 +378,7 @@ const createProjectAssistant = () => {
         <div><span>A few practical questions</span><h2 id="project-assistant-title">Let's define your project</h2></div>
         <button type="button" class="project-assistant-close" data-project-assistant-close aria-label="Close project assistant">&times;</button>
       </header>
-      <div class="project-assistant-progress"><span data-assistant-progress>Step 1 of 5</span><i data-assistant-progress-bar></i></div>
+      <div class="project-assistant-progress"><span data-assistant-progress>Step 1 of 5</span><progress max="5" value="1" data-assistant-progress-bar aria-hidden="true"></progress></div>
       <div class="project-assistant-summary" data-assistant-summary aria-label="Your answers"></div>
       <div class="project-assistant-body" data-assistant-body></div>
       <footer class="project-assistant-footer"><button type="button" class="text-link" data-assistant-back hidden>&larr; Back</button><span>Every project enquiry is read by a person.</span></footer>
@@ -495,6 +495,7 @@ const createProjectAssistant = () => {
       <form class="project-assistant-form" data-assistant-form>
         <label class="project-assistant-field" for="assistant-name">Name<input id="assistant-name" name="name" autocomplete="name" required></label>
         <label class="project-assistant-field" for="assistant-email">Email<input id="assistant-email" name="email" type="email" autocomplete="email" required></label>
+        <label class="form-honeypot" for="assistant-website" aria-hidden="true">Website<input id="assistant-website" name="website" tabindex="-1" autocomplete="off"></label>
         <label class="consent" for="assistant-consent"><input id="assistant-consent" name="consent" type="checkbox" required><span>I agree that Ask for Task may use these details to respond to my enquiry.</span></label>
         <button class="button button-primary" type="submit">Send my project</button>
         <p class="project-assistant-status" data-assistant-status aria-live="polite"></p>
@@ -515,6 +516,7 @@ const createProjectAssistant = () => {
         region: state.region,
         budget: state.budget,
         targetDate: state.targetDate,
+        website: String(formData.get("website") || "").trim(),
         message: [
           "Guided project enquiry",
           "",
@@ -559,7 +561,7 @@ const createProjectAssistant = () => {
     updateSummary();
     assistantBack.hidden = step === 0 || complete;
     assistantProgress.textContent = complete ? "Enquiry sent" : `Step ${step + 1} of 5`;
-    assistantProgressBar.style.width = complete ? "100%" : `${((step + 1) / 5) * 100}%`;
+    assistantProgressBar.value = complete ? 5 : step + 1;
 
     if (complete) {
       assistantSummary.hidden = true;

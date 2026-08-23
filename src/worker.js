@@ -5,6 +5,53 @@ const jsonHeaders = {
   "cache-control": "no-store"
 };
 
+const securityHeaders = {
+  "content-security-policy": "default-src 'self'; base-uri 'self'; connect-src 'self'; font-src 'self'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; object-src 'none'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-attr 'none'; upgrade-insecure-requests",
+  "cross-origin-opener-policy": "same-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "strict-transport-security": "max-age=31536000",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY"
+};
+
+export const PARTNER_DESTINATIONS = Object.freeze({
+  "dmar-international": "https://www.dmarinternational.com/",
+  "dmar-linkedin": "https://www.linkedin.com/company/dmar-international/",
+  "nikita-linkedin": "https://www.linkedin.com/in/nikita-piazenko-530566113/",
+  "nk-sports": "https://nksports.eu/",
+  "photography-instagram": "https://www.instagram.com/piazenko_nikita/",
+  "photography-portfolio": "https://npiazenko.myportfolio.com/",
+  "pinglo": "https://pingloapp.com/",
+  "pinglo-app-store": "https://apps.apple.com/gb/app/pinglo-lost-found/id6768083250",
+  "pulse-point-events": "https://www.instagram.com/pulsepointevents/"
+});
+
+export const PARTNER_SOURCE_PAGES = new Set([
+  "404",
+  "about",
+  "app-development",
+  "brand-development",
+  "contact",
+  "cookies",
+  "design",
+  "dmar-case-study",
+  "faq",
+  "history",
+  "home",
+  "photography",
+  "pinglo-case-study",
+  "privacy",
+  "professionals",
+  "responsible-growth",
+  "reviews",
+  "services",
+  "terms",
+  "trust",
+  "ventures",
+  "website-development"
+]);
+
 const MAX_CV_BYTES = 5 * 1024 * 1024;
 const MAX_APPLICATION_BODY_BYTES = 7 * 1024 * 1024;
 const MAX_JSON_BODY_BYTES = 32 * 1024;
@@ -24,6 +71,7 @@ const CONTACT_BUDGETS = new Set([
   "Over £50,000 / phased"
 ]);
 const PROFESSIONAL_CATEGORIES = new Set([
+  "Brand development",
   "Apps & product development",
   "Design & brand",
   "Photography & content",
@@ -65,6 +113,26 @@ const REVIEW_RELATIONSHIPS = new Set([
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: jsonHeaders });
+}
+
+function withSecurityHeaders(response) {
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(securityHeaders)) {
+    headers.set(name, value);
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
+function logTechnicalError(event, error, status) {
+  console.error(event, {
+    errorType: error instanceof Error ? error.name : "UnknownError",
+    ...(Number.isInteger(status) ? { status } : {})
+  });
 }
 
 class HttpError extends Error {
@@ -127,6 +195,41 @@ async function readJsonBody(request, maxBytes = MAX_JSON_BODY_BYTES) {
   }
 }
 
+async function readBodyBytes(request, maxBytes) {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    throw new HttpError(413, "The request is too large.");
+  }
+
+  if (!request.body) {
+    throw new HttpError(400, "Invalid request body.");
+  }
+
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel("The request is too large.");
+      throw new HttpError(413, "The request is too large.");
+    }
+    chunks.push(value);
+  }
+
+  const body = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    body.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return body;
+}
+
 function readString(payload, field, maxLength, { required = false, singleLine = false } = {}) {
   const rawValue = payload[field];
   if (rawValue === undefined || rawValue === null) {
@@ -151,6 +254,10 @@ function clean(value, max = 4000) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isMultipartContentType(contentType) {
+  return /^multipart\/form-data\s*;[^;]*boundary=/i.test(contentType);
 }
 
 export function validateContactPayload(payload) {
@@ -362,8 +469,8 @@ async function sendContactEmail(env, payload) {
   });
 
   if (!response.ok) {
-    const details = await response.text().catch(() => "");
-    console.error("Email provider rejected the message", details);
+    await response.body?.cancel().catch(() => {});
+    logTechnicalError("contact_email_rejected", null, response.status);
     return { ok: false, error: "Email provider rejected the message." };
   }
 
@@ -403,7 +510,7 @@ async function sendProfessionalEmail(env, payload, cvBuffer) {
 
   const details = await response.text().catch(() => "");
   if (!response.ok) {
-    console.error("Email provider rejected the professional application", details);
+    logTechnicalError("professional_email_rejected", null, response.status);
     return { ok: false, error: "The CV could not be delivered. Please try again." };
   }
 
@@ -443,7 +550,7 @@ async function sendReviewEmail(env, payload) {
 
   const details = await response.text().catch(() => "");
   if (!response.ok) {
-    console.error("Email provider rejected the review notification", details);
+    logTechnicalError("review_email_rejected", null, response.status);
     return { ok: false, error: "The review notification could not be delivered." };
   }
 
@@ -457,8 +564,107 @@ async function sendReviewEmail(env, payload) {
   return { ok: true, emailId };
 }
 
-export default {
-  async fetch(request, env) {
+function controlledPartnerSource(value) {
+  const source = clean(value, 80);
+  return PARTNER_SOURCE_PAGES.has(source) ? source : "direct";
+}
+
+async function handlePartnerRedirect(request, env, url) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return json({ ok: false, error: "Method not allowed." }, 405);
+  }
+
+  const match = url.pathname.match(/^\/go\/([a-z0-9-]+)\/?$/);
+  const slug = match?.[1] || "";
+  const destination = PARTNER_DESTINATIONS[slug];
+
+  if (!destination) {
+    return json({ ok: false, error: "Partner link not found." }, 404);
+  }
+
+  if (request.method === "GET" && env.DB) {
+    try {
+      await env.DB.prepare(
+        `INSERT INTO partner_click_daily (
+           partner_slug, source_page, click_date, request_count
+         ) VALUES (?1, ?2, ?3, 1)
+         ON CONFLICT(partner_slug, source_page, click_date)
+         DO UPDATE SET request_count = request_count + 1`
+      )
+        .bind(
+          slug,
+          controlledPartnerSource(url.searchParams.get("source")),
+          new Date().toISOString().slice(0, 10)
+        )
+        .run();
+    } catch (error) {
+      logTechnicalError("partner_click_count_failed", error);
+    }
+  }
+
+  return new Response(null, {
+    status: 302,
+    headers: {
+      "cache-control": "private, no-store",
+      location: destination,
+      "x-robots-tag": "noindex, nofollow"
+    }
+  });
+}
+
+function subtractUtcMonths(reference, months) {
+  const date = new Date(reference);
+  if (Number.isNaN(date.getTime())) {
+    throw new TypeError("A valid retention reference date is required.");
+  }
+
+  const day = date.getUTCDate();
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() - months);
+  const daysInTargetMonth = new Date(Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    0
+  )).getUTCDate();
+  date.setUTCDate(Math.min(day, daysInTargetMonth));
+  return date;
+}
+
+export async function runRetentionCleanup(db, reference = new Date()) {
+  if (!db) throw new Error("DB binding is required for retention cleanup.");
+
+  const enquiryCutoff = subtractUtcMonths(reference, 24).toISOString();
+  const professionalCutoff = subtractUtcMonths(reference, 12).toISOString();
+  const partnerCutoff = subtractUtcMonths(reference, 24).toISOString().slice(0, 10);
+
+  return db.batch([
+    db.prepare(
+      `DELETE FROM contact_messages
+       WHERE retention_hold = 0
+         AND COALESCE(retention_reference_at, created_at) < ?1`
+    ).bind(enquiryCutoff),
+    db.prepare(
+      `DELETE FROM client_reviews
+       WHERE retention_hold = 0
+         AND COALESCE(retention_reference_at, created_at) < ?1
+         AND NOT (
+           publish_consent = 1
+           AND moderation_status IN ('approved', 'published')
+         )`
+    ).bind(enquiryCutoff),
+    db.prepare(
+      `DELETE FROM professional_applications
+       WHERE retention_hold = 0
+         AND COALESCE(retention_reference_at, created_at) < ?1`
+    ).bind(professionalCutoff),
+    db.prepare(
+      `DELETE FROM partner_click_daily
+       WHERE click_date < ?1`
+    ).bind(partnerCutoff)
+  ]);
+}
+
+async function handleRequest(request, env) {
     const url = new URL(request.url);
     let redirectToCanonical = false;
 
@@ -475,6 +681,14 @@ export default {
       redirectToCanonical = true;
     }
 
+    if (redirectToCanonical && url.pathname.startsWith("/go/")) {
+      return Response.redirect(url.toString(), 301);
+    }
+
+    if (url.pathname.startsWith("/go/")) {
+      return handlePartnerRedirect(request, env, url);
+    }
+
     const isNotFoundAlias = ["/404", "/404/", "/404.html"].includes(url.pathname);
     if (isNotFoundAlias) {
       if (redirectToCanonical) {
@@ -488,7 +702,8 @@ export default {
     const isPagePath = url.pathname.length > 1
       && !url.pathname.endsWith("/")
       && !url.pathname.split("/").pop().includes(".")
-      && !url.pathname.startsWith("/api/");
+      && !url.pathname.startsWith("/api/")
+      && !url.pathname.startsWith("/go/");
 
     if (isPagePath) {
       url.pathname += "/";
@@ -521,8 +736,19 @@ export default {
         if (error instanceof HttpError) {
           return json({ ok: false, error: error.message }, error.status);
         }
-        console.error("Failed to read contact request", error);
+        logTechnicalError("contact_request_read_failed", error);
         return json({ ok: false, error: "Invalid request body." }, 400);
+      }
+
+      try {
+        if (readString(payload, "website", 160, { singleLine: true })) {
+          return json({ ok: true });
+        }
+      } catch (error) {
+        if (error instanceof HttpError) {
+          return json({ ok: false, error: error.message }, error.status);
+        }
+        return json({ ok: false, error: "Invalid contact details." }, 400);
       }
 
       let contact;
@@ -532,7 +758,7 @@ export default {
         if (error instanceof HttpError) {
           return json({ ok: false, error: error.message }, error.status);
         }
-        console.error("Failed to validate contact request", error);
+        logTechnicalError("contact_validation_failed", error);
         return json({ ok: false, error: "Invalid contact details." }, 400);
       }
 
@@ -562,7 +788,7 @@ export default {
           )
           .run();
       } catch (error) {
-        console.error("Failed to store contact message", error);
+        logTechnicalError("contact_store_failed", error);
       }
 
       let emailResult;
@@ -577,7 +803,7 @@ export default {
           message
         });
       } catch (error) {
-        console.error("Failed to send contact email", error);
+        logTechnicalError("contact_email_failed", error);
         return json({ ok: false, error: "Email service failed to send the message." }, 500);
       }
 
@@ -604,26 +830,34 @@ export default {
         if (error instanceof HttpError) {
           return json({ ok: false, error: error.message }, error.status);
         }
-        console.error("Failed to read review request", error);
+        logTechnicalError("review_request_read_failed", error);
         return json({ ok: false, error: "Invalid request body." }, 400);
       }
 
-      if (clean(payload.website, 160)) {
-        return json({ ok: true });
+      let name;
+      let email;
+      let companyProject;
+      let service;
+      let relationship;
+      let reviewText;
+      try {
+        if (readString(payload, "website", 160, { singleLine: true })) {
+          return json({ ok: true });
+        }
+        name = readString(payload, "name", 160, { required: true, singleLine: true });
+        email = readString(payload, "email", 254, { required: true, singleLine: true }).toLowerCase();
+        companyProject = readString(payload, "companyProject", 240, { singleLine: true });
+        service = readString(payload, "service", 120, { required: true, singleLine: true });
+        relationship = readString(payload, "relationship", 120, { required: true, singleLine: true });
+        reviewText = readString(payload, "reviewText", 2000, { required: true });
+      } catch (error) {
+        if (error instanceof HttpError) {
+          return json({ ok: false, error: error.message }, error.status);
+        }
+        return json({ ok: false, error: "Invalid review details." }, 400);
       }
-
-      const name = clean(payload.name, 160);
-      const email = clean(payload.email, 254).toLowerCase();
-      const companyProject = clean(payload.companyProject, 240);
-      const service = clean(payload.service, 120);
-      const relationship = clean(payload.relationship, 120);
-      const reviewText = clean(payload.reviewText, 2000);
       const contactConsent = payload.contactConsent === true;
       const publishConsent = payload.publishConsent === true;
-
-      if (!name || !email || !service || !relationship || !reviewText) {
-        return json({ ok: false, error: "Complete all required review fields." }, 400);
-      }
 
       if (!isValidEmail(email)) {
         return json({ ok: false, error: "Enter a valid email address." }, 400);
@@ -676,7 +910,7 @@ export default {
           )
           .run();
       } catch (error) {
-        console.error("Failed to store client review", error);
+        logTechnicalError("review_store_failed", error);
         return json({ ok: false, error: "The review could not be saved." }, 500);
       }
 
@@ -684,7 +918,7 @@ export default {
       try {
         emailResult = await sendReviewEmail(env, reviewPayload);
       } catch (error) {
-        console.error("Failed to deliver review notification", error);
+        logTechnicalError("review_email_failed", error);
         emailResult = { ok: false, error: "The review notification could not be delivered." };
       }
 
@@ -701,7 +935,7 @@ export default {
           )
           .run();
       } catch (error) {
-        console.error("Failed to update review notification status", error);
+        logTechnicalError("review_status_update_failed", error);
       }
 
       return json({ ok: true, reviewId: id });
@@ -712,9 +946,8 @@ export default {
         return json({ ok: false, error: "Method not allowed." }, 405);
       }
 
-      const contentLength = Number(request.headers.get("content-length") || 0);
-      if (contentLength > MAX_APPLICATION_BODY_BYTES) {
-        return json({ ok: false, error: "The application is too large. Use a PDF under 5 MB." }, 413);
+      if (!isMultipartContentType(request.headers.get("content-type") || "")) {
+        return json({ ok: false, error: "Content-Type must be multipart/form-data." }, 415);
       }
 
       if (!env.DB || !env.RESEND_API_KEY) {
@@ -723,8 +956,19 @@ export default {
 
       let formData;
       try {
-        formData = await request.formData();
-      } catch {
+        const body = await readBodyBytes(request, MAX_APPLICATION_BODY_BYTES);
+        formData = await new Request(request.url, {
+          method: "POST",
+          headers: request.headers,
+          body
+        }).formData();
+      } catch (error) {
+        if (error instanceof HttpError) {
+          const message = error.status === 413
+            ? "The application is too large. Use a PDF under 5 MB."
+            : error.message;
+          return json({ ok: false, error: message }, error.status);
+        }
         return json({ ok: false, error: "The application could not be read." }, 400);
       }
 
@@ -784,7 +1028,7 @@ export default {
       }
 
       const cvFilename = safePdfFilename(cv.name);
-      if (!cv.name.toLowerCase().endsWith(".pdf")) {
+      if (!cv.name.toLowerCase().endsWith(".pdf") || cv.type !== "application/pdf") {
         return json({ ok: false, error: "Your CV must be a PDF file." }, 400);
       }
 
@@ -840,7 +1084,7 @@ export default {
           )
           .run();
       } catch (error) {
-        console.error("Failed to store professional application", error);
+        logTechnicalError("professional_store_failed", error);
         return json({ ok: false, error: "The application could not be saved." }, 500);
       }
 
@@ -848,7 +1092,7 @@ export default {
       try {
         emailResult = await sendProfessionalEmail(env, payload, cvBuffer);
       } catch (error) {
-        console.error("Failed to deliver professional application", error);
+        logTechnicalError("professional_email_failed", error);
         emailResult = { ok: false, error: "The CV could not be delivered. Please try again." };
       }
 
@@ -865,7 +1109,7 @@ export default {
           )
           .run();
       } catch (error) {
-        console.error("Failed to update professional application status", error);
+        logTechnicalError("professional_status_update_failed", error);
       }
 
       if (!emailResult.ok) {
@@ -880,5 +1124,17 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
+}
+
+export default {
+  async fetch(request, env) {
+    return withSecurityHeaders(await handleRequest(request, env));
+  },
+
+  async scheduled(controller, env) {
+    const reference = Number.isFinite(controller?.scheduledTime)
+      ? new Date(controller.scheduledTime)
+      : new Date();
+    await runRetentionCleanup(env.DB, reference);
   }
 };

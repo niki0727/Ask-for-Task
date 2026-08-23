@@ -1117,7 +1117,7 @@
 
 .footer-company {
   display: grid;
-  max-width: 380px;
+  max-width: 620px;
   gap: 8px;
 }
 
@@ -1410,14 +1410,22 @@ dd {
   pointer-events: none;
 }
 
-.page-progress > i {
+.page-progress > progress {
+  appearance: none;
   display: block;
   width: 100%;
   height: 100%;
+  border: 0;
   background: var(--page-accent);
-  transform: scaleX(0);
-  transform-origin: left center;
-  will-change: transform;
+}
+
+.page-progress > progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+.page-progress > progress::-webkit-progress-value,
+.page-progress > progress::-moz-progress-bar {
+  background: var(--page-accent);
 }
 
 .nav {
@@ -1835,10 +1843,35 @@ dd {
 
 .page-route ol {
   display: grid;
-  grid-template-columns: repeat(var(--route-count, 4), minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.page-route-count-5 ol {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.project-assistant-progress progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  appearance: none;
+  border: 0;
+  background: transparent;
+}
+
+.project-assistant-progress progress::-webkit-progress-bar {
+  background: transparent;
+}
+
+.project-assistant-progress progress::-webkit-progress-value,
+.project-assistant-progress progress::-moz-progress-bar {
+  background: var(--blue);
 }
 
 .page-route li {
@@ -2110,6 +2143,122 @@ dd {
 .legal-card {
   border-top: 4px solid var(--page-accent);
   padding-top: 28px;
+}
+
+.legal-card-hero .legal-intro {
+  max-width: 690px;
+  color: var(--ink-soft);
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.legal-jump-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0 0 36px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 24px;
+}
+
+.legal-jump-links a,
+.legal-related a {
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 750;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.legal-card > section {
+  max-width: 760px;
+  scroll-margin-top: 96px;
+}
+
+.legal-card h3 {
+  margin: 24px 0 8px;
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.legal-related {
+  margin-top: 46px;
+  border: 1px solid var(--line-strong);
+  border-left: 4px solid var(--page-accent);
+  padding: 22px 24px 24px;
+  background: var(--paper);
+}
+
+.legal-related h2 {
+  margin-top: 0;
+  font-size: 20px;
+}
+
+.legal-related > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.faq-policy-section {
+  max-width: none !important;
+  margin-top: 48px;
+}
+
+.faq-policy-section > h2 {
+  margin-bottom: 18px;
+}
+
+.faq-policy-list {
+  border-top: 1px solid var(--line-strong);
+}
+
+.faq-policy-list details {
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+
+.faq-policy-list summary {
+  position: relative;
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  padding: 16px 48px 16px 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.faq-policy-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-policy-list summary::after {
+  position: absolute;
+  right: 4px;
+  color: var(--blue);
+  content: "+";
+  font-size: 25px;
+  font-weight: 400;
+  transition: transform 160ms ease;
+}
+
+.faq-policy-list details[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faq-policy-list summary h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.faq-policy-list details > p {
+  max-width: 720px;
+  margin: 0;
+  padding: 0 48px 22px 0;
+}
+
+.faq-contact > p {
+  margin-top: 0;
 }
 
 .footer-inner > span::before {
@@ -2564,8 +2713,20 @@ dd {
 
   .motion-ready .motion-section.is-visible [data-reveal-item] {
     animation: a4t-stagger 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
-    animation-delay: calc(var(--reveal-order, 0) * 70ms);
+    animation-delay: 0ms;
   }
+
+  .motion-ready .motion-section.is-visible .reveal-order-1 { animation-delay: 70ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-2 { animation-delay: 140ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-3 { animation-delay: 210ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-4 { animation-delay: 280ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-5 { animation-delay: 350ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-6 { animation-delay: 420ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-7 { animation-delay: 490ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-8 { animation-delay: 560ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-9 { animation-delay: 630ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-10 { animation-delay: 700ms; }
+  .motion-ready .motion-section.is-visible .reveal-order-11 { animation-delay: 770ms; }
 
   @keyframes a4t-enter {
     from { opacity: 1; transform: translateY(14px); }
@@ -3011,5 +3172,38 @@ dd {
 
   .not-found-code {
     font-size: 112px;
+  }
+}
+
+@media (max-width: 640px) {
+  .legal-card-hero .legal-intro {
+    font-size: 16px;
+  }
+
+  .legal-jump-links {
+    gap: 10px 16px;
+    margin-bottom: 26px;
+  }
+
+  .legal-related {
+    padding: 20px;
+  }
+
+  .legal-related > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .faq-policy-list summary {
+    min-height: 62px;
+    padding-right: 36px;
+  }
+
+  .faq-policy-list summary h3 {
+    font-size: 16px;
+  }
+
+  .faq-policy-list details > p {
+    padding-right: 0;
   }
 }

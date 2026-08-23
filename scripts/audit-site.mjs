@@ -1,11 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { PARTNER_DESTINATIONS, PARTNER_SOURCE_PAGES } from "../src/worker.js";
+
 const publicDir = path.resolve("public");
 const origin = "https://askfortask.co.uk";
 const errors = [];
 const titlesByValue = new Map();
 const descriptionsByValue = new Map();
+const statutorySentence = "ASK FOR TASK LTD is a company registered in England and Wales. Company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.";
+const requiredFooterRoutes = ["/safety/", "/privacy/", "/cookies/", "/faq/", "/terms/"];
 
 function recordValue(map, value, label) {
   if (!value) return;
@@ -53,6 +57,23 @@ for (const file of htmlFiles) {
   const label = path.relative(process.cwd(), file);
   const robots = html.match(/<meta\s+name="robots"\s+content="([^"]+)"/i)?.[1] || "";
   const noindex = /noindex/i.test(robots);
+
+  if (!html.includes(statutorySentence)) {
+    errors.push(`${label}: statutory company information is missing`);
+  }
+  for (const footerRoute of requiredFooterRoutes) {
+    if (!new RegExp(`<footer[\\s\\S]*?href="${footerRoute.replaceAll("/", "\\/")}"`, "i").test(html)) {
+      errors.push(`${label}: footer is missing ${footerRoute}`);
+    }
+  }
+  if (/\sstyle="/i.test(html)) {
+    errors.push(`${label}: inline style attribute is not allowed by the CSP`);
+  }
+  for (const destination of Object.values(PARTNER_DESTINATIONS)) {
+    if (html.includes(`href="${destination}"`)) {
+      errors.push(`${label}: partner destination must use a controlled /go/ route (${destination})`);
+    }
+  }
 
   const titles = [...html.matchAll(/<title>([\s\S]*?)<\/title>/gi)].map((match) => textContent(match[1]));
   if (titles.length !== 1) errors.push(`${label}: expected one title, found ${titles.length}`);
@@ -166,6 +187,18 @@ for (const file of htmlFiles) {
     const href = match[1];
     if (!href.startsWith("/") || href.startsWith("//")) continue;
     const pathname = href.split(/[?#]/)[0] || "/";
+    if (pathname.startsWith("/go/")) {
+      const partnerUrl = new URL(href, origin);
+      const slug = partnerUrl.pathname.match(/^\/go\/([a-z0-9-]+)\/?$/)?.[1];
+      const source = partnerUrl.searchParams.get("source");
+      if (!slug || !PARTNER_DESTINATIONS[slug]) {
+        errors.push(`${label}: unknown controlled partner route (${href})`);
+      }
+      if (!source || !PARTNER_SOURCE_PAGES.has(source)) {
+        errors.push(`${label}: invalid controlled partner source (${href})`);
+      }
+      continue;
+    }
     if (/\.[a-z0-9]+$/i.test(pathname)) {
       if (!fs.existsSync(path.join(publicDir, pathname.slice(1)))) {
         errors.push(`${label}: local link target does not exist (${href})`);
@@ -192,7 +225,12 @@ for (const [value, labels] of descriptionsByValue) {
   if (labels.length > 1) errors.push(`duplicate meta description in ${labels.join(", ")}`);
 }
 
-const today = new Date().toISOString().slice(0, 10);
+const now = new Date();
+const today = [
+  now.getFullYear(),
+  String(now.getMonth() + 1).padStart(2, "0"),
+  String(now.getDate()).padStart(2, "0"),
+].join("-");
 for (const block of sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)) {
   const loc = block[1].match(/<loc>([^<]+)<\/loc>/)?.[1] || "unknown URL";
   const lastmod = block[1].match(/<lastmod>([^<]+)<\/lastmod>/)?.[1];
@@ -213,6 +251,33 @@ for (const route of sitemapRoutes) {
 const robots = fs.readFileSync(path.join(publicDir, "robots.txt"), "utf8");
 if (!robots.includes(`Sitemap: ${origin}/sitemap.xml`)) {
   errors.push("robots.txt: canonical sitemap directive is missing");
+}
+
+const headerRules = fs.readFileSync(path.join(publicDir, "_headers"), "utf8");
+const requiredSecurityHeaderFragments = [
+  "Content-Security-Policy:",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  "script-src-attr 'none'",
+  "style-src-attr 'none'",
+  "Strict-Transport-Security:",
+  "X-Content-Type-Options: nosniff",
+  "Referrer-Policy:",
+  "Permissions-Policy:",
+  "X-Frame-Options: DENY"
+];
+for (const fragment of requiredSecurityHeaderFragments) {
+  if (!headerRules.includes(fragment)) errors.push(`_headers: missing ${fragment}`);
+}
+if (headerRules.includes("'unsafe-inline'")) {
+  errors.push("_headers: CSP must not contain 'unsafe-inline'");
+}
+
+const clientScript = fs.readFileSync(path.join(publicDir, "script.js"), "utf8");
+if (/\.style\b|setAttribute\(\s*["']style["']/i.test(clientScript)) {
+  errors.push("script.js: inline style mutation is not allowed by the CSP");
 }
 
 if (errors.length) {
