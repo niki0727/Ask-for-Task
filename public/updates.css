@@ -1,266 +1,89 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&display=swap");
-
 body {
-  font-family: "Space Grotesk", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
 }
 
-.brand-mark {
-  color: transparent;
-  font-size: 0;
-  background: #fff;
-  object-fit: contain;
+h1,
+h2,
+h3 {
+  font-weight: 650;
+  letter-spacing: 0;
 }
 
-h1 {
-  font-size: clamp(48px, 7.2vw, 98px);
-  line-height: 0.94;
+h1 { line-height: 1.03; }
+h2 { line-height: 1.08; }
+h3 { line-height: 1.18; }
+
+.eyebrow,
+.section-kicker,
+.service-card-top,
+.service-status,
+.service-desk,
+.service-desk-head,
+.service-desk-foot,
+.service-desk-list > a > span,
+.service-desk-list em,
+.timeline-card > span,
+.hero-capabilities span,
+.clarity-flow article > span,
+.example-asks strong,
+.app-frame strong,
+.project-board-head,
+.project-brief-board dt,
+.delivery-model-grid > article > span,
+.scope-service header span,
+.scope-service h4,
+.scope-service footer span,
+.scope-start span,
+.pricing-route > article > span,
+.app-type-grid > article > span,
+.app-cost-ledger span,
+.photo-scope-factors span,
+.contact-brief-list span {
+  font-family: inherit;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
-h2 {
-  font-size: clamp(31px, 4.2vw, 58px);
+.hero-copy-block h1,
+.services-hero h1,
+.app-development-page .app-subhero h1,
+.photo-hero h1 {
+  font-size: 58px;
+  line-height: 1.03;
 }
 
-.hero {
-  padding: 112px 0 96px;
+body .subhero h1,
+.subhero .split h1,
+.legal-card-hero h1,
+.history-hero h1 {
+  font-size: 52px;
+  line-height: 1.05;
 }
 
-.section {
-  padding: 104px 0;
-}
-
-.section-header {
-  margin-bottom: 40px;
-}
-
-.command-panel {
-  min-height: 0;
-  gap: 28px;
-  padding: 28px;
-}
-
-.pathway-list {
-  display: grid;
-  gap: 12px;
-}
-
-.pathway-list a {
-  display: grid;
-  grid-template-columns: 46px 1fr;
-  gap: 4px 16px;
-  padding: 18px;
-  border: 1px solid var(--stroke);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.035);
-  text-decoration: none;
-}
-
-.pathway-list a:hover {
-  border-color: rgba(213, 255, 95, 0.5);
-  background: rgba(213, 255, 95, 0.055);
-}
-
-.pathway-list span {
-  grid-row: span 2;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 820;
-}
-
-.pathway-list strong {
-  color: var(--text);
-  font-size: 18px;
-}
-
-.pathway-list p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.45;
-}
-
-.service-grid {
-  gap: 22px;
-}
-
-.service-card,
-.card {
-  padding: 30px;
-}
-
-.service-card,
-.card,
-.about-panel {
-  border-color: rgba(213, 255, 95, 0.18);
-  background:
-    linear-gradient(145deg, rgba(213, 255, 95, 0.13), rgba(125, 211, 252, 0.09)),
-    #f3f7ef;
-  color: #11161d;
-  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.15);
-}
-
-.service-card span {
-  color: #6b8f00;
-}
-
-.service-card p,
-.card p,
-.about-panel p {
-  color: #52606c;
-}
-
-.card .number {
-  color: #17728f;
-}
-
-.card {
-  min-height: 300px;
-}
-
-.subhero {
-  padding: 104px 0 32px;
-}
-
-.subhero-inner {
-  max-width: 960px;
-}
-
-.subhero h1 {
-  font-size: clamp(40px, 5.4vw, 70px);
-}
-
-.subhero p {
-  max-width: 720px;
-  margin: 26px 0 0;
-  color: var(--muted);
-  font-size: 21px;
-  line-height: 1.6;
-}
-
-.about-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 24px;
-}
-
-.about-panel {
-  min-height: 360px;
-  display: grid;
-  align-content: space-between;
-  gap: 34px;
-  padding: 34px;
-  border: 1px solid rgba(213, 255, 95, 0.18);
-  border-radius: var(--radius-xl);
-}
-
-.about-panel span {
-  color: #6b8f00;
-  font-size: 13px;
-  font-weight: 820;
-  text-transform: uppercase;
-}
-
-.about-panel h2 {
-  margin-top: auto;
-}
-
-.about-panel p {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.6;
-}
-
-.venture-card {
-  gap: 22px;
-  padding: 30px;
-  border-color: rgba(213, 255, 95, 0.2);
-  background:
-    linear-gradient(155deg, rgba(213, 255, 95, 0.16), rgba(125, 211, 252, 0.10)),
-    #f6f8f1;
-  color: #11161d;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.18);
-}
-
-.venture-brand {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-  width: 100%;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-  overflow: hidden;
-}
-
-.venture-appicon {
-  width: 58px;
-  height: 58px;
-  border-radius: 14px;
-  flex: 0 0 auto;
-}
-
-.venture-card .venture-logo {
-  width: min(100%, 248px);
-  height: auto;
-  border-radius: 0;
-  min-width: 0;
-  object-fit: contain;
-}
-
-.venture-card p {
-  margin: 0;
-  color: #52606c;
-  line-height: 1.55;
-}
-
-.venture-card a {
-  color: #11161d;
-  border-bottom-color: currentColor;
-}
-
-@media (max-width: 980px) {
-  .about-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .command-panel {
-    min-height: 0;
-  }
+.section h2,
+.clarity-section h2,
+.photo-enquiry-band h2 {
+  font-size: 42px;
+  line-height: 1.08;
 }
 
 @media (max-width: 680px) {
-  .hero {
-    padding: 70px 0 58px;
+  .hero-copy-block h1,
+  .services-hero h1,
+  .app-development-page .app-subhero h1,
+  .photo-hero h1,
+  body .subhero h1,
+  .subhero .split h1,
+  body .legal-card-hero h1,
+  .history-hero h1 {
+    font-size: 38px;
+    line-height: 1.06;
   }
 
-  .section {
-    padding: 68px 0;
-  }
-
-  .command-panel {
-    padding: 18px;
-  }
-
-  .venture-card {
-    padding: 22px;
-  }
-
-  .venture-brand {
-    gap: 12px;
-  }
-
-  .venture-appicon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-  }
-
-  .venture-card .venture-logo {
-    width: min(100%, 190px);
-  }
-
-  h1 {
-    font-size: clamp(42px, 14vw, 64px);
+  .section h2,
+  .clarity-section h2,
+  .photo-enquiry-band h2 {
+    font-size: 32px;
+    line-height: 1.1;
   }
 }

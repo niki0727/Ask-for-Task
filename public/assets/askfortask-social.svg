@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f4f4f0"/>
+  <rect x="0" y="0" width="1200" height="12" fill="#3157d5"/>
+  <rect x="76" y="70" width="156" height="156" rx="12" fill="#ffffff" stroke="#d7dcd7" stroke-width="3"/>
+  <text x="154" y="165" fill="#18201d" font-family="Arial, Helvetica, sans-serif" font-size="49" font-weight="800" text-anchor="middle">A4T</text>
+  <text x="76" y="338" fill="#18201d" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="750">Ask for Task</text>
+  <text x="80" y="408" fill="#5f6965" font-family="Arial, Helvetica, sans-serif" font-size="34">Your project, delivered by the right professional.</text>
+  <text x="80" y="474" fill="#3157d5" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">APPS  |  DESIGN  |  PHOTOGRAPHY  |  BUSINESS  |  WRITING</text>
+  <rect x="80" y="515" width="72" height="5" fill="#3157d5"/>
+  <text x="80" y="568" fill="#18201d" font-family="Arial, Helvetica, sans-serif" font-size="22" font-weight="700">askfortask.co.uk</text>
+</svg>

@@ -1,0 +1,5 @@
+node_modules/
+*.cpuprofile
+.wrangler/
+.dev.vars*
+.env*

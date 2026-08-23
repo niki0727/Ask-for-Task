@@ -1,0 +1,90 @@
+/* Simple system typography and clearer page sizing, 2026-07-23. */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+h1 { line-height: 1.03; }
+h2 { line-height: 1.08; }
+h3 { line-height: 1.18; }
+
+.eyebrow,
+.section-kicker,
+.service-card-top,
+.service-status,
+.service-desk,
+.service-desk-head,
+.service-desk-foot,
+.service-desk-list > a > span,
+.service-desk-list em,
+.timeline-card > span,
+.hero-capabilities span,
+.clarity-flow article > span,
+.example-asks strong,
+.app-frame strong,
+.project-board-head,
+.project-brief-board dt,
+.delivery-model-grid > article > span,
+.scope-service header span,
+.scope-service h4,
+.scope-service footer span,
+.scope-start span,
+.pricing-route > article > span,
+.app-type-grid > article > span,
+.app-cost-ledger span,
+.photo-scope-factors span,
+.contact-brief-list span {
+  font-family: inherit;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.hero-copy-block h1,
+.services-hero h1,
+.app-development-page .app-subhero h1,
+.photo-hero h1 {
+  font-size: 58px;
+  line-height: 1.03;
+}
+
+body .subhero h1,
+.subhero .split h1,
+.legal-card-hero h1,
+.history-hero h1 {
+  font-size: 52px;
+  line-height: 1.05;
+}
+
+.section h2,
+.clarity-section h2,
+.photo-enquiry-band h2 {
+  font-size: 42px;
+  line-height: 1.08;
+}
+
+@media (max-width: 680px) {
+  .hero-copy-block h1,
+  .services-hero h1,
+  .app-development-page .app-subhero h1,
+  .photo-hero h1,
+  body .subhero h1,
+  .subhero .split h1,
+  body .legal-card-hero h1,
+  .history-hero h1 {
+    font-size: 38px;
+    line-height: 1.06;
+  }
+
+  .section h2,
+  .clarity-section h2,
+  .photo-enquiry-band h2 {
+    font-size: 32px;
+    line-height: 1.1;
+  }
+}

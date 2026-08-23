@@ -1,0 +1,10 @@
+{
+  "name": "ask-for-task-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "audit": "node scripts/audit-site.mjs",
+    "check": "npm test && npm run audit",
+    "test": "node --test"
+  }
+}

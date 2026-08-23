@@ -1,8 +1,8 @@
 # Ask for Task website
 
-Cloudflare website for `Askfortask.co.uk`, matching the structure used by the Pinglo site.
+Cloudflare website and Worker for `askfortask.co.uk`.
 
-This is the public company/product home for ASK FOR TASK LTD, the operator behind Pinglo.
+This is the public home of ASK FOR TASK LTD: a founder-led managed project delivery company. Pinglo is an owned venture and public app-development case study; DMAR International and other inspectable work provide additional evidence for the services.
 
 ## Preview locally
 
@@ -20,6 +20,12 @@ For the Worker API and D1 binding:
 npx wrangler dev
 ```
 
+Run the Worker tests and the static SEO/content audit:
+
+```bash
+npm run check
+```
+
 ## Cloudflare setup
 
 Create the D1 database:
@@ -30,7 +36,7 @@ npx wrangler d1 create askfortask_messages
 
 Copy the returned database ID into `wrangler.jsonc` if it changes.
 
-Apply the migration:
+Apply all pending migrations:
 
 ```bash
 npx wrangler d1 migrations apply askfortask_messages --remote
@@ -51,11 +57,17 @@ In Cloudflare, add routes/custom domains for:
 - `askfortask.co.uk`
 - `www.askfortask.co.uk`
 
-The included `_redirects` file redirects `www` to the root domain when served through the static asset layer.
+The Worker permanently redirects public HTTP traffic to HTTPS, redirects `www` to the apex domain, and canonicalises page paths while preserving query strings.
 
 ## Contact
 
-The contact form posts to `/api/contact`. The Worker validates the message, stores a copy in D1 when available, and sends the enquiry to `admin@askfortask.co.uk` through the Resend email API.
+The Worker provides three form endpoints:
+
+- `/api/contact` validates project enquiries, stores them in D1, and sends the notification through Resend.
+- `/api/reviews` stores submitted reviews for moderation and sends an internal notification. Reviews are never published automatically.
+- `/api/professionals` validates professional profiles and PDF CVs, stores the application record, and sends the CV through Resend.
+
+Notifications are sent to `admin@askfortask.co.uk` by default.
 
 Set these Worker variables/secrets in Cloudflare:
 
@@ -64,3 +76,12 @@ Set these Worker variables/secrets in Cloudflare:
 - Optional variable: `CONTACT_FROM=Ask for Task <contact@askfortask.co.uk>`
 
 The sending domain used in `CONTACT_FROM` must be verified in Resend.
+
+Before a production release, run:
+
+```bash
+npm run check
+npx wrangler deploy --dry-run
+```
+
+Applying D1 migrations and deploying are separate production actions and should only be run when the release is authorised.
