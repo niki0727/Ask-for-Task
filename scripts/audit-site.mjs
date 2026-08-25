@@ -10,6 +10,26 @@ const titlesByValue = new Map();
 const descriptionsByValue = new Map();
 const statutorySentence = "ASK FOR TASK LTD is a company registered in England and Wales. Company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.";
 const requiredFooterRoutes = ["/safety/", "/privacy/", "/cookies/", "/faq/", "/terms/"];
+const privacyAtCollectionRoutes = new Set(["/contact/", "/professionals/", "/reviews/"]);
+const requiredStylesheetOrder = [
+  "/a4t-system.css",
+  "/a4t-evolution-20260724.css",
+  "/a4t-polish-20260805.css",
+];
+const legacyPublicStylesheets = [
+  "/styles.css",
+  "/updates.css",
+  "/updates-simple-20260723.css",
+  "/a4t-light-20260723.css",
+  "/a4t-refined-20260724.css",
+  "/a4t-professional-20260724.css",
+];
+const canonicalBrandMark = "/assets/a4t-mark-soft.svg";
+const canonicalCompanySocialImage = "https://askfortask.co.uk/assets/askfortask-social.png";
+const activeComponentStylesheets = [
+  "a4t-evolution-20260724.css",
+  "a4t-polish-20260805.css",
+];
 
 function recordValue(map, value, label) {
   if (!value) return;
@@ -68,6 +88,38 @@ for (const file of htmlFiles) {
   }
   if (/\sstyle="/i.test(html)) {
     errors.push(`${label}: inline style attribute is not allowed by the CSP`);
+  }
+  const stylesheetHrefs = [...html.matchAll(/<link\b[^>]*\brel="stylesheet"[^>]*\bhref="([^"]+)"[^>]*>/gi)]
+    .map((match) => match[1].split(/[?#]/)[0]);
+  const designSystemPositions = requiredStylesheetOrder.map((href) => stylesheetHrefs.indexOf(href));
+  if (designSystemPositions.some((position) => position === -1)) {
+    errors.push(`${label}: required design-system stylesheets are missing`);
+  } else if (designSystemPositions.some((position, index) => index > 0 && position < designSystemPositions[index - 1])) {
+    errors.push(`${label}: design-system stylesheets are in the wrong order`);
+  }
+  for (const legacyStylesheet of legacyPublicStylesheets) {
+    if (stylesheetHrefs.includes(legacyStylesheet)) {
+      errors.push(`${label}: legacy stylesheet is active (${legacyStylesheet})`);
+    }
+  }
+  const iconHrefs = [...html.matchAll(/<link\b[^>]*\brel="icon"[^>]*\bhref="([^"]+)"[^>]*>/gi)]
+    .map((match) => match[1].split(/[?#]/)[0]);
+  if (!iconHrefs.includes(canonicalBrandMark)) {
+    errors.push(`${label}: canonical SVG brand mark is missing from the favicon set`);
+  }
+  for (const match of html.matchAll(/<img\b[^>]*\bclass="[^"]*brand-mark[^"]*"[^>]*\bsrc="([^"]+)"[^>]*>/gi)) {
+    if (match[1].split(/[?#]/)[0] !== canonicalBrandMark) {
+      errors.push(`${label}: navigation uses a non-canonical brand mark (${match[1]})`);
+    }
+  }
+  if (/\bwithin 48 hours\b/i.test(textContent(html))) {
+    errors.push(`${label}: absolute 48-hour response wording conflicts with the qualified service target`);
+  }
+  if (
+    privacyAtCollectionRoutes.has(route)
+    && !/<label\b[^>]*class="[^"]*consent[^"]*"[\s\S]{0,1200}?href="\/privacy\/"/i.test(html)
+  ) {
+    errors.push(`${label}: form consent must link to the Privacy Policy at collection`);
   }
   for (const destination of Object.values(PARTNER_DESTINATIONS)) {
     if (html.includes(`href="${destination}"`)) {
@@ -278,6 +330,37 @@ if (headerRules.includes("'unsafe-inline'")) {
 const clientScript = fs.readFileSync(path.join(publicDir, "script.js"), "utf8");
 if (/\.style\b|setAttribute\(\s*["']style["']/i.test(clientScript)) {
   errors.push("script.js: inline style mutation is not allowed by the CSP");
+}
+if (/\bwithin 48 hours\b/i.test(clientScript)) {
+  errors.push("script.js: absolute 48-hour response wording conflicts with the qualified service target");
+}
+if (!/assistant-consent[\s\S]{0,600}?href="\/privacy\/"/i.test(clientScript)) {
+  errors.push("script.js: project assistant consent must link to the Privacy Policy at collection");
+}
+
+for (const stylesheet of activeComponentStylesheets) {
+  const css = fs.readFileSync(path.join(publicDir, stylesheet), "utf8");
+  const fontFamilies = [...css.matchAll(/font-family:\s*([^;]+);/gi)].map((match) => match[1].trim());
+  if (fontFamilies.some((value) => !/^var\(--(?:font-sans|body-font|display-font)\)$/i.test(value))) {
+    errors.push(`${stylesheet}: active font-family must resolve through the design system`);
+  }
+  if (/border-radius:\s*(?:0|\d+(?:\.\d+)?(?:px|rem|em)|50%)(?:\s*!important)?\s*;/i.test(css)) {
+    errors.push(`${stylesheet}: active border radius must resolve through the design system`);
+  }
+  if (/box-shadow:\s*(?:none|inset|0|\d)/i.test(css)) {
+    errors.push(`${stylesheet}: active box shadow must resolve through the design system`);
+  }
+  if (/--(?:max|radius|shadow):/i.test(css)) {
+    errors.push(`${stylesheet}: legacy global design token is still declared`);
+  }
+}
+
+const systemReference = fs.readFileSync(path.join(publicDir, "design-system", "index.html"), "utf8");
+if (!/name="robots"\s+content="[^"]*noindex/i.test(systemReference)) {
+  errors.push("design-system/index.html: internal visual QA route must remain noindex");
+}
+if (!systemReference.includes(canonicalCompanySocialImage) && /property="og:image"/i.test(systemReference)) {
+  errors.push("design-system/index.html: internal visual QA route must not introduce a second company social image");
 }
 
 if (errors.length) {

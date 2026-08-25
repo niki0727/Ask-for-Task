@@ -289,11 +289,11 @@
         <form class="contact-form" id="contact-form">
           <label for="contact-name">
             Name
-            <input id="contact-name" name="name" autocomplete="name" required />
+            <input id="contact-name" name="name" autocomplete="name" maxlength="160" required />
           </label>
           <label for="contact-email">
             Email
-            <input id="contact-email" name="email" type="email" autocomplete="email" required />
+            <input id="contact-email" name="email" type="email" autocomplete="email" maxlength="254" required />
           </label>
           <label for="contact-topic">
             Topic
@@ -310,7 +310,7 @@
           </label>
           <label for="contact-message">
             Message
-            <textarea id="contact-message" name="message" rows="5" required></textarea>
+            <textarea id="contact-message" name="message" rows="5" maxlength="4000" required></textarea>
           </label>
           <label class="consent" for="contact-consent">
             <input id="contact-consent" name="consent" type="checkbox" required />

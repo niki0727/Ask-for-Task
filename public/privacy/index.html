@@ -24,8 +24,9 @@
   <meta name="twitter:image" content="https://askfortask.co.uk/assets/askfortask-social.png">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="icon" href="/assets/a4t-mark-soft.svg?v=20260718" type="image/svg+xml">
-  <link rel="stylesheet" href="/a4t-evolution-20260724.css?v=20260823-perf-v2">
-  <link rel="stylesheet" href="/a4t-polish-20260805.css?v=20260824-trust-v1">
+  <link rel="stylesheet" href="/a4t-system.css?v=20260825-system-v4">
+  <link rel="stylesheet" href="/a4t-evolution-20260724.css?v=20260825-system-v4">
+  <link rel="stylesheet" href="/a4t-polish-20260805.css?v=20260825-system-v4">
 </head>
 <body class="legal-page privacy-page">
   <header class="nav">
@@ -63,7 +64,7 @@
         <h3>Product support</h3>
         <p>Support requests for Pinglo or another Ask for Task service may include your contact details, the product involved, a description of the issue, and information needed to investigate it. Please do not send passwords, payment information, identity documents, or another person’s private information unless a secure route has been agreed.</p>
         <h3>Security and operational logs</h3>
-        <p>Cloudflare may process technical request information such as an IP address, request time, requested path, browser or network information, and security events to deliver and protect the website. Ask for Task application logs are designed not to include submitted names, email addresses, form messages, CV content, or full partner destinations.</p>
+        <p>Cloudflare may process technical request information such as an IP address, request time, requested path, browser or network information, and security events to deliver and protect the website. To limit repeated form submissions, the Worker converts the connecting IP address into a one-way hash and stores only that hash, the form route, a short time window, and a request count. Ask for Task application logs are designed not to include submitted names, email addresses, form messages, CV content, or full partner destinations.</p>
         <h3>Outbound partner-link requests</h3>
         <p>When a controlled partner or portfolio link is requested, our first-party counter stores only the approved partner slug, a controlled source-page label, the UTC date, and an aggregate request count. It does not create a visitor ID or store an IP address, name, email address, fingerprint, or browsing profile. Bots and link scanners may also be counted, so these figures are requests rather than guaranteed human visits.</p>
       </section>
@@ -98,6 +99,7 @@
           <li><strong>Reviews:</strong> normally up to 24 months after submission or the latest contact, with approved publication records retained while the review remains in use.</li>
           <li><strong>Professional profiles and CV information:</strong> normally up to 12 months after the latest contact unless a working relationship begins, deletion is requested sooner, or longer retention is legally required.</li>
           <li><strong>Outbound partner-link aggregate counts:</strong> up to 24 months, after which older daily totals are deleted.</li>
+          <li><strong>Form rate-limit records:</strong> short-lived hashed network keys normally expire within 30 minutes and are removed by scheduled cleanup.</li>
           <li><strong>Security and operational logs:</strong> for the period provided by the configured Cloudflare logging and security services, or longer where a specific incident must be investigated or a legal requirement applies.</li>
         </ul>
         <p>Scheduled database cleanup removes expired records. Records connected to an active contract, approved review in use, legal duty, complaint, or claim can be placed on retention hold and are not removed by the ordinary schedule.</p>
@@ -105,7 +107,7 @@
 
       <section>
         <h2>How information is protected</h2>
-        <p>Public forms use encrypted transport, request-size limits, server-side validation, parameterised database statements, restricted file types, and no-store responses. Website security headers restrict framing, executable sources, and unnecessary permissions. Access is limited to people and providers who need the information for the stated purpose.</p>
+        <p>Public forms use encrypted transport, short-window submission limits, request-size limits, server-side validation, parameterised database statements, restricted file types, and no-store responses. Website security headers restrict framing, executable sources, and unnecessary permissions. Access is limited to people and providers who need the information for the stated purpose.</p>
         <p>No internet service can promise absolute security. If you believe personal data or a service may be at risk, contact <a href="mailto:admin@askfortask.co.uk?subject=Security%20or%20privacy%20concern">admin@askfortask.co.uk</a>.</p>
       </section>
 
@@ -128,7 +130,7 @@
       <aside class="legal-related" aria-labelledby="privacy-related-title"><h2 id="privacy-related-title">Related information</h2><div><a href="/cookies/">Cookies and Analytics</a><a href="/safety/">Trust and Standards</a><a href="/terms/">Terms of Use</a><a href="/faq/">Frequently asked questions</a><a href="/contact/?topic=Privacy%20request">Make a privacy request</a></div></aside>
     </article>
   </main>
-  <footer class="site-footer"><div class="container footer-inner"><div class="footer-company"><strong>ASK FOR TASK LTD</strong><span>ASK FOR TASK LTD is a company registered in England and Wales. Company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.</span></div><nav class="footer-links" aria-label="Footer links"><a href="/services/">Services</a><a href="/brand-development/">Brand development</a><a href="/ventures/">Work</a><a href="/reviews/">Reviews</a><a href="/professionals/">Join projects</a><a href="/about/">About</a><a href="/history/">History</a><a href="/safety/">Trust &amp; standards</a><a href="/privacy/">Privacy</a><a href="/cookies/">Cookies</a><a href="/faq/">FAQ</a><a href="/terms/">Terms</a></nav></div><div class="container footer-meta"><a href="tel:+447404810279">+44 7404 810279</a><a href="mailto:admin@askfortask.co.uk">admin@askfortask.co.uk</a><a href="https://find-and-update.company-information.service.gov.uk/company/14697408" rel="noopener noreferrer">Company no. 14697408 &nearr;</a><a href="/go/nikita-linkedin?source=privacy" rel="noopener noreferrer">Nikita Piazenko on LinkedIn &nearr;</a><span>Replies within 48 hours</span></div></footer>
-  <script src="/script.js?v=20260824-trust-v1"></script>
+  <footer class="site-footer"><div class="container footer-inner"><div class="footer-company"><strong>ASK FOR TASK LTD</strong><span>ASK FOR TASK LTD is a company registered in England and Wales. Company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.</span></div><nav class="footer-links" aria-label="Footer links"><a href="/services/">Services</a><a href="/brand-development/">Brand development</a><a href="/ventures/">Work</a><a href="/reviews/">Reviews</a><a href="/professionals/">Join projects</a><a href="/about/">About</a><a href="/history/">History</a><a href="/safety/">Trust &amp; standards</a><a href="/privacy/">Privacy</a><a href="/cookies/">Cookies</a><a href="/faq/">FAQ</a><a href="/terms/">Terms</a></nav></div><div class="container footer-meta"><a href="tel:+447404810279">+44 7404 810279</a><a href="mailto:admin@askfortask.co.uk">admin@askfortask.co.uk</a><a href="https://find-and-update.company-information.service.gov.uk/company/14697408" rel="noopener noreferrer">Company no. 14697408 &nearr;</a><a href="/go/nikita-linkedin?source=privacy" rel="noopener noreferrer">Nikita Piazenko on LinkedIn &nearr;</a><span>Usually replies within two business days</span></div></footer>
+  <script src="/script.js?v=20260824-trust-v2"></script>
 </body>
 </html>

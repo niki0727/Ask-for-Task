@@ -2,6 +2,34 @@
 
 Cloudflare website and Worker for `askfortask.co.uk`.
 
+The deployment source of truth is `public/`, as configured by `wrangler.jsonc`.
+The former root-level HTML, assets, scripts, and older stylesheet stack are
+preserved under `archive/legacy-site/`; they are historical snapshots and are
+not part of the deployed site.
+
+## Visual system
+
+All deployed HTML pages load the visual layers in this order:
+
+1. `public/a4t-system.css` — canonical colour, typography, spacing, shape,
+   motion, and accessibility tokens.
+2. `public/a4t-evolution-20260724.css` — shared layout and component styles.
+3. `public/a4t-polish-20260805.css` — current route-specific refinements.
+
+The dated component filenames are retained to preserve the working site, but
+they must resolve shared values through `a4t-system.css`. `npm run audit`
+rejects missing, reordered, or legacy public stylesheet links.
+
+Canonical brand assets:
+
+- Navigation, favicon, and structured company logo: `public/assets/a4t-mark-soft.svg`.
+- Company-wide social preview: `public/assets/askfortask-social.png`.
+- Case-study and specialist-route social previews may use the relevant verified work image instead of the company card.
+
+The noindex route at `/design-system/` is the internal visual-QA reference for
+tokens, type, actions, proof surfaces, forms, focus states, and responsive
+behaviour. It is deliberately excluded from the sitemap.
+
 This is the public home of ASK FOR TASK LTD: a founder-led managed project delivery company. Pinglo is an owned venture and public app-development case study; DMAR International and other inspectable work provide additional evidence for the services.
 
 ## Preview locally
@@ -61,7 +89,7 @@ The Worker permanently redirects public HTTP traffic to HTTPS, redirects `www` t
 
 ## Contact
 
-The Worker provides three form endpoints:
+The Worker provides three rate-limited form endpoints:
 
 - `/api/contact` validates project enquiries, stores them in D1, and sends the notification through Resend.
 - `/api/reviews` stores submitted reviews for moderation and sends an internal notification. Reviews are never published automatically.
@@ -105,19 +133,13 @@ Example hold:
 npx wrangler d1 execute askfortask_messages --remote --command "UPDATE contact_messages SET retention_hold = 1 WHERE id = 123;"
 ```
 
-## Remaining anti-abuse setup
+## Form anti-abuse controls
 
-The forms use server-side validation, body-size limits, strict content types, honeypots, and restrictive CV checks. Cloudflare Turnstile or a dedicated rate-limiting binding is not configured.
+The forms use server-side validation, body-size limits, strict content types, honeypots, restrictive CV checks, and a D1-backed 15-minute submission limit. Limits are five project enquiries, four reviews, and three professional applications per connecting address and window.
 
-To add Turnstile correctly:
+The Worker hashes the connecting address before writing the rate-limit key. It never stores the raw address in D1. Rate-limit rows expire after 30 minutes and are removed during scheduled retention cleanup. Apply migration `0007_create_form_rate_limits.sql` before deploying the Worker release that enforces these limits.
 
-1. Create a managed Turnstile widget for `askfortask.co.uk` in Cloudflare.
-2. Add the public site key to the three form experiences.
-3. Store the secret with `npx wrangler secret put TURNSTILE_SECRET_KEY`.
-4. Verify each submitted token against Cloudflare Siteverify in the Worker before accepting `/api/contact`, `/api/reviews`, or `/api/professionals`.
-5. Add success, failure, expiry, and unavailable-service tests before deployment.
-
-Do not add placeholder keys or treat a browser-only widget as server protection.
+Turnstile can still be added later if automated abuse persists. A browser widget must not be treated as protection unless every submitted token is also verified server-side.
 
 ## Policy maintenance
 

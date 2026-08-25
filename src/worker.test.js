@@ -16,6 +16,7 @@ function createEnv(overrides = {}) {
     RESEND_API_KEY: "test-key",
     CONTACT_TO: "admin@example.com",
     CONTACT_FROM: "Ask for Task <contact@example.com>",
+    DB: createRecordingDb().binding,
     ...overrides
   };
 }
@@ -30,12 +31,26 @@ function contactRequest(body, init = {}) {
 
 function createRecordingDb() {
   const calls = [];
+  const rateLimitCalls = [];
+  const rateLimits = new Map();
   return {
     calls,
+    rateLimitCalls,
     binding: {
       prepare(sql) {
         return {
           bind(...values) {
+            if (sql.includes("INSERT INTO form_rate_limits")) {
+              rateLimitCalls.push({ sql, values });
+              return {
+                async first() {
+                  const key = values.slice(0, 3).join(":");
+                  const requestCount = (rateLimits.get(key) || 0) + 1;
+                  rateLimits.set(key, requestCount);
+                  return { request_count: requestCount };
+                }
+              };
+            }
             calls.push({ sql, values });
             return { run: async () => ({ success: true }) };
           }
@@ -150,6 +165,9 @@ test("stores and emails a valid contact request", async (t) => {
       prepare() {
         return {
           bind(...values) {
+            if (values.length === 4 && typeof values[2] === "number") {
+              return { first: async () => ({ request_count: 1 }) };
+            }
             boundValues = values;
             return { run: async () => ({ success: true }) };
           }
@@ -185,6 +203,33 @@ test("returns a safe error when the email provider fails", async (t) => {
     ok: false,
     error: "Email provider rejected the message."
   });
+});
+
+test("rate limits repeated contact submissions without storing or emailing the excess request", async (t) => {
+  let emailCount = 0;
+  t.mock.method(globalThis, "fetch", async () => {
+    emailCount += 1;
+    return new Response(JSON.stringify({ id: `email-${emailCount}` }), { status: 202 });
+  });
+
+  const db = createRecordingDb();
+  const env = createEnv({ DB: db.binding });
+  let response;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    response = await worker.fetch(contactRequest(validPayload, {
+      headers: { "cf-connecting-ip": "203.0.113.10" }
+    }), env);
+  }
+
+  assert.equal(response.status, 429);
+  assert.match(response.headers.get("retry-after"), /^\d+$/);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    error: "Too many submissions. Please wait a few minutes and try again."
+  });
+  assert.equal(emailCount, 5);
+  assert.equal(db.calls.filter(({ sql }) => /INSERT INTO contact_messages/.test(sql)).length, 5);
+  assert.equal(db.rateLimitCalls.length, 6);
 });
 
 test("forces HTTPS and the apex host while preserving path and query", async () => {
@@ -542,8 +587,8 @@ test("retention cleanup uses explicit cutoffs and protects held or published rec
 
   await runRetentionCleanup(db, new Date("2026-08-24T12:00:00.000Z"));
 
-  assert.equal(prepared.length, 4);
-  assert.equal(batchStatements.length, 4);
+  assert.equal(prepared.length, 5);
+  assert.equal(batchStatements.length, 5);
   assert.match(prepared[0].sql, /DELETE FROM contact_messages/);
   assert.match(prepared[0].sql, /retention_hold = 0/);
   assert.match(prepared[0].sql, /COALESCE\(retention_reference_at, created_at\) < \?1/);
@@ -554,6 +599,8 @@ test("retention cleanup uses explicit cutoffs and protects held or published rec
   assert.equal(prepared[2].values[0], "2025-08-24T12:00:00.000Z");
   assert.match(prepared[3].sql, /DELETE FROM partner_click_daily/);
   assert.equal(prepared[3].values[0], "2024-08-24");
+  assert.match(prepared[4].sql, /DELETE FROM form_rate_limits/);
+  assert.equal(prepared[4].values[0], 1787572800);
 });
 
 test("does not expose retention cleanup as a public API", async () => {

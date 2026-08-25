@@ -491,12 +491,12 @@ const createProjectAssistant = () => {
   const renderContactStep = () => {
     assistantBody.innerHTML = `
       <h3>Where should we reply?</h3>
-      <p>We will review the outline and reply within 48 hours with questions or a proposed first stage.</p>
+      <p>We will review the outline and usually reply within two business days with questions or a proposed first stage.</p>
       <form class="project-assistant-form" data-assistant-form>
-        <label class="project-assistant-field" for="assistant-name">Name<input id="assistant-name" name="name" autocomplete="name" required></label>
-        <label class="project-assistant-field" for="assistant-email">Email<input id="assistant-email" name="email" type="email" autocomplete="email" required></label>
+        <label class="project-assistant-field" for="assistant-name">Name<input id="assistant-name" name="name" autocomplete="name" maxlength="160" required></label>
+        <label class="project-assistant-field" for="assistant-email">Email<input id="assistant-email" name="email" type="email" autocomplete="email" maxlength="254" required></label>
         <label class="form-honeypot" for="assistant-website" aria-hidden="true">Website<input id="assistant-website" name="website" tabindex="-1" autocomplete="off"></label>
-        <label class="consent" for="assistant-consent"><input id="assistant-consent" name="consent" type="checkbox" required><span>I agree that Ask for Task may use these details to respond to my enquiry.</span></label>
+        <label class="consent" for="assistant-consent"><input id="assistant-consent" name="consent" type="checkbox" required><span>I agree that Ask for Task may use these details to respond to my enquiry. Read our <a href="/privacy/">Privacy Policy</a>.</span></label>
         <button class="button button-primary" type="submit">Send my project</button>
         <p class="project-assistant-status" data-assistant-status aria-live="polite"></p>
       </form>
@@ -566,7 +566,7 @@ const createProjectAssistant = () => {
     if (complete) {
       assistantSummary.hidden = true;
       assistantBody.innerHTML = `
-        <div class="project-assistant-success"><span aria-hidden="true">Sent</span><h3>Thank you. We have your project outline.</h3><p>We will review it and reply to your email within 48 hours.</p><button class="button button-secondary" type="button" data-assistant-reset>Share another idea</button></div>
+        <div class="project-assistant-success"><span aria-hidden="true">Sent</span><h3>Thank you. We have your project outline.</h3><p>We will review it and usually reply within two business days.</p><button class="button button-secondary" type="button" data-assistant-reset>Share another idea</button></div>
       `;
       assistantBody.querySelector("[data-assistant-reset]").addEventListener("click", resetAssistant);
       return;

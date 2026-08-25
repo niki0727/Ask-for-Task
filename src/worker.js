@@ -55,6 +55,12 @@ export const PARTNER_SOURCE_PAGES = new Set([
 const MAX_CV_BYTES = 5 * 1024 * 1024;
 const MAX_APPLICATION_BODY_BYTES = 7 * 1024 * 1024;
 const MAX_JSON_BODY_BYTES = 32 * 1024;
+const FORM_RATE_LIMIT_WINDOW_SECONDS = 15 * 60;
+const FORM_RATE_LIMITS = Object.freeze({
+  contact: 5,
+  reviews: 4,
+  professionals: 3
+});
 const CONTACT_REGIONS = new Set([
   "United Kingdom",
   "European Union",
@@ -111,8 +117,11 @@ const REVIEW_RELATIONSHIPS = new Set([
   "Other"
 ]);
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: jsonHeaders });
+function json(data, status = 200, additionalHeaders = {}) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...jsonHeaders, ...additionalHeaders }
+  });
 }
 
 function withSecurityHeaders(response) {
@@ -258,6 +267,74 @@ function isValidEmail(email) {
 
 function isMultipartContentType(contentType) {
   return /^multipart\/form-data\s*;[^;]*boundary=/i.test(contentType);
+}
+
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export async function checkSubmissionRateLimit(request, db, route, reference = new Date()) {
+  const limit = FORM_RATE_LIMITS[route];
+  if (!limit) throw new TypeError("A valid form route is required.");
+  if (!db) throw new Error("DB binding is required for form rate limiting.");
+
+  const referenceSeconds = Math.floor(reference.getTime() / 1000);
+  if (!Number.isFinite(referenceSeconds)) {
+    throw new TypeError("A valid rate-limit reference date is required.");
+  }
+
+  const clientAddress = request.headers.get("cf-connecting-ip") || "unavailable";
+  const keyHash = await sha256Hex(`${route}\n${clientAddress}`);
+  const windowStartedAt = Math.floor(referenceSeconds / FORM_RATE_LIMIT_WINDOW_SECONDS)
+    * FORM_RATE_LIMIT_WINDOW_SECONDS;
+  const expiresAt = windowStartedAt + (FORM_RATE_LIMIT_WINDOW_SECONDS * 2);
+  const result = await db.prepare(
+    `INSERT INTO form_rate_limits (
+       key_hash, route, window_started_at, request_count, expires_at
+     ) VALUES (?1, ?2, ?3, 1, ?4)
+     ON CONFLICT(key_hash, route, window_started_at)
+     DO UPDATE SET
+       request_count = request_count + 1,
+       expires_at = excluded.expires_at
+     RETURNING request_count`
+  )
+    .bind(keyHash, route, windowStartedAt, expiresAt)
+    .first();
+
+  const requestCount = Number(result?.request_count);
+  if (!Number.isInteger(requestCount) || requestCount < 1) {
+    throw new Error("Form rate limit did not return a valid request count.");
+  }
+
+  return {
+    allowed: requestCount <= limit,
+    limit,
+    remaining: Math.max(0, limit - requestCount),
+    retryAfter: Math.max(1, (windowStartedAt + FORM_RATE_LIMIT_WINDOW_SECONDS) - referenceSeconds)
+  };
+}
+
+async function enforceSubmissionRateLimit(request, env, route) {
+  if (!env.DB) {
+    return json({ ok: false, error: "This form is temporarily unavailable." }, 503);
+  }
+
+  try {
+    const result = await checkSubmissionRateLimit(request, env.DB, route);
+    if (result.allowed) return null;
+
+    return json(
+      { ok: false, error: "Too many submissions. Please wait a few minutes and try again." },
+      429,
+      { "retry-after": String(result.retryAfter) }
+    );
+  } catch (error) {
+    logTechnicalError(`${route}_rate_limit_failed`, error);
+    return json({ ok: false, error: "This form is temporarily unavailable." }, 503);
+  }
 }
 
 export function validateContactPayload(payload) {
@@ -636,6 +713,7 @@ export async function runRetentionCleanup(db, reference = new Date()) {
   const enquiryCutoff = subtractUtcMonths(reference, 24).toISOString();
   const professionalCutoff = subtractUtcMonths(reference, 12).toISOString();
   const partnerCutoff = subtractUtcMonths(reference, 24).toISOString().slice(0, 10);
+  const rateLimitCutoff = Math.floor(reference.getTime() / 1000);
 
   return db.batch([
     db.prepare(
@@ -660,7 +738,11 @@ export async function runRetentionCleanup(db, reference = new Date()) {
     db.prepare(
       `DELETE FROM partner_click_daily
        WHERE click_date < ?1`
-    ).bind(partnerCutoff)
+    ).bind(partnerCutoff),
+    db.prepare(
+      `DELETE FROM form_rate_limits
+       WHERE expires_at < ?1`
+    ).bind(rateLimitCutoff)
   ]);
 }
 
@@ -728,6 +810,9 @@ async function handleRequest(request, env) {
       if (request.method !== "POST") {
         return json({ ok: false, error: "Method not allowed." }, 405);
       }
+
+      const rateLimitResponse = await enforceSubmissionRateLimit(request, env, "contact");
+      if (rateLimitResponse) return rateLimitResponse;
 
       let payload;
       try {
@@ -819,9 +904,8 @@ async function handleRequest(request, env) {
         return json({ ok: false, error: "Method not allowed." }, 405);
       }
 
-      if (!env.DB) {
-        return json({ ok: false, error: "Reviews are temporarily unavailable." }, 503);
-      }
+      const rateLimitResponse = await enforceSubmissionRateLimit(request, env, "reviews");
+      if (rateLimitResponse) return rateLimitResponse;
 
       let payload;
       try {
@@ -945,6 +1029,9 @@ async function handleRequest(request, env) {
       if (request.method !== "POST") {
         return json({ ok: false, error: "Method not allowed." }, 405);
       }
+
+      const rateLimitResponse = await enforceSubmissionRateLimit(request, env, "professionals");
+      if (rateLimitResponse) return rateLimitResponse;
 
       if (!isMultipartContentType(request.headers.get("content-type") || "")) {
         return json({ ok: false, error: "Content-Type must be multipart/form-data." }, 415);
