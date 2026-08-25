@@ -1,5 +1,12 @@
 # Decision log
 
+## 25 August 2026 — Deploy the consolidated visual system
+
+- **Decision:** Deploy the complete visual-system release candidate from commit `4c30a7a` to the production Ask for Task Worker.
+- **Reason:** Nikita explicitly approved deployment after asking whether the Creative Director had implemented the audit rather than only reporting it. Automated, dry-run, source, desktop, and mobile checks confirmed that the audit actions were implemented.
+- **Effect:** Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64` is live. The canonical system layer, internal noindex reference, accessibility corrections, and active-source consolidation are now customer-facing. Future production changes still require explicit approval.
+- **Source:** User instruction and Cloudflare deployment output, 25 August 2026.
+
 ## 25 August 2026 — Complete the visual system and archive the duplicate site
 
 - **Decision:** Finish every action in the visual-system audit, preserve the former root site under `archive/legacy-site/`, keep `public/` as the only active source, and prepare the result for a separately authorised production deployment.

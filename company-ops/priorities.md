@@ -25,8 +25,8 @@ Last updated: 25 August 2026 (Europe/Athens)
 - **Owner:** Nikita
 - **Status:** Active — green/amber
 - **Outcome:** Maintain a credible, secure lead-generation website with verified release checks.
-- **Current position:** The 24 August trust remediation remains live as Worker version `30d3f55e-65b8-4965-91dd-8641dd953ab4`. The full 25 August visual-system release candidate is complete locally: the active source uses one enforced system vocabulary, the duplicate root site is preserved in a recoverable archive, a noindex visual-QA route is present, and automated plus desktop/mobile browser checks pass. No visual-system deployment has occurred.
-- **Next action:** Explicitly approve or reject production deployment of the verified visual-system release candidate. Continue monitoring live submissions and Worker errors; Turnstile remains a later option only if abuse evidence changes.
+- **Current position:** The 25 August visual-system consolidation is live as Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64`. The active source uses one enforced system vocabulary, the duplicate root site is preserved in a recoverable archive, the noindex visual-QA route is live, and automated plus desktop/mobile checks pass.
+- **Next action:** Monitor customer-facing behaviour, submissions, and Worker errors. Treat future design changes as token/component updates rather than new override layers; Turnstile remains a later option only if abuse evidence changes.
 - **Success measures:** Checks remain green, intentional changes are committed, and no production action occurs without approval.
 
 ## Parking lot

@@ -14,7 +14,7 @@ As of: 25 August 2026 (Europe/Athens)
 | Visual-production outreach | Amber | 5 sent on 23 Aug; 20 first touches scheduled, including prospects 26–30 on 25 Aug | Measure direct vs routed exposure and production ownership | Agency ownership and routed addresses |
 | Writing outreach | Amber | 5 sent on 23 Aug; 5 first touches scheduled | Measure response to contained proof offers | Internal marketing ownership and routed addresses |
 | Conversion control | Red | First substantive human reply is negative; no positive reply, conversation, proposal or win | Review each cohort after five UK working days and enforce suppression | Positioning, sender credibility, route quality, offer size and contact tolerance |
-| Website and Worker | Green | Trust remediation remains live; the complete visual-system release candidate passes 36 tests, the 23-page audit, desktop/mobile browser QA, contrast and target checks, and a Wrangler dry run | Explicitly approve or reject production deployment | Real-user behaviour and Search Console coverage remain unverified |
+| Website and Worker | Green | Trust remediation and visual-system consolidation are live as Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64`; automated and live custom-domain checks pass | Monitor live behaviour and preserve the canonical system | Real-user behaviour and Search Console coverage remain unverified |
 
 ## Known delivery facts
 
@@ -50,6 +50,15 @@ As of: 25 August 2026 (Europe/Athens)
 ## Decisions needed
 
 1. When to schedule the recurring weekly company-report preparation, if an automated cadence is desired.
+
+## 25 August 2026 — Visual-system release deployed
+
+- **Delivery state:** Deployed and live-verified.
+- **Production version:** `2cfc9a0b-ea27-43dc-8398-543ca0becb64`.
+- **Release evidence:** `npm run check` passed 36 tests and the audit of 23 HTML pages / 20 indexable routes. Wrangler read 114 production assets and deployed 26 new or modified assets.
+- **Live verification:** The homepage, contact, photography, DMAR case study, internal design-system reference, and canonical system stylesheet returned HTTP 200 with security headers present. Every checked page loaded the canonical system layer. Desktop and 390px mobile checks found one H1, no horizontal overflow, the expected mobile menu, no missing visible images, and no visible mobile target below 44px.
+- **Source control note:** Production was deployed from commit `4c30a7a`; `origin/master` remains at `289c84f` until a separate push is authorised.
+- **Next action:** Owner: Nikita Piazenko. Monitor customer-facing behaviour and decide whether to authorise pushing commit `4c30a7a` to the connected GitHub branch.
 
 ## 24 August 2026 — Baseline website trust and quality audit
 

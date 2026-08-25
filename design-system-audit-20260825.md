@@ -1,9 +1,9 @@
 # ASK FOR TASK — visual language audit and minimal design system
 
-**Status:** Fully implemented and verified locally; deployment approval pending
+**Status:** Implemented, deployed, and live-verified
 **Audit date:** 25 August 2026 (Europe/Athens)
 **Scope:** Repository source, public asset inventory, active local render at desktop and 390px mobile widths
-**Constraint:** The implementation does not change the live website or production configuration until a separate deployment is authorised.
+**Release:** Nikita Piazenko authorised production deployment on 25 August 2026. Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64` is live.
 
 ## Executive direction
 
@@ -181,11 +181,11 @@ No new illustration or icon library is required for the first system pass. The e
 3. **Complete:** `public/assets/a4t-mark-soft.svg` is enforced for navigation, favicon, and structured company-logo contexts; `public/assets/askfortask-social.png` is the canonical company social card. Active font declarations resolve through the shared font stack.
 4. **Complete:** `/design-system/` is a noindex internal visual-QA route covering colour, type, actions, evidence components, forms, focus states, dark surfaces, and responsive layouts.
 5. **Complete:** Automated checks, desktop and mobile browser checks, computed contrast checks, image checks, heading checks, overflow checks, touch-target checks, and the Cloudflare dry run pass.
-6. **Complete locally:** The former root site, assets, and its uncommitted homepage hardening work are preserved under `archive/legacy-site/`. `public/` is the only deployment source. Production deployment remains the single pending action and requires explicit approval.
+6. **Complete:** The former root site, assets, and its uncommitted homepage hardening work are preserved under `archive/legacy-site/`. `public/` is the only deployment source, and the consolidated release is live.
 
 ## Decision boundary
 
-The current light blue/lime public direction is the approved company baseline, with dark navy retained as a controlled variant. The complete design-system release candidate is implemented and verified locally. No production deployment or delivery date is authorised by this document.
+The current light blue/lime public direction is the approved company baseline, with dark navy retained as a controlled variant. The complete design system is implemented and live. Future production changes still require separate approval.
 
 ## 25 August 2026 implementation record
 
@@ -208,4 +208,11 @@ The current light blue/lime public direction is the approved company baseline, w
 - Archived the complete former root site under `archive/legacy-site/`, preserving its uncommitted root-homepage hardening changes and eliminating the duplicate active source tree.
 - Final automated verification: 36 tests pass; the audit passes for 23 HTML pages and 20 indexable routes; `git diff --check` passes; and the Cloudflare dry run reads 114 public assets successfully.
 - Final browser verification: homepage, design-system reference, contact, photography, and DMAR case study pass at 1280px desktop and 390px mobile with one H1, no horizontal overflow, no missing images, no computed WCAG contrast failures, and no active target below 44px. The mobile menu is present on every checked route.
-- **Pending:** Explicit production deployment approval. No live change has occurred.
+- **Deployed:** Nikita Piazenko authorised the production release on 25 August 2026. Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64` is live.
+
+## 25 August 2026 production verification
+
+- The apex homepage, contact, photography, DMAR case study, internal design-system reference, and canonical system stylesheet returned HTTP 200 with HSTS and CSP present.
+- All checked pages loaded `a4t-system.css`; the internal reference remained `noindex, nofollow`.
+- The live 1280px homepage used the canonical canvas and action colours, contained one H1, loaded all visible images, and had no horizontal overflow.
+- The live 390px homepage contained one H1, showed the collapsed menu, had no horizontal overflow, and had no visible interactive target below 44px. The off-screen NK Sports lazy image returned HTTP 200 when checked directly.

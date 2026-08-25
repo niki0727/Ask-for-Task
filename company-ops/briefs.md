@@ -22,5 +22,5 @@ Last updated: 25 August 2026 (Europe/Athens)
 - **Out of scope without explicit approval:** Production deployment, remote D1 migrations, DNS changes, new secrets, or deletion of live data.
 - **Primary record:** `README.md` plus the repository code and tests.
 - **Owner:** Nikita
-- **Current milestone:** Trust remediation is live as Worker version `30d3f55e-65b8-4965-91dd-8641dd953ab4`. The complete 25 August visual-system release candidate passes automated, desktop/mobile, contrast, touch-target, and Cloudflare dry-run checks but is not deployed; production deployment requires explicit approval.
+- **Current milestone:** The trust and visual-system consolidation is live as Worker version `2cfc9a0b-ea27-43dc-8398-543ca0becb64`. Automated, desktop/mobile, contrast, touch-target, asset, and custom-domain checks pass.
 - **Key controls:** Run `npm run check` and `npx wrangler deploy --dry-run` before an authorised release. D1-backed short-window limits are the current enforceable anti-abuse control; store only a route-scoped SHA-256 client-address hash and delete expired records. Consider Turnstile later only if observed abuse justifies the added browser challenge.
