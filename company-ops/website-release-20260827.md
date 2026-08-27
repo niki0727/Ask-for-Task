@@ -29,5 +29,33 @@ documents retain the original pre-release recommendation as historical context.
 
 ## Delivery state
 
-Approved for commit, push, and deployment; not yet reported as deployed.
-Production verification and release identifiers will be recorded after deployment.
+Deployed and live-verified on 27 August 2026.
+
+- Website commit: `e1c55e3` (`feat: launch A4T Studio positioning and audited website`).
+- Pushed to `origin/master` in `niki0727/Ask-for-Task`.
+- Cloudflare Worker: `askfortask`.
+- Deployment version: `e7e57f7e-69f6-468c-9480-6e689903064e`.
+- Previous version: `2cfc9a0b-ea27-43dc-8398-543ca0becb64`.
+- Wrangler read 112 assets and uploaded 30 new or changed files.
+- Live domain: https://askfortask.co.uk/
+
+## Live verification
+
+- All 20 HTML pages match the release files byte-for-byte. Public and private
+  utility pages return 200; the custom error page returns 404.
+- All 12 retired page aliases return 301 with the correct target and query.
+- `/404`, `/404/`, `/404.html`, and a nonexistent path return 404 without a loop.
+- `www` redirects to the apex domain. Security headers are present on all checked
+  HTML responses, and the new social image returns 200 with the correct MIME type.
+- Contact configuration reports Resend, sender, recipient, and database configured.
+  No real contact, review, or professional application was submitted; this confirms
+  configuration, not end-to-end receipt of a new email.
+- Homepage, About timeline, and Contact pass live layout checks at 1440x900 and
+  390x844 without horizontal overflow or missing loaded images in the viewport.
+  The timeline disclosure opens from its anchor; mobile Contact was inspected visually.
+
+## Next action
+
+Owner: Nikita Piazenko. Complete the manual name check and monitor genuine
+enquiries and Worker errors. No next release date is committed. Search Console,
+Google profile, DNS, database contents, and external social profiles were not changed.
