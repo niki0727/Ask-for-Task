@@ -9,6 +9,68 @@
   --signal-yellow: var(--color-yellow);
 }
 
+/* Conversion details introduced during the August 2026 offer review. */
+.home-entry-offer {
+  border-block: 1px solid var(--line, #d8ddd8);
+  background: #f4f7ff;
+}
+
+.home-entry-offer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+  gap: clamp(32px, 7vw, 112px);
+  align-items: center;
+  padding-block: clamp(56px, 8vw, 104px);
+}
+
+.home-entry-offer h2 {
+  max-width: 13ch;
+  margin: 12px 0 0;
+}
+
+.home-entry-offer p {
+  max-width: 62ch;
+  margin-top: 0;
+}
+
+.photo-package-price {
+  width: fit-content;
+  margin: 18px 0 8px;
+  padding: 6px 10px;
+  border: 1px solid currentColor;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.contact-optional-details {
+  border-block: 1px solid var(--line, #d8ddd8);
+  padding-block: 6px;
+}
+
+.contact-optional-details > summary {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.contact-optional-details[open] > summary {
+  margin-bottom: 18px;
+}
+
+@media (max-width: 720px) {
+  .home-entry-offer-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .home-entry-offer h2 {
+    max-width: none;
+  }
+}
+
 /* Trust routes: structured enquiries, client case studies, and moderated reviews */
 .contact-form-row {
   display: grid;
@@ -2548,6 +2610,32 @@ dd {
 
 .content-disclosure-body p {
   margin: 0;
+}
+
+#company-timeline .founder-timeline {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+
+#company-timeline .founder-timeline::before {
+  inset: 25px auto 25px 25px;
+  width: 1px;
+  height: auto;
+}
+
+#company-timeline .founder-timeline li {
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+}
+
+#company-timeline .founder-timeline li > div {
+  border: 0;
+  padding: var(--space-1) 0 0;
+}
+
+#company-timeline .founder-timeline li:last-child {
+  padding-bottom: 0;
 }
 
 .founder-story-copy .content-disclosure-body p:last-child {

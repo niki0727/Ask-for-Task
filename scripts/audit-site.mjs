@@ -1,14 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { PARTNER_DESTINATIONS, PARTNER_SOURCE_PAGES } from "../src/worker.js";
+import { CONSOLIDATED_PAGES, PARTNER_DESTINATIONS, PARTNER_SOURCE_PAGES } from "../src/worker.js";
 
 const publicDir = path.resolve("public");
 const origin = "https://askfortask.co.uk";
 const errors = [];
 const titlesByValue = new Map();
 const descriptionsByValue = new Map();
-const statutorySentence = "ASK FOR TASK LTD is a company registered in England and Wales. Company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.";
+const statutorySentence = "A4T Studio is the trading name of ASK FOR TASK LTD, registered in England and Wales under company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.";
 const requiredFooterRoutes = ["/safety/", "/privacy/", "/cookies/", "/faq/", "/terms/"];
 const privacyAtCollectionRoutes = new Set(["/contact/", "/professionals/", "/reviews/"]);
 const requiredStylesheetOrder = [
@@ -25,7 +25,7 @@ const legacyPublicStylesheets = [
   "/a4t-professional-20260724.css",
 ];
 const canonicalBrandMark = "/assets/a4t-mark-soft.svg";
-const canonicalCompanySocialImage = "https://askfortask.co.uk/assets/askfortask-social.png";
+const canonicalCompanySocialImage = "https://askfortask.co.uk/assets/a4t-studio-social.png";
 const activeComponentStylesheets = [
   "a4t-evolution-20260724.css",
   "a4t-polish-20260805.css",
@@ -70,6 +70,17 @@ function hasAccessibleName(tag, inner = "") {
 const htmlFiles = walk(publicDir).filter((file) => file.endsWith(".html")).sort();
 const routes = new Map(htmlFiles.map((file) => [routeFor(file), file]));
 const indexableRoutes = new Set();
+
+for (const [retired, destination] of Object.entries(CONSOLIDATED_PAGES)) {
+  if (routes.has(retired)) errors.push(`${retired}: retired content must stay outside public/`);
+  const target = new URL(destination, origin);
+  const targetFile = routes.get(target.pathname);
+  if (!targetFile) {
+    errors.push(`${retired}: redirect destination does not exist (${destination})`);
+  } else if (target.hash && !fs.readFileSync(targetFile, "utf8").includes(`id="${target.hash.slice(1)}"`)) {
+    errors.push(`${retired}: redirect destination anchor does not exist (${destination})`);
+  }
+}
 
 for (const file of htmlFiles) {
   const route = routeFor(file);
@@ -144,6 +155,18 @@ for (const file of htmlFiles) {
     recordValue(descriptionsByValue, descriptions[0]?.[1], label);
   }
 
+  for (const field of ["og:title", "twitter:title", "og:description", "twitter:description"]) {
+    const value = html.match(new RegExp(`<meta (?:property|name)="${field}" content="([^"]*)"`, "i"))?.[1];
+    if (noindex && !value) continue;
+    const expected = field.endsWith(":title") ? titles[0] : textContent(descriptions[0]?.[1] || "");
+    if (!value || textContent(value) !== expected) {
+      errors.push(`${label}: ${field} must match the current page title or description`);
+    }
+    if (/\bESG\b|six-month development partnerships/i.test(value || "")) {
+      errors.push(`${label}: ${field} advertises a retired offering`);
+    }
+  }
+
   const headings = [...html.matchAll(/<h1\b[^>]*>([\s\S]*?)<\/h1>/gi)];
   if (headings.length !== 1) errors.push(`${label}: expected one H1, found ${headings.length}`);
   if (/title-full|title-short/.test(headings[0]?.[1] || "")) {
@@ -197,7 +220,14 @@ for (const file of htmlFiles) {
 
   for (const match of html.matchAll(/<script\s+type="application\/ld\+json">([\s\S]*?)<\/script>/gi)) {
     try {
-      JSON.parse(match[1]);
+      const schema = JSON.parse(match[1]);
+      const entities = schema["@graph"] || [schema];
+      for (const entity of entities) {
+        if (entity["@id"] === `${origin}/#organization` && entity.sameAs?.some(url =>
+          /linkedin\.com\/in\/|instagram\.com\/piazenko_nikita|apps\.apple\.com/.test(url))) {
+          errors.push(`${label}: company sameAs must not identify a founder profile or app listing`);
+        }
+      }
     } catch (error) {
       errors.push(`${label}: invalid JSON-LD (${error.message})`);
     }
@@ -259,6 +289,11 @@ for (const file of htmlFiles) {
     }
     const canonicalPath = pathname === "/" ? "/" : `${pathname.replace(/\/+$/, "")}/`;
     if (!routes.has(canonicalPath)) errors.push(`${label}: internal page does not exist (${href})`);
+    const targetFile = routes.get(canonicalPath);
+    const fragment = new URL(href, origin).hash.slice(1);
+    if (targetFile && fragment && !fs.readFileSync(targetFile, "utf8").includes(`id="${decodeURIComponent(fragment)}"`)) {
+      errors.push(`${label}: internal anchor does not exist (${href})`);
+    }
   }
 
   if (!noindex && route !== "/404.html") indexableRoutes.add(route);

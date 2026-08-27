@@ -56,7 +56,6 @@ const projectRoutes = {
   "/services/": ["Brief", "Scope", "Team", "Delivery"],
   "/brand-development/": ["Direction", "Identity", "Build", "Launch", "Develop"],
   "/app-development/": ["Discover", "Design", "Build", "Test", "Launch"],
-  "/design/": ["Brief", "Concepts", "Refine", "Files"],
   "/ventures/": ["Idea", "Route", "Work", "Result"]
 };
 
@@ -204,8 +203,20 @@ if (topicField) {
   const query = new URLSearchParams(window.location.search);
   const requestedTopic = query.get("topic");
   const requestedBrief = query.get("brief");
+  const topicAliases = new Map([
+    ["app development", "Brand, website, or app"],
+    ["website development", "Brand, website, or app"],
+    ["brand development", "Brand, website, or app"],
+    ["graphic design", "Brand, website, or app"],
+    ["project scoping call", "Brand, website, or app"],
+    ["photography package", "Photography or aerial content"],
+    ["drone and aerial content", "Photography or aerial content"],
+    ["business development", "Commercial direction"],
+    ["ghostwriting and copywriting", "Specialist writing"]
+  ]);
+  const requestedOption = topicAliases.get(requestedTopic?.toLowerCase()) || requestedTopic;
   const matchingOption = [...topicField.options].find((option) => (
-    option.value.toLowerCase() === requestedTopic?.toLowerCase()
+    option.value.toLowerCase() === requestedOption?.toLowerCase()
   ));
 
   if (matchingOption) topicField.value = matchingOption.value;
@@ -344,11 +355,10 @@ form?.addEventListener("submit", async (event) => {
 
 const projectAssistantOptions = {
   category: [
-    "A managed project with several parts",
-    "An app or website",
-    "Brand, content, or launch work",
-    "Photography or visual production",
-    "Business, writing, or ESG support",
+    "Brand, website, or app",
+    "Photography or aerial content",
+    "Commercial direction",
+    "Specialist writing",
     "Not sure yet"
   ],
   stage: [
@@ -459,8 +469,7 @@ const createProjectAssistant = () => {
           <option>£1,000–£5,000</option>
           <option>£5,000–£10,000</option>
           <option>£10,000–£25,000</option>
-          <option>£25,000–£50,000</option>
-          <option>Over £50,000 / phased</option>
+          <option>£25,000–£50,000 / phased</option>
         </select></label>
         <label class="project-assistant-field" for="assistant-target-date">Target date (optional)<input id="assistant-target-date" type="date"></label>
       </div>
@@ -491,12 +500,12 @@ const createProjectAssistant = () => {
   const renderContactStep = () => {
     assistantBody.innerHTML = `
       <h3>Where should we reply?</h3>
-      <p>We will review the outline and usually reply within two business days with questions or a proposed first stage.</p>
+      <p>Nikita will reply by the end of the next business day with questions or a proposed first stage.</p>
       <form class="project-assistant-form" data-assistant-form>
         <label class="project-assistant-field" for="assistant-name">Name<input id="assistant-name" name="name" autocomplete="name" maxlength="160" required></label>
         <label class="project-assistant-field" for="assistant-email">Email<input id="assistant-email" name="email" type="email" autocomplete="email" maxlength="254" required></label>
         <label class="form-honeypot" for="assistant-website" aria-hidden="true">Website<input id="assistant-website" name="website" tabindex="-1" autocomplete="off"></label>
-        <label class="consent" for="assistant-consent"><input id="assistant-consent" name="consent" type="checkbox" required><span>I agree that Ask for Task may use these details to respond to my enquiry. Read our <a href="/privacy/">Privacy Policy</a>.</span></label>
+        <label class="consent" for="assistant-consent"><input id="assistant-consent" name="consent" type="checkbox" required><span>I agree that A4T Studio may use these details to respond to my enquiry. Read our <a href="/privacy/">Privacy Policy</a>.</span></label>
         <button class="button button-primary" type="submit">Send my project</button>
         <p class="project-assistant-status" data-assistant-status aria-live="polite"></p>
       </form>
@@ -566,7 +575,7 @@ const createProjectAssistant = () => {
     if (complete) {
       assistantSummary.hidden = true;
       assistantBody.innerHTML = `
-        <div class="project-assistant-success"><span aria-hidden="true">Sent</span><h3>Thank you. We have your project outline.</h3><p>We will review it and usually reply within two business days.</p><button class="button button-secondary" type="button" data-assistant-reset>Share another idea</button></div>
+        <div class="project-assistant-success"><span aria-hidden="true">Sent</span><h3>Thank you. We have your project outline.</h3><p>Nikita will reply by the end of the next business day.</p><button class="button button-secondary" type="button" data-assistant-reset>Share another idea</button></div>
       `;
       assistantBody.querySelector("[data-assistant-reset]").addEventListener("click", resetAssistant);
       return;

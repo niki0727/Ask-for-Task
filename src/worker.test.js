@@ -3,6 +3,7 @@ import test from "node:test";
 
 import worker, {
   makeEmailHtml,
+  CONSOLIDATED_PAGES,
   PARTNER_DESTINATIONS,
   runRetentionCleanup,
   validateContactPayload
@@ -15,7 +16,7 @@ function createEnv(overrides = {}) {
     },
     RESEND_API_KEY: "test-key",
     CONTACT_TO: "admin@example.com",
-    CONTACT_FROM: "Ask for Task <contact@example.com>",
+    CONTACT_FROM: "A4T Studio <contact@example.com>",
     DB: createRecordingDb().binding,
     ...overrides
   };
@@ -268,6 +269,34 @@ test("keeps direct 404 aliases on the error page without a redirect loop", async
   assert.equal(await response.text(), "/__ask-for-task-not-found__");
 });
 
+for (const [oldPath, destination] of Object.entries(CONSOLIDATED_PAGES)) {
+  test(`consolidates ${oldPath} aliases in one hop and preserves queries`, async () => {
+    const stem = oldPath.slice(0, -1);
+    for (const alias of [stem, oldPath, `${stem}.html`, `${oldPath}index.html`]) {
+      for (const method of ["GET", "HEAD"]) {
+        const response = await worker.fetch(
+          new Request(`http://www.askfortask.co.uk${alias}?ref=legacy&topic=Design`, { method }),
+          createEnv()
+        );
+        const expected = new URL(destination, "https://askfortask.co.uk");
+        expected.search = "?ref=legacy&topic=Design";
+        assert.equal(response.status, 301);
+        assert.equal(response.headers.get("location"), expected.href);
+        assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+        const final = await worker.fetch(new Request(expected, { method }), createEnv());
+        assert.equal(final.status, 200);
+        assert.equal(final.headers.get("location"), null);
+      }
+    }
+  });
+}
+
+test("consolidated redirects do not capture unrelated nested paths", async () => {
+  const response = await worker.fetch(new Request("https://askfortask.co.uk/design/unknown/"), createEnv());
+  assert.equal(response.headers.get("location"), null);
+  assert.equal(await response.text(), "/design/unknown/");
+});
+
 test("delegates canonical page requests to static assets", async () => {
   const response = await worker.fetch(
     new Request("https://askfortask.co.uk/about/"),
@@ -335,7 +364,7 @@ test("accepts a valid professional profile with a PDF CV", async (t) => {
   formData.append("consent", "on");
   formData.append(
     "cv",
-    new Blob(["%PDF-1.4\nAsk for Task test CV"], { type: "application/pdf" }),
+    new Blob(["%PDF-1.4\nA4T Studio test CV"], { type: "application/pdf" }),
     "professional-cv.pdf"
   );
 

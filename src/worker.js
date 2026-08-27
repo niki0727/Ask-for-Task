@@ -27,6 +27,12 @@ export const PARTNER_DESTINATIONS = Object.freeze({
   "pulse-point-events": "https://www.instagram.com/pulsepointevents/"
 });
 
+export const CONSOLIDATED_PAGES = Object.freeze({
+  "/design/": "/brand-development/#visual-development",
+  "/history/": "/about/#company-timeline",
+  "/responsible-growth/": "/services/#business-development"
+});
+
 export const PARTNER_SOURCE_PAGES = new Set([
   "404",
   "about",
@@ -73,8 +79,7 @@ const CONTACT_BUDGETS = new Set([
   "£1,000–£5,000",
   "£5,000–£10,000",
   "£10,000–£25,000",
-  "£25,000–£50,000",
-  "Over £50,000 / phased"
+  "£25,000–£50,000 / phased"
 ]);
 const PROFESSIONAL_CATEGORIES = new Set([
   "Brand development",
@@ -84,8 +89,7 @@ const PROFESSIONAL_CATEGORIES = new Set([
   "Writing & editorial",
   "Business & growth",
   "Project delivery & operations",
-  "Drone & aerial content",
-  "Sustainability & ESG"
+  "Drone & aerial content"
 ]);
 const RESPONSIBILITY_LEVELS = new Set([
   "Specialist contributor",
@@ -410,7 +414,7 @@ function escapeHtml(value) {
 
 function makeEmailText({ name, email, topic, region, budget, targetDate, message }) {
   return [
-    "New Ask for Task enquiry",
+    "New A4T Studio enquiry",
     "",
     `Name: ${name}`,
     `Email: ${email}`,
@@ -426,7 +430,7 @@ function makeEmailText({ name, email, topic, region, budget, targetDate, message
 
 export function makeEmailHtml({ name, email, topic, region, budget, targetDate, message }) {
   return `
-    <h2>New Ask for Task enquiry</h2>
+    <h2>New A4T Studio enquiry</h2>
     <p><strong>Name:</strong> ${escapeHtml(name)}</p>
     <p><strong>Email:</strong> ${escapeHtml(email)}</p>
     <p><strong>Topic:</strong> ${escapeHtml(topic || "Not specified")}</p>
@@ -440,7 +444,7 @@ export function makeEmailHtml({ name, email, topic, region, budget, targetDate, 
 
 function makeReviewEmailText(payload) {
   return [
-    "New Ask for Task review",
+    "New A4T Studio review",
     "",
     `Review ID: ${payload.id}`,
     `Name: ${payload.name}`,
@@ -457,7 +461,7 @@ function makeReviewEmailText(payload) {
 
 function makeReviewEmailHtml(payload) {
   return `
-    <h2>New Ask for Task review</h2>
+    <h2>New A4T Studio review</h2>
     <p><strong>Review ID:</strong> ${escapeHtml(payload.id)}</p>
     <p><strong>Name:</strong> ${escapeHtml(payload.name)}</p>
     <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
@@ -472,7 +476,7 @@ function makeReviewEmailHtml(payload) {
 
 function makeProfessionalEmailText(payload) {
   return [
-    "New Ask for Task professional profile",
+    "New A4T Studio professional profile",
     "",
     `Application ID: ${payload.id}`,
     `Name: ${payload.name}`,
@@ -502,7 +506,7 @@ function makeProfessionalEmailHtml(payload) {
     : "Not supplied";
 
   return `
-    <h2>New Ask for Task professional profile</h2>
+    <h2>New A4T Studio professional profile</h2>
     <p><strong>Application ID:</strong> ${escapeHtml(payload.id)}</p>
     <p><strong>Name:</strong> ${escapeHtml(payload.name)}</p>
     <p><strong>Email:</strong> ${escapeHtml(payload.email)}</p>
@@ -526,8 +530,8 @@ async function sendContactEmail(env, payload) {
   }
 
   const to = env.CONTACT_TO || "admin@askfortask.co.uk";
-  const from = env.CONTACT_FROM || "Ask for Task <contact@askfortask.co.uk>";
-  const subject = `New Ask for Task enquiry${payload.topic ? ` - ${payload.topic}` : ""}`;
+  const from = env.CONTACT_FROM || "A4T Studio <contact@askfortask.co.uk>";
+  const subject = `New A4T Studio enquiry${payload.topic ? ` - ${payload.topic}` : ""}`;
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -560,7 +564,7 @@ async function sendProfessionalEmail(env, payload, cvBuffer) {
   }
 
   const to = env.CONTACT_TO || "admin@askfortask.co.uk";
-  const from = env.CONTACT_FROM || "Ask for Task <contact@askfortask.co.uk>";
+  const from = env.CONTACT_FROM || "A4T Studio <contact@askfortask.co.uk>";
   const primaryCategory = payload.categories[0] || "Professional network";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -607,7 +611,7 @@ async function sendReviewEmail(env, payload) {
   }
 
   const to = env.CONTACT_TO || "admin@askfortask.co.uk";
-  const from = env.CONTACT_FROM || "Ask for Task <contact@askfortask.co.uk>";
+  const from = env.CONTACT_FROM || "A4T Studio <contact@askfortask.co.uk>";
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -761,6 +765,15 @@ async function handleRequest(request, env) {
     if (url.hostname === "www.askfortask.co.uk") {
       url.hostname = "askfortask.co.uk";
       redirectToCanonical = true;
+    }
+
+    // Resolve retired page aliases before slash/host redirects to avoid extra hops.
+    const retiredPath = url.pathname.replace(/(?:\/index\.html|\.html|\/)?$/, "/");
+    const destination = CONSOLIDATED_PAGES[retiredPath];
+    if (destination && (request.method === "GET" || request.method === "HEAD")) {
+      const target = new URL(destination, url);
+      target.search = url.search;
+      return Response.redirect(target.toString(), 301);
     }
 
     if (redirectToCanonical && url.pathname.startsWith("/go/")) {

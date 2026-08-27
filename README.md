@@ -1,4 +1,4 @@
-# Ask for Task website
+# A4T Studio website
 
 Cloudflare website and Worker for `askfortask.co.uk`.
 
@@ -23,7 +23,7 @@ rejects missing, reordered, or legacy public stylesheet links.
 Canonical brand assets:
 
 - Navigation, favicon, and structured company logo: `public/assets/a4t-mark-soft.svg`.
-- Company-wide social preview: `public/assets/askfortask-social.png`.
+- Company-wide social preview: `public/assets/a4t-studio-social.png`.
 - Case-study and specialist-route social previews may use the relevant verified work image instead of the company card.
 
 The noindex route at `/design-system/` is the internal visual-QA reference for
@@ -42,10 +42,10 @@ python3 -m http.server 8788 --directory public
 
 Then visit `http://localhost:8788`.
 
-For the Worker API and D1 binding:
+For the Worker API, D1 binding, and canonical/legacy redirects (local bindings):
 
 ```bash
-npx wrangler dev
+npx wrangler dev --local
 ```
 
 Run the Worker tests and the static SEO/content audit:
@@ -53,6 +53,23 @@ Run the Worker tests and the static SEO/content audit:
 ```bash
 npm run check
 ```
+
+## Consolidated routes
+
+The Worker maintains the three retired page routes in `CONSOLIDATED_PAGES`:
+
+- `/design/` redirects to `/brand-development/#visual-development`.
+- `/history/` redirects to `/about/#company-timeline`.
+- `/responsible-growth/` redirects to `/services/#business-development`.
+
+Clean, trailing-slash, `.html`, and `/index.html` variants preserve queries and
+redirect in one hop. Old source is preserved under
+`archive/legacy-site/consolidated-20260827/`, outside the deployed assets.
+Use Wrangler, not the static Python preview, to verify those redirects.
+The site audit checks their destination anchors and keeps retired pages out of
+the sitemap. Share titles and descriptions must match current page metadata.
+When changing an immutable cached stylesheet or script, update its version query
+across every public page.
 
 ## Cloudflare setup
 
@@ -101,7 +118,7 @@ Set these Worker variables/secrets in Cloudflare:
 
 - Secret: `RESEND_API_KEY`
 - Optional variable: `CONTACT_TO=admin@askfortask.co.uk`
-- Optional variable: `CONTACT_FROM=Ask for Task <contact@askfortask.co.uk>`
+- Optional variable: `CONTACT_FROM=A4T Studio <contact@askfortask.co.uk>`
 
 The sending domain used in `CONTACT_FROM` must be verified in Resend.
 
