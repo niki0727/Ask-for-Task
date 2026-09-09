@@ -13,12 +13,13 @@ All deployed HTML pages load the visual layers in this order:
 
 1. `public/a4t-system.css` — canonical colour, typography, spacing, shape,
    motion, and accessibility tokens.
-2. `public/a4t-evolution-20260724.css` — shared layout and component styles.
-3. `public/a4t-polish-20260805.css` — current route-specific refinements.
+2. `public/a4t-components.css` — shared layout, components, and route-specific
+   compositions.
 
-The dated component filenames are retained to preserve the working site, but
-they must resolve shared values through `a4t-system.css`. `npm run audit`
-rejects missing, reordered, or legacy public stylesheet links.
+The former dated layers are preserved under `archive/legacy-site/` rather than
+deployed. Components must resolve shared values through `a4t-system.css`.
+`npm run audit` rejects missing, reordered, additional, or legacy public
+stylesheets.
 
 Canonical brand assets:
 
@@ -68,8 +69,9 @@ redirect in one hop. Old source is preserved under
 Use Wrangler, not the static Python preview, to verify those redirects.
 The site audit checks their destination anchors and keeps retired pages out of
 the sitemap. Share titles and descriptions must match current page metadata.
-When changing an immutable cached stylesheet or script, update its version query
-across every public page.
+All immutable local asset references use a content-derived version. Run
+`npm run version-assets` after changing a stylesheet, script, or file in
+`public/assets/`; `npm run audit` rejects stale versions.
 
 ## Cloudflare setup
 

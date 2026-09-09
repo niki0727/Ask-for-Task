@@ -162,9 +162,11 @@
 
 .dmar-case-hero-visual img {
   width: 100%;
-  height: 100%;
-  min-height: 520px;
-  object-fit: cover;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  object-position: top left;
 }
 
 .dmar-case-hero-visual figcaption {
@@ -842,6 +844,18 @@
   height: 100%;
   object-fit: cover;
   transition: transform var(--motion-emphasis) var(--ease-enter);
+}
+
+.home-work-proof-media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.home-work-proof-media.website-proof-media img {
+  object-fit: contain;
+  object-position: top left;
+  background: var(--paper);
 }
 
 .home-work-proof-media:hover img,
@@ -2204,14 +2218,15 @@ dd {
   object-fit: cover;
 }
 
-.pinglo-case-page .case-hero-visual > img {
+.case-hero-visual.case-website-proof > img {
   height: auto;
   min-height: 0;
   aspect-ratio: 16 / 9;
+  object-fit: contain;
   object-position: top left;
 }
 
-.pinglo-case-page .case-hero-visual {
+.case-hero-visual.case-website-proof {
   align-self: center;
 }
 

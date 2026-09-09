@@ -13,8 +13,7 @@ const requiredFooterRoutes = ["/safety/", "/privacy/", "/cookies/", "/faq/", "/t
 const privacyAtCollectionRoutes = new Set(["/contact/", "/professionals/", "/reviews/"]);
 const requiredStylesheetOrder = [
   "/a4t-system.css",
-  "/a4t-evolution-20260724.css",
-  "/a4t-polish-20260805.css",
+  "/a4t-components.css",
 ];
 const legacyPublicStylesheets = [
   "/styles.css",
@@ -23,12 +22,13 @@ const legacyPublicStylesheets = [
   "/a4t-light-20260723.css",
   "/a4t-refined-20260724.css",
   "/a4t-professional-20260724.css",
+  "/a4t-evolution-20260724.css",
+  "/a4t-polish-20260805.css",
 ];
 const canonicalBrandMark = "/assets/a4t-mark-soft.svg";
 const canonicalCompanySocialImage = "https://askfortask.co.uk/assets/a4t-studio-social.png";
 const activeComponentStylesheets = [
-  "a4t-evolution-20260724.css",
-  "a4t-polish-20260805.css",
+  "a4t-components.css",
 ];
 
 function recordValue(map, value, label) {
@@ -70,6 +70,11 @@ function hasAccessibleName(tag, inner = "") {
 const htmlFiles = walk(publicDir).filter((file) => file.endsWith(".html")).sort();
 const routes = new Map(htmlFiles.map((file) => [routeFor(file), file]));
 const indexableRoutes = new Set();
+const deployedStylesheets = fs.readdirSync(publicDir).filter((file) => file.endsWith(".css")).sort();
+const expectedStylesheets = ["a4t-components.css", "a4t-system.css"];
+if (JSON.stringify(deployedStylesheets) !== JSON.stringify(expectedStylesheets)) {
+  errors.push(`public/: expected only ${expectedStylesheets.join(", ")}; found ${deployedStylesheets.join(", ")}`);
+}
 
 for (const [retired, destination] of Object.entries(CONSOLIDATED_PAGES)) {
   if (routes.has(retired)) errors.push(`${retired}: retired content must stay outside public/`);
@@ -371,6 +376,19 @@ if (/\bwithin 48 hours\b/i.test(clientScript)) {
 }
 if (!/assistant-consent[\s\S]{0,600}?href="\/privacy\/"/i.test(clientScript)) {
   errors.push("script.js: project assistant consent must link to the Privacy Policy at collection");
+}
+
+for (const route of ["/", "/about/", "/ventures/"]) {
+  const html = fs.readFileSync(routes.get(route), "utf8");
+  if (!/<picture>[\s\S]{0,240}?event-dj\.avif[^>]*>[\s\S]{0,240}?event-dj\.jpg/i.test(html)) {
+    errors.push(`${route}: event photography must use the existing AVIF source with JPG fallback`);
+  }
+}
+for (const route of ["/case-studies/pinglo/", "/case-studies/dmar-international/"]) {
+  const html = fs.readFileSync(routes.get(route), "utf8");
+  if (!/<figure\b[^>]*class="[^"]*case-website-proof[^"]*"/i.test(html)) {
+    errors.push(`${route}: case-study interface evidence must use the shared website-proof media role`);
+  }
 }
 
 for (const stylesheet of activeComponentStylesheets) {

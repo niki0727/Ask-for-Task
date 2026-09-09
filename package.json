@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "audit": "node scripts/audit-site.mjs",
+    "version-assets": "node scripts/version-assets.mjs",
+    "audit": "node scripts/version-assets.mjs --check && node scripts/audit-site.mjs",
     "check": "npm test && npm run audit",
     "test": "node --test"
   }
