@@ -1,6 +1,6 @@
 # A4T Studio — current visual language audit
 
-**Status:** Audit complete; no production changes made
+**Status:** P2 findings implemented, deployed, and live-verified
 
 **Audit date:** 9 September 2026, 12:36 Athens
 
@@ -86,3 +86,15 @@ No delivery date is committed. The first two items are bounded, low-risk impleme
 ## Decision boundary
 
 This document is an audit and proposed implementation sequence only. No `public/` file, production setting, database, or deployment was changed during this audit. Any implementation and subsequent deployment require their own explicit instruction and release verification.
+
+## 9 September 2026 implementation and release record
+
+- Nikita Piazenko explicitly authorised implementation and live deployment after the audit.
+- Consolidated the two dated component/route layers into `a4t-components.css`. Deployed pages now load only the canonical token layer and the consolidated component layer; eight historical and unused stylesheets were moved out of `public/` and preserved under `archive/legacy-site/styles-20260909/`.
+- Added the existing AVIF source with JPG fallback to the Home, About, and Ventures event-photography placements.
+- Added shared website-proof roles so Pinglo, DMAR, and supporting website evidence use inspectable 16:9 containment while photography keeps its editorial crop behaviour.
+- Added content-derived versions for local immutable CSS, JavaScript, and asset references. The versioning check now fails before release when a referenced file and its cache key diverge.
+- Extended the static audit to permit only the two active stylesheets and to enforce the event-image and case-proof rules.
+- Verification passed: 40 tests; 20 HTML pages; 17 indexable routes; immutable-version validation; `git diff --check`; local Worker routes, redirects, stylesheets, and AVIF delivery; and the Cloudflare dry run.
+- Commit `ea6b22c` was pushed to `origin/master` and deployed. The active deployment is Worker version `bdc8afad-8313-4385-8d4c-c09c57885346`; the live homepage and consolidated stylesheet exactly match local SHA-256 hashes, all 17 sitemap routes return 200 with the correct asset references, and the retired polish stylesheet returns 404.
+- No D1 migration, form submission, navigation hierarchy change, or recruitment-content change was made. The P3 hierarchy question remains evidence-gated.
