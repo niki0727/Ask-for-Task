@@ -2204,6 +2204,17 @@ dd {
   object-fit: cover;
 }
 
+.pinglo-case-page .case-hero-visual > img {
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+  object-position: top left;
+}
+
+.pinglo-case-page .case-hero-visual {
+  align-self: center;
+}
+
 .case-hero-visual figcaption {
   display: flex;
   min-height: 58px;
