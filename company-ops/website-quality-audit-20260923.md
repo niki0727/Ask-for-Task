@@ -126,3 +126,11 @@ All six findings are corrected in the prepared release and verified locally. Pro
 - **L4 corrected:** Wrangler is pinned to 4.136.3 with a lockfile, the compatibility date is 23 September 2026, `npm audit` reports zero vulnerabilities, and the repository dry run succeeds.
 
 Verification passed: 41 tests, the 20-page / 17-indexable-route site audit, immutable asset validation, `git diff --check`, local D1 migration and schema inspection, Wrangler dry run, desktop visual inspection, 390×844 Photography inspection with no horizontal overflow, and Lighthouse 100/100/100/100 for performance/accessibility/best-practices/SEO on Home and Photography. No production migration, deployment, or genuine form submission occurred during remediation.
+
+## Production release verification — 23 September 2026, 12:12 Athens
+
+Nikita explicitly approved the remote migration, push, deployment, and live verification. Migration `0008_add_contact_idempotency.sql` applied successfully to `askfortask_messages`; Wrangler reports no pending migrations, and remote schema inspection confirms `request_id`, `notification_status`, and `notification_id`. Commit `b071630` is on `origin/master`. Cloudflare Worker version `4136ce8f-8912-41e9-ab34-ef0bbb684132` is active.
+
+All 19 canonical HTML routes plus the direct error-page asset byte-match the committed release. The live 404 flow canonicalises the path and returns the committed error page with status 404. New responsive assets and the sitemap return 200. Security headers remain present, `/api/contact-config` confirms Resend and D1 bindings, and an unsupported contact method returns 405 with a no-store JSON response. Live mobile inspection found no horizontal overflow or console errors, all carousel panels are neutral `DIV` tab panels, and the browser selected an 800-pixel AVIF at a 390-pixel CSS viewport with a high-density display. Live Lighthouse scored Home 100/100/100/100 and Photography 99/100/100/100 for performance/accessibility/best-practices/SEO, with LCP 1.2 s and 1.7 s and CLS 0. No genuine enquiry was submitted.
+
+**Final decision:** Approved for the verified scope. Continue monitoring genuine enquiry delivery and Worker errors; Search Console coverage, field Core Web Vitals, and an explicitly authorised end-to-end mailbox receipt remain evidence gaps rather than release blockers.
