@@ -25,7 +25,11 @@ function createEnv(overrides = {}) {
 function contactRequest(body, init = {}) {
   return new Request("https://askfortask.co.uk/api/contact", {
     method: "POST",
-    headers: { "content-type": "application/json", ...init.headers },
+    headers: {
+      "content-type": "application/json",
+      "idempotency-key": crypto.randomUUID(),
+      ...init.headers
+    },
     body: typeof body === "string" ? body : JSON.stringify(body)
   });
 }
@@ -34,6 +38,8 @@ function createRecordingDb() {
   const calls = [];
   const rateLimitCalls = [];
   const rateLimits = new Map();
+  const contacts = new Map();
+  let nextContactId = 1;
   return {
     calls,
     rateLimitCalls,
@@ -53,6 +59,33 @@ function createRecordingDb() {
               };
             }
             calls.push({ sql, values });
+            if (sql.includes("INSERT INTO contact_messages")) {
+              return {
+                async first() {
+                  const requestId = values.at(-1);
+                  if (contacts.has(requestId)) return null;
+                  const record = { id: nextContactId, notification_status: "pending" };
+                  nextContactId += 1;
+                  contacts.set(requestId, record);
+                  return { id: record.id };
+                }
+              };
+            }
+            if (sql.includes("FROM contact_messages") && sql.includes("request_id = ?")) {
+              return { first: async () => contacts.get(values[0]) || null };
+            }
+            if (sql.includes("UPDATE contact_messages")) {
+              return {
+                async run() {
+                  const id = values.at(-1);
+                  const record = [...contacts.values()].find((candidate) => candidate.id === id);
+                  if (record) {
+                    record.notification_status = sql.includes("'sent'") ? "sent" : "failed";
+                  }
+                  return { success: true };
+                }
+              };
+            }
             return { run: async () => ({ success: true }) };
           }
         };
@@ -153,6 +186,19 @@ test("rejects invalid contact details", async () => {
   });
 });
 
+test("requires an idempotency key for contact submissions", async () => {
+  const response = await worker.fetch(
+    contactRequest(validPayload, { headers: { "idempotency-key": "" } }),
+    createEnv()
+  );
+
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), {
+    ok: false,
+    error: "A valid submission key is required."
+  });
+});
+
 test("stores and emails a valid contact request", async (t) => {
   let emailRequest;
   t.mock.method(globalThis, "fetch", async (url, init) => {
@@ -163,13 +209,16 @@ test("stores and emails a valid contact request", async (t) => {
   let boundValues;
   const env = createEnv({
     DB: {
-      prepare() {
+      prepare(sql) {
         return {
           bind(...values) {
             if (values.length === 4 && typeof values[2] === "number") {
               return { first: async () => ({ request_count: 1 }) };
             }
-            boundValues = values;
+            if (sql.includes("INSERT INTO contact_messages")) {
+              boundValues = values;
+              return { first: async () => ({ id: 1 }) };
+            }
             return { run: async () => ({ success: true }) };
           }
         };
@@ -181,6 +230,7 @@ test("stores and emails a valid contact request", async (t) => {
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
   assert.equal(emailRequest.url, "https://api.resend.com/emails");
+  assert.match(emailRequest.init.headers["idempotency-key"], /^contact-enquiry\//);
   assert.equal(JSON.parse(emailRequest.init.body).reply_to, "niki@example.com");
   assert.deepEqual(boundValues.slice(0, 7), [
     "Niki",
@@ -191,6 +241,30 @@ test("stores and emails a valid contact request", async (t) => {
     "2026-12-01",
     "Please tell me more."
   ]);
+});
+
+test("deduplicates a retried contact request", async (t) => {
+  let emailCount = 0;
+  t.mock.method(globalThis, "fetch", async () => {
+    emailCount += 1;
+    return new Response(JSON.stringify({ id: "email-1" }), { status: 202 });
+  });
+
+  const db = createRecordingDb();
+  const env = createEnv({ DB: db.binding });
+  const requestId = crypto.randomUUID();
+  const first = await worker.fetch(contactRequest(validPayload, {
+    headers: { "idempotency-key": requestId }
+  }), env);
+  const retry = await worker.fetch(contactRequest(validPayload, {
+    headers: { "idempotency-key": requestId }
+  }), env);
+
+  assert.equal(first.status, 200);
+  assert.equal(retry.status, 200);
+  assert.deepEqual(await retry.json(), { ok: true, duplicate: true });
+  assert.equal(emailCount, 1);
+  assert.equal(db.calls.filter(({ sql }) => /INSERT INTO contact_messages/.test(sql)).length, 2);
 });
 
 test("returns a safe error when the email provider fails", async (t) => {

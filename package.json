@@ -6,6 +6,10 @@
     "version-assets": "node scripts/version-assets.mjs",
     "audit": "node scripts/version-assets.mjs --check && node scripts/audit-site.mjs",
     "check": "npm test && npm run audit",
+    "deploy:dry-run": "wrangler deploy --dry-run",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "wrangler": "4.136.3"
   }
 }

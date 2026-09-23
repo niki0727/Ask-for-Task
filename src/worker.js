@@ -23,8 +23,7 @@ export const PARTNER_DESTINATIONS = Object.freeze({
   "photography-instagram": "https://www.instagram.com/piazenko_nikita/",
   "photography-portfolio": "https://npiazenko.myportfolio.com/",
   "pinglo": "https://pingloapp.com/",
-  "pinglo-app-store": "https://apps.apple.com/gb/app/pinglo-lost-found/id6768083250",
-  "pulse-point-events": "https://www.instagram.com/pulsepointevents/"
+  "pinglo-app-store": "https://apps.apple.com/gb/app/pinglo-lost-found/id6768083250"
 });
 
 export const CONSOLIDATED_PAGES = Object.freeze({
@@ -267,6 +266,14 @@ function clean(value, max = 4000) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function readIdempotencyKey(request) {
+  const value = request.headers.get("idempotency-key")?.trim() || "";
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+    throw new HttpError(400, "A valid submission key is required.");
+  }
+  return value.toLowerCase();
 }
 
 function isMultipartContentType(contentType) {
@@ -524,7 +531,7 @@ function makeProfessionalEmailHtml(payload) {
   `;
 }
 
-async function sendContactEmail(env, payload) {
+async function sendContactEmail(env, payload, requestId) {
   if (!env.RESEND_API_KEY) {
     return { ok: false, error: "Email service is not configured yet." };
   }
@@ -537,7 +544,8 @@ async function sendContactEmail(env, payload) {
     method: "POST",
     headers: {
       authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "content-type": "application/json"
+      "content-type": "application/json",
+      "idempotency-key": `contact-enquiry/${requestId}`
     },
     body: JSON.stringify({
       from,
@@ -555,7 +563,8 @@ async function sendContactEmail(env, payload) {
     return { ok: false, error: "Email provider rejected the message." };
   }
 
-  return { ok: true };
+  const result = await response.json().catch(() => ({}));
+  return { ok: true, id: clean(result.id, 160) || null };
 }
 
 async function sendProfessionalEmail(env, payload, cvBuffer) {
@@ -850,7 +859,9 @@ async function handleRequest(request, env) {
       }
 
       let contact;
+      let requestId;
       try {
+        requestId = readIdempotencyKey(request);
         contact = validateContactPayload(payload);
       } catch (error) {
         if (error instanceof HttpError) {
@@ -862,15 +873,19 @@ async function handleRequest(request, env) {
 
       const { name, email, topic, region, budget, targetDate, message } = contact;
 
+      let contactMessageId;
       try {
         if (!env.DB) {
           throw new Error("DB binding is not configured.");
         }
 
-        await env.DB.prepare(
+        const insertResult = await env.DB.prepare(
           `INSERT INTO contact_messages (
-             name, email, topic, region, budget, target_date, message, consent, source, created_at
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+             name, email, topic, region, budget, target_date, message, consent, source, created_at,
+             request_id, notification_status
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+           ON CONFLICT(request_id) DO NOTHING
+           RETURNING id`
         )
           .bind(
             name,
@@ -882,11 +897,29 @@ async function handleRequest(request, env) {
             message,
             1,
             "askfortask.co.uk",
-            new Date().toISOString()
+            new Date().toISOString(),
+            requestId
           )
-          .run();
+          .first();
+
+        contactMessageId = insertResult?.id;
+        if (!contactMessageId) {
+          const existing = await env.DB.prepare(
+            `SELECT id, notification_status
+             FROM contact_messages
+             WHERE request_id = ?
+             LIMIT 1`
+          ).bind(requestId).first();
+
+          if (!existing?.id) throw new Error("Idempotent contact record was not found.");
+          if (existing.notification_status === "sent") {
+            return json({ ok: true, duplicate: true });
+          }
+          contactMessageId = existing.id;
+        }
       } catch (error) {
         logTechnicalError("contact_store_failed", error);
+        return json({ ok: false, error: "The enquiry could not be stored. Please try again." }, 503);
       }
 
       let emailResult;
@@ -899,15 +932,29 @@ async function handleRequest(request, env) {
           budget,
           targetDate,
           message
-        });
+        }, requestId);
       } catch (error) {
         logTechnicalError("contact_email_failed", error);
+        await env.DB.prepare(
+          `UPDATE contact_messages SET notification_status = 'failed' WHERE id = ?`
+        ).bind(contactMessageId).run().catch(() => {});
         return json({ ok: false, error: "Email service failed to send the message." }, 500);
       }
 
       if (!emailResult.ok) {
+        await env.DB.prepare(
+          `UPDATE contact_messages SET notification_status = 'failed' WHERE id = ?`
+        ).bind(contactMessageId).run().catch(() => {});
         return json({ ok: false, error: emailResult.error }, 500);
       }
+
+      await env.DB.prepare(
+        `UPDATE contact_messages
+         SET notification_status = 'sent', notification_id = ?
+         WHERE id = ?`
+      ).bind(emailResult.id, contactMessageId).run().catch((error) => {
+        logTechnicalError("contact_notification_update_failed", error);
+      });
 
       return json({ ok: true });
     }

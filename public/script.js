@@ -299,10 +299,13 @@ if (photoCarousel) {
   next?.addEventListener("click", () => showPhotoSlide(activePhotoSlide + 1));
 }
 
-const sendContactPayload = async (payload) => {
+const sendContactPayload = async (payload, requestId) => {
   const response = await fetch("/api/contact", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "idempotency-key": requestId
+    },
     body: JSON.stringify(payload)
   });
   const result = await response.json().catch(() => ({}));
@@ -314,8 +317,16 @@ const sendContactPayload = async (payload) => {
   return result;
 };
 
+let contactRequestId = "";
+let contactSubmitting = false;
+
+form?.addEventListener("input", () => {
+  if (!contactSubmitting) contactRequestId = "";
+});
+
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (contactSubmitting) return;
 
   const region = regionField?.value.trim() || "";
   const projectMessage = document.getElementById("contact-message").value.trim();
@@ -342,14 +353,29 @@ form?.addEventListener("submit", async (event) => {
     return;
   }
 
+  const submitButton = form.querySelector('button[type="submit"]');
+  const originalButtonText = submitButton?.textContent || "Send enquiry";
+  contactRequestId ||= crypto.randomUUID();
+  contactSubmitting = true;
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
+  }
   status.textContent = "Sending message...";
 
   try {
-    await sendContactPayload(payload);
+    await sendContactPayload(payload, contactRequestId);
     form.reset();
+    contactRequestId = "";
     status.textContent = "Message sent. A person will read it and reply as soon as possible.";
   } catch (error) {
     status.textContent = error.message;
+  } finally {
+    contactSubmitting = false;
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
+    }
   }
 });
 
@@ -514,6 +540,11 @@ const createProjectAssistant = () => {
     const assistantForm = assistantBody.querySelector("[data-assistant-form]");
     const assistantStatus = assistantBody.querySelector("[data-assistant-status]");
     const submitButton = assistantForm.querySelector('button[type="submit"]');
+    let assistantRequestId = "";
+
+    assistantForm.addEventListener("input", () => {
+      if (!submitButton.disabled) assistantRequestId = "";
+    });
 
     assistantForm.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -545,9 +576,10 @@ const createProjectAssistant = () => {
       submitButton.disabled = true;
       submitButton.textContent = "Sending...";
       assistantStatus.textContent = "Sending your project outline...";
+      assistantRequestId ||= crypto.randomUUID();
 
       try {
-        await sendContactPayload(payload);
+        await sendContactPayload(payload, assistantRequestId);
         complete = true;
         renderAssistant();
       } catch (error) {
