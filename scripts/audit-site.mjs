@@ -138,6 +138,7 @@ for (const file of htmlFiles) {
     errors.push(`${label}: form consent must link to the Privacy Policy at collection`);
   }
   for (const destination of Object.values(PARTNER_DESTINATIONS)) {
+    if (destination.startsWith(origin)) continue;
     if (html.includes(`href="${destination}"`)) {
       errors.push(`${label}: partner destination must use a controlled /go/ route (${destination})`);
     }

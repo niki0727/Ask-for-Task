@@ -1,0 +1,276 @@
+{
+  "checkedAtUtc": "2026-10-06T22:09:46.144Z",
+  "baseUrl": "https://askfortask.co.uk",
+  "filesChecked": 38,
+  "matches": 38,
+  "differences": 0,
+  "note": "Read-only byte comparison of local public text files and live HTTP bodies; does not compare Worker code, D1, secrets, external systems or binary assets.",
+  "results": [
+    {
+      "path": "/404.html",
+      "httpStatus": 404,
+      "localSha256": "d47f143ccf508d78466b7a11abc53b966cf4f35d4a3e35b9790c303c6a68711c",
+      "liveSha256": "d47f143ccf508d78466b7a11abc53b966cf4f35d4a3e35b9790c303c6a68711c",
+      "matches": true
+    },
+    {
+      "path": "/a4t-components.css",
+      "httpStatus": 200,
+      "localSha256": "ea5a12f67f4b57aa9cecc35e33e78233027169993e30b5b8937bb031bb0f9a52",
+      "liveSha256": "ea5a12f67f4b57aa9cecc35e33e78233027169993e30b5b8937bb031bb0f9a52",
+      "matches": true
+    },
+    {
+      "path": "/a4t-system.css",
+      "httpStatus": 200,
+      "localSha256": "abb1e54c02be5db47e62791d1b163981424fe0b98bcce1847a299d111cda63be",
+      "liveSha256": "abb1e54c02be5db47e62791d1b163981424fe0b98bcce1847a299d111cda63be",
+      "matches": true
+    },
+    {
+      "path": "/about/",
+      "httpStatus": 200,
+      "localSha256": "8c163d9370708a4193dc88a50ec16b196b36bf9fa5e0e767a46247de6a54a2d5",
+      "liveSha256": "8c163d9370708a4193dc88a50ec16b196b36bf9fa5e0e767a46247de6a54a2d5",
+      "matches": true
+    },
+    {
+      "path": "/app-development/",
+      "httpStatus": 200,
+      "localSha256": "8cc76bfa1199e4a4844ddc5f43f9376c890bd5705b9f4d75525de5dadcbf77e2",
+      "liveSha256": "8cc76bfa1199e4a4844ddc5f43f9376c890bd5705b9f4d75525de5dadcbf77e2",
+      "matches": true
+    },
+    {
+      "path": "/brand-development/",
+      "httpStatus": 200,
+      "localSha256": "64c98da515fe88cb4066d1b183761d48f2591eb6067e7a6ed31655bfc4901384",
+      "liveSha256": "64c98da515fe88cb4066d1b183761d48f2591eb6067e7a6ed31655bfc4901384",
+      "matches": true
+    },
+    {
+      "path": "/case-studies/dmar-international/",
+      "httpStatus": 200,
+      "localSha256": "9f232d253d27f6c46ae81720e84c6f1a2583493c4f46f9fe41185488fc5520bc",
+      "liveSha256": "9f232d253d27f6c46ae81720e84c6f1a2583493c4f46f9fe41185488fc5520bc",
+      "matches": true
+    },
+    {
+      "path": "/case-studies/pinglo/",
+      "httpStatus": 200,
+      "localSha256": "fbe46d4eaffaab9f5c24a47a0fcb2cbbc02f2d36a0cf7a7d7e532011ca16081d",
+      "liveSha256": "fbe46d4eaffaab9f5c24a47a0fcb2cbbc02f2d36a0cf7a7d7e532011ca16081d",
+      "matches": true
+    },
+    {
+      "path": "/contact/",
+      "httpStatus": 200,
+      "localSha256": "863e1b860d3eaedd44eedc6f755b8a8691e4aa488d30a4f87fdeec2d8c3aca0b",
+      "liveSha256": "863e1b860d3eaedd44eedc6f755b8a8691e4aa488d30a4f87fdeec2d8c3aca0b",
+      "matches": true
+    },
+    {
+      "path": "/cookies/",
+      "httpStatus": 200,
+      "localSha256": "7013df06dd2736175b5304886c1b7d911d41f73498f60e12ec9f40255440fc92",
+      "liveSha256": "7013df06dd2736175b5304886c1b7d911d41f73498f60e12ec9f40255440fc92",
+      "matches": true
+    },
+    {
+      "path": "/design-system/",
+      "httpStatus": 200,
+      "localSha256": "f70e94ee7be0e488c5665a3ecc591eba77aeb7819af48f15064d4d9c312f8b0a",
+      "liveSha256": "f70e94ee7be0e488c5665a3ecc591eba77aeb7819af48f15064d4d9c312f8b0a",
+      "matches": true
+    },
+    {
+      "path": "/faq/",
+      "httpStatus": 200,
+      "localSha256": "2f98976ff3c62a876b1a0d5ec2862b378714fbd20aeae4fa04206bb59b03fc0c",
+      "liveSha256": "2f98976ff3c62a876b1a0d5ec2862b378714fbd20aeae4fa04206bb59b03fc0c",
+      "matches": true
+    },
+    {
+      "path": "/image-sitemap.xml",
+      "httpStatus": 200,
+      "localSha256": "da63620ef3f4d3e06dee0bf4f54bb8530e4d1ebc697240377d4be0733fdb0b74",
+      "liveSha256": "da63620ef3f4d3e06dee0bf4f54bb8530e4d1ebc697240377d4be0733fdb0b74",
+      "matches": true
+    },
+    {
+      "path": "/",
+      "httpStatus": 200,
+      "localSha256": "656e19e3e5141639cf6414929a0d635dea27e0999b156ec8a999be0d549f32f6",
+      "liveSha256": "656e19e3e5141639cf6414929a0d635dea27e0999b156ec8a999be0d549f32f6",
+      "matches": true
+    },
+    {
+      "path": "/photography/",
+      "httpStatus": 200,
+      "localSha256": "ce5f34d5c299ae489f42701b16e9e29400ade5b7fe2d5412389de4ff3f69ed51",
+      "liveSha256": "ce5f34d5c299ae489f42701b16e9e29400ade5b7fe2d5412389de4ff3f69ed51",
+      "matches": true
+    },
+    {
+      "path": "/photography/nightlife-story.js",
+      "httpStatus": 200,
+      "localSha256": "986d3b56873a158312cb8cf3833dce2571c008c9544ca61795698c47a3b9287c",
+      "liveSha256": "986d3b56873a158312cb8cf3833dce2571c008c9544ca61795698c47a3b9287c",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/aerial/",
+      "httpStatus": 200,
+      "localSha256": "8a1967c8e592fe06ef162b3859ae549f2251b00fc61c51cb6ce907e51dfb997f",
+      "liveSha256": "8a1967c8e592fe06ef162b3859ae549f2251b00fc61c51cb6ce907e51dfb997f",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/events/",
+      "httpStatus": 200,
+      "localSha256": "2d43194bb1e6bbb42b086c9a6bb6c36296a2f8a9b7477263c209dd481852e493",
+      "liveSha256": "2d43194bb1e6bbb42b086c9a6bb6c36296a2f8a9b7477263c209dd481852e493",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/gallery.js",
+      "httpStatus": 200,
+      "localSha256": "b1fd28d01e4c0a5f0d91dd1872ecee8b1c1717b47546b5fa3c9930ee3d0a8c70",
+      "liveSha256": "b1fd28d01e4c0a5f0d91dd1872ecee8b1c1717b47546b5fa3c9930ee3d0a8c70",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/hospitality/",
+      "httpStatus": 200,
+      "localSha256": "74b569d530811361e8dc2c12aabc2c35335489aac01ad9b2622d6d6bd09c0579",
+      "liveSha256": "74b569d530811361e8dc2c12aabc2c35335489aac01ad9b2622d6d6bd09c0579",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/",
+      "httpStatus": 200,
+      "localSha256": "dfdc07ae3140b58af9ddae6ee973816be7b47f64440d10d70493856563ac7792",
+      "liveSha256": "dfdc07ae3140b58af9ddae6ee973816be7b47f64440d10d70493856563ac7792",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/people/",
+      "httpStatus": 200,
+      "localSha256": "77b90f678c6693aeaf9a46e0ad5b3df8285fbb3a1b0029698084d7ebcb4c68d4",
+      "liveSha256": "77b90f678c6693aeaf9a46e0ad5b3df8285fbb3a1b0029698084d7ebcb4c68d4",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/products/",
+      "httpStatus": 200,
+      "localSha256": "245a8fce0cf3dcc16d5db01c23d9e203adae7fd03f8cfa7d8625f42c614618c7",
+      "liveSha256": "245a8fce0cf3dcc16d5db01c23d9e203adae7fd03f8cfa7d8625f42c614618c7",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/sport/",
+      "httpStatus": 200,
+      "localSha256": "5195050dd42291b3d9c1a7f4390c62e1a84c95b9e4ba1c3797cf63a27f32c907",
+      "liveSha256": "5195050dd42291b3d9c1a7f4390c62e1a84c95b9e4ba1c3797cf63a27f32c907",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/streets/",
+      "httpStatus": 200,
+      "localSha256": "09733fe32a6630c020bf54f7f3c0238e115445de1ccb2bc1f69680150be5c4c8",
+      "liveSha256": "09733fe32a6630c020bf54f7f3c0238e115445de1ccb2bc1f69680150be5c4c8",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/style.css",
+      "httpStatus": 200,
+      "localSha256": "d09114548d5cdede1c63df7e8d61a34f229405ef4e2d5926327a110dff483c75",
+      "liveSha256": "d09114548d5cdede1c63df7e8d61a34f229405ef4e2d5926327a110dff483c75",
+      "matches": true
+    },
+    {
+      "path": "/portfolio/travel/",
+      "httpStatus": 200,
+      "localSha256": "aac86d9e3838e25293ebd250eb68cbdcd6b05bc60955b78b196cd1442cfa00d4",
+      "liveSha256": "aac86d9e3838e25293ebd250eb68cbdcd6b05bc60955b78b196cd1442cfa00d4",
+      "matches": true
+    },
+    {
+      "path": "/privacy/",
+      "httpStatus": 200,
+      "localSha256": "e91ff6ef7438652a4e88eed527f5e89459d8654b7cd8292c9bcdd2ad9264bcf6",
+      "liveSha256": "e91ff6ef7438652a4e88eed527f5e89459d8654b7cd8292c9bcdd2ad9264bcf6",
+      "matches": true
+    },
+    {
+      "path": "/professionals/",
+      "httpStatus": 200,
+      "localSha256": "135c3613504a7671764212bebcd4ee38daccf124925555451d01aa1e117e320f",
+      "liveSha256": "135c3613504a7671764212bebcd4ee38daccf124925555451d01aa1e117e320f",
+      "matches": true
+    },
+    {
+      "path": "/reviews/",
+      "httpStatus": 200,
+      "localSha256": "ec2d119d35082c1c7c2fb8ade5340ba01a97ed0cc2b48f911c134c73763b60ad",
+      "liveSha256": "ec2d119d35082c1c7c2fb8ade5340ba01a97ed0cc2b48f911c134c73763b60ad",
+      "matches": true
+    },
+    {
+      "path": "/robots.txt",
+      "httpStatus": 200,
+      "localSha256": "4f588c4f9ab725059cb5e8e3f08c306f30a33908ee9fe75e17264b071e573c07",
+      "liveSha256": "4f588c4f9ab725059cb5e8e3f08c306f30a33908ee9fe75e17264b071e573c07",
+      "matches": true
+    },
+    {
+      "path": "/safety/",
+      "httpStatus": 200,
+      "localSha256": "546ca602f41809bbab37a1cb281cb1715b8c4ae49e68c5a7a0b3837c3b261fdf",
+      "liveSha256": "546ca602f41809bbab37a1cb281cb1715b8c4ae49e68c5a7a0b3837c3b261fdf",
+      "matches": true
+    },
+    {
+      "path": "/script.js",
+      "httpStatus": 200,
+      "localSha256": "b169172274bea130cd979d6938a876c57a0615c790e77f80c6682c1c271addfb",
+      "liveSha256": "b169172274bea130cd979d6938a876c57a0615c790e77f80c6682c1c271addfb",
+      "matches": true
+    },
+    {
+      "path": "/services/",
+      "httpStatus": 200,
+      "localSha256": "4f1baee364a13cde6e5ba096fd93db96ed5f2ad79a6e8f262a51c5b8f1337590",
+      "liveSha256": "4f1baee364a13cde6e5ba096fd93db96ed5f2ad79a6e8f262a51c5b8f1337590",
+      "matches": true
+    },
+    {
+      "path": "/sitemap.xml",
+      "httpStatus": 200,
+      "localSha256": "4376b85a747a3e9f56303226550095105bbadca2e6947fcc248e6b15394cda0b",
+      "liveSha256": "4376b85a747a3e9f56303226550095105bbadca2e6947fcc248e6b15394cda0b",
+      "matches": true
+    },
+    {
+      "path": "/terms/",
+      "httpStatus": 200,
+      "localSha256": "ae60814b28114e044c0f0ff8855c4b8de989f81b3a9b93ed1899534522e9e19f",
+      "liveSha256": "ae60814b28114e044c0f0ff8855c4b8de989f81b3a9b93ed1899534522e9e19f",
+      "matches": true
+    },
+    {
+      "path": "/ventures/",
+      "httpStatus": 200,
+      "localSha256": "9dc430d60071b172c2b3d5487613216540d6aa34fc57cd2b60d03cdcb717471c",
+      "liveSha256": "9dc430d60071b172c2b3d5487613216540d6aa34fc57cd2b60d03cdcb717471c",
+      "matches": true
+    },
+    {
+      "path": "/website-development/",
+      "httpStatus": 200,
+      "localSha256": "818fa62e1645effcd38a459907227967dc76ffa86e8d705c125c3006584ed6ac",
+      "liveSha256": "818fa62e1645effcd38a459907227967dc76ffa86e8d705c125c3006584ed6ac",
+      "matches": true
+    }
+  ]
+}

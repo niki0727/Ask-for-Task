@@ -4,3 +4,4 @@ Disallow: /api/
 Disallow: /go/
 
 Sitemap: https://askfortask.co.uk/sitemap.xml
+Sitemap: https://askfortask.co.uk/image-sitemap.xml

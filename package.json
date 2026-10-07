@@ -4,9 +4,9 @@
   "type": "module",
   "scripts": {
     "version-assets": "node scripts/version-assets.mjs",
-    "audit": "node scripts/version-assets.mjs --check && node scripts/audit-site.mjs",
+    "audit": "node scripts/version-assets.mjs --check && node scripts/build-image-sitemap.mjs --check && node scripts/audit-photography-rights.mjs && node scripts/audit-site.mjs",
     "check": "npm test && npm run audit",
-    "deploy:dry-run": "wrangler deploy --dry-run",
+    "deploy:dry-run": "REQUIRE_PHOTOGRAPHY_RIGHTS_CLEARANCE=1 node scripts/audit-photography-rights.mjs && wrangler deploy --dry-run",
     "test": "node --test"
   },
   "devDependencies": {

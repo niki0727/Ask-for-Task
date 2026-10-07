@@ -1,6 +1,5 @@
 const form = document.getElementById("contact-form");
 const status = document.getElementById("contact-status");
-const photoCarousel = document.querySelector("[data-photo-carousel]");
 const menuToggle = document.querySelector("[data-menu-toggle]");
 const primaryNavigation = document.querySelector(".nav-links");
 const menuLabel = document.querySelector("[data-menu-label]");
@@ -251,52 +250,6 @@ if (menuToggle && primaryNavigation) {
   desktopNavigation.addEventListener?.("change", (event) => {
     if (event.matches) setMenuOpen(false);
   });
-}
-
-if (photoCarousel) {
-  const tabs = [...photoCarousel.querySelectorAll("[data-photo-tab]")];
-  const slides = [...photoCarousel.querySelectorAll("[data-photo-slide]")];
-  const previous = photoCarousel.querySelector("[data-photo-prev]");
-  const next = photoCarousel.querySelector("[data-photo-next]");
-  let activePhotoSlide = 0;
-
-  const showPhotoSlide = (index) => {
-    activePhotoSlide = (index + slides.length) % slides.length;
-
-    slides.forEach((slide, slideIndex) => {
-      const active = slideIndex === activePhotoSlide;
-      slide.hidden = !active;
-      slide.classList.toggle("active", active);
-    });
-
-    tabs.forEach((tab, tabIndex) => {
-      const active = tabIndex === activePhotoSlide;
-      tab.classList.toggle("active", active);
-      tab.setAttribute("aria-selected", String(active));
-      tab.tabIndex = active ? 0 : -1;
-    });
-  };
-
-  tabs.forEach((tab, tabIndex) => {
-    tab.addEventListener("click", () => {
-      showPhotoSlide(Number(tab.dataset.photoTab));
-    });
-    tab.addEventListener("keydown", (event) => {
-      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      event.preventDefault();
-      let nextTab = tabIndex;
-      if (event.key === "ArrowLeft") nextTab -= 1;
-      if (event.key === "ArrowRight") nextTab += 1;
-      if (event.key === "Home") nextTab = 0;
-      if (event.key === "End") nextTab = tabs.length - 1;
-      nextTab = (nextTab + tabs.length) % tabs.length;
-      showPhotoSlide(nextTab);
-      tabs[nextTab].focus();
-    });
-  });
-
-  previous?.addEventListener("click", () => showPhotoSlide(activePhotoSlide - 1));
-  next?.addEventListener("click", () => showPhotoSlide(activePhotoSlide + 1));
 }
 
 const sendContactPayload = async (payload, requestId) => {

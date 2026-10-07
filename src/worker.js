@@ -21,7 +21,7 @@ export const PARTNER_DESTINATIONS = Object.freeze({
   "nikita-linkedin": "https://www.linkedin.com/in/nikita-piazenko-530566113/",
   "nk-sports": "https://nksports.eu/",
   "photography-instagram": "https://www.instagram.com/piazenko_nikita/",
-  "photography-portfolio": "https://npiazenko.myportfolio.com/",
+  "photography-portfolio": "https://askfortask.co.uk/portfolio/",
   "pinglo": "https://pingloapp.com/",
   "pinglo-app-store": "https://apps.apple.com/gb/app/pinglo-lost-found/id6768083250"
 });
@@ -29,7 +29,8 @@ export const PARTNER_DESTINATIONS = Object.freeze({
 export const CONSOLIDATED_PAGES = Object.freeze({
   "/design/": "/brand-development/#visual-development",
   "/history/": "/about/#company-timeline",
-  "/responsible-growth/": "/services/#business-development"
+  "/responsible-growth/": "/services/#business-development",
+  "/portfolio/personal/": "/portfolio/people/#curonian-portraits"
 });
 
 export const PARTNER_SOURCE_PAGES = new Set([
