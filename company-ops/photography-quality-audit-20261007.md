@@ -72,3 +72,7 @@
 ## 7 October owner-evidence update — rights finding closed
 
 Nikita Piazenko confirmed as accountable owner that ASK FOR TASK LTD has publication rights for all photographs and that portfolio publication was discussed with and approved by the relevant clients. All 38 story records now identify `client_publication_permission` and cite that owner confirmation. The strict rights audit therefore passes with zero stories awaiting review. This records the owner's factual confirmation; the audit did not independently inspect client contracts or correspondence. H1 is closed on the evidence supplied, while the objection/removal route remains an appropriate safeguard.
+
+## 7 October release update — deployed and verified
+
+Nikita authorised pushing and deployment. Commit `d6fcba0` is on `origin/master`; Cloudflare Worker version `ccbbf4ad-7e8c-4720-939f-b4d239824665` is live. All 38 checked text resources match the release. Live browser QA passes all nine portfolio routes at 1440/768/390 px and no-JavaScript fallback. Three live mobile Lighthouse Events runs have median LCP 2.43 s / performance 97, while a live Portfolio run measured 2.1 s / performance 98; accessibility, best practices and SEO are 100 in the sampled runs. Full release evidence: `company-ops/photography-release-20261007.md`.
