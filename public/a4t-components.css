@@ -10694,3 +10694,130 @@ dd {
   .photography-page .nightlife-stage figcaption span { display: block; margin-bottom: 4px; }
   .photography-page .nightlife-dialog-footer { gap: 6px; }
 }
+
+/* Clear phone navigation and direct routes from the homepage. */
+.nav-mobile-only,
+.home-mobile-action,
+.home-mobile-explore {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .menu-toggle {
+    width: auto;
+    min-width: 88px;
+    gap: 9px;
+    padding-inline: 12px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .menu-toggle::after {
+    content: "Menu";
+  }
+
+  .nav-open .menu-toggle::after {
+    content: "Close";
+  }
+
+  .nav-links {
+    gap: 0;
+    padding: 12px var(--gutter-tablet) max(24px, env(safe-area-inset-bottom));
+    background: #fff;
+  }
+
+  .nav-links[data-open="true"] {
+    animation: none;
+  }
+
+  .nav-links a {
+    min-height: 50px;
+    padding-block: 10px;
+    font-size: 18px;
+  }
+
+  .nav-links .nav-mobile-only {
+    display: flex;
+  }
+
+  .nav-links .nav-mobile-contact {
+    min-height: 52px;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-links {
+    padding-inline: var(--gutter-mobile);
+  }
+
+  .home-actions .home-desktop-action {
+    display: none;
+  }
+
+  .home-actions .home-mobile-action {
+    display: inline-flex;
+  }
+
+  .home-index .home-actions .text-link {
+    display: none;
+  }
+
+  .home-mobile-explore {
+    display: block;
+    scroll-margin-top: 68px;
+    border-block: 1px solid var(--line);
+    padding-block: 24px 30px;
+    background: #fff;
+  }
+
+  .home-mobile-explore p {
+    margin: 0 0 13px;
+    color: var(--ink-soft);
+    font-size: 12px;
+    font-weight: 750;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  .home-mobile-explore-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .home-mobile-explore-grid a {
+    position: relative;
+    display: grid;
+    min-height: 84px;
+    align-content: center;
+    gap: 5px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-control);
+    padding: 12px 28px 12px 13px;
+    color: var(--ink);
+    background: var(--paper);
+    text-decoration: none;
+  }
+
+  .home-mobile-explore-grid a::after {
+    position: absolute;
+    top: 11px;
+    right: 12px;
+    color: var(--page-accent);
+    content: "↗";
+    font-size: 18px;
+  }
+
+  .home-mobile-explore-grid a span {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  .home-mobile-explore-grid a small {
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.25;
+  }
+}
