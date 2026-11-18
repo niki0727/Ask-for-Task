@@ -66,8 +66,21 @@ async function directory(){
  $('people').replaceChildren(...people.map(p=>{
   const a=el('article','');a.append(el('h3',p.name),el('p',[p.role,p.place].filter(Boolean).join(' · ')),el('p',p.bio));
   if(p.specialties?.length){const list=el('ul','');list.className='disciplines';list.append(...p.specialties.map(label=>el('li',label)));a.append(list);}
-  if(p.portfolio){const l=el('a','View portfolio ↗');l.href=p.portfolio;l.rel='noopener noreferrer';a.append(l);}
-  if(p.available)a.append(el('p','Open to project enquiries'));
+  const route='/creators/'+encodeURIComponent(p.id);
+  const profile=el('a','View creator profile ↗');profile.href=route;
+  if(p.works?.length){
+   const item=p.works[0];
+   if(item.image){
+    const img=el('img','');img.className='work-preview';img.src=item.image;img.alt=item.alt;img.loading='lazy';img.width=800;img.height=532;a.prepend(img);
+   }
+   const work=el('p','');const link=el('a',item.title);link.href=item.url;
+   work.append(link,' · '+item.credit);a.append(work);
+  }
+  a.append(profile);
+  if(p.available){
+   const enquiry=el('a','Enquire about this creator');enquiry.href=route+'#enquiry';enquiry.className='button creator-enquiry';
+   a.append(el('p','Open to project enquiries'),enquiry);
+  }
   return a;
  }));
  if(!people.length)$('people').append(el('p','Public profiles appear here when creators choose to share them.'));
@@ -83,9 +96,29 @@ async function refresh(){
  $('nav-work').textContent=member?'My studio':'Sign in';
  $('share').hidden=!liveAI;
  $('ai-mode').textContent=liveAI?'Use the local guide or opt in to live AI for this request.':'Local planning guide · live AI is not configured.';
- if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();await projects();}
+ if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href='/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);await projects();}
  await directory();
 }
+function renderWork(items=[]){
+ const slots=Array.from({length:3},(_,i)=>{
+  const field=$('work-template').content.firstElementChild.cloneNode(true);
+  field.querySelector('legend').textContent='Project '+(i+1);
+  for(const input of field.querySelectorAll('input'))input.value=items[i]?.[input.name]||'';
+  return field;
+ });
+ $('work-fields').replaceChildren(...slots);
+}
+bind('work',async ()=>{
+ const items=[...$('work-fields').children].map(field=>Object.fromEntries(
+  [...field.querySelectorAll('input')].map(input=>[input.name,input.value.trim()])
+ )).filter(item=>Object.values(item).some(Boolean));
+ const status=$('work-status');
+ try{
+  await api('work','PUT',{items});
+  await directory();
+  status.textContent='Selected work saved.';
+ }catch(error){status.textContent=error.message;}
+});
 async function projects(){
  const list=await api('projects');
  $('projects').replaceChildren(...list.map(p=>{const b=el('button',p.title);b.type='button';b.className='outline';b.onclick=()=>guard(()=>openProject(p.id));return b;}));

@@ -8,6 +8,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {creatorPage, featuredCreators, httpsLink} from './creators.mjs';
+
 const schema=readFileSync(new URL('./schema.sql',import.meta.url),'utf8');
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const token=()=>randomBytes(32).toString('hex');
@@ -17,6 +19,7 @@ const staticFiles={
  '/':['site/index.html','text/html; charset=utf-8'],
  '/studio.css':['site/studio.css','text/css'],
  '/studio.js':['site/studio.js','text/javascript'],
+ '/enquiry.js':['site/enquiry.js','text/javascript'],
  '/sketch.js':['site/sketch.js','text/javascript'],
  '/showcase.jpg':['../public/assets/photography/event-dj.jpg','image/jpeg']
 };
@@ -28,19 +31,33 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
  const one=(q,...args)=>store?store.one(q,args):db.prepare(q).get(...args);
  const run=(q,...args)=>store?store.run(q,args):db.prepare(q).run(...args);
  const withSpecialties=async row=>({...row,specialties:JSON.parse((await one('SELECT labels FROM creator_specialties WHERE owner=?',row.id))?.labels||'[]')});
+ const withWork=async row=>({...row,works:JSON.parse((await one('SELECT items FROM creator_work WHERE owner=?',row.id))?.items||'[]')});
+ const publicFields='id,name,role,place,bio,portfolio,available';
+ async function publicCreator(id){
+  const featured=featuredCreators.find(creator=>creator.id===id);
+  if(featured)return featured;
+  const row=await one('SELECT '+publicFields+' FROM members WHERE id=? AND visible=1',id);
+  if(row)return withWork(await withSpecialties(row));
+ }
  const cookie=(value,max)=>`studio_session=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${max}${origin?'; Secure':''}`;
  const limiter=new Map();
  function limit(key,max){const now=Date.now();for(const [k,v] of limiter)if(v.until<now)limiter.delete(k);const v=limiter.get(key)||{count:0,until:now+60000};if(++v.count>max)throw issue(429,'Please wait a minute and try again.');limiter.set(key,v);}
  async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>20000)throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
  const server=createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https://askfortask.co.uk; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
   const send=(data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   try{
    const base=origin||`http://${req.headers.host}`, host=new URL(base);
    if(!origin&&!['127.0.0.1','localhost','[::1]'].includes(host.hostname))throw issue(403,'This build is local only.');
    if((origin&&req.headers.host!==host.host)||(req.headers.origin&&req.headers.origin!==base))throw issue(403,'Invalid origin.');
    const {pathname}=new URL(req.url,base), method=req.method;
+   const profilePath=pathname.match(/^\/creators\/([a-z0-9-]{1,80})\/?$/);
+   if(method==='GET'&&profilePath){
+    const creator=await publicCreator(profilePath[1]);
+    res.writeHead(creator?200:404,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Robots-Tag':'noindex'});
+    res.end(creatorPage(creator,Boolean(auth)));return;
+   }
    if(!pathname.startsWith('/api/')){
     if(method!=='GET'||!Object.hasOwn(staticFiles,pathname))throw issue(404,'Page not found.');
     const [path,type]=staticFiles[pathname];const data=await readFile(new URL(path,import.meta.url));res.writeHead(200,{'Content-Type':type});res.end(data);return;
@@ -78,8 +95,21 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     res.setHeader('Set-Cookie',auth?[cookie(key,86400),authCookie(usingPassword?'':verified.access_token,usingPassword?0:600)]:cookie(key,86400));
     return send({ok:true});
    }
-   if(method==='GET'&&pathname==='/api/directory')return send(await Promise.all((await sql('SELECT id,name,role,place,bio,portfolio,available FROM members WHERE visible=1 ORDER BY name LIMIT 100')).map(withSpecialties)));
-   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withSpecialties(member):null, hosted:Boolean(auth), liveAI:Boolean(apiKey&&model)});
+   if(method==='GET'&&pathname==='/api/directory'){
+    const rows=await sql('SELECT '+publicFields+' FROM members WHERE visible=1 ORDER BY name LIMIT 100');
+    return send([...featuredCreators,...await Promise.all(rows.map(async row=>withWork(await withSpecialties(row))))]);
+   }
+   if(method==='POST'&&pathname==='/api/enquiries'){
+    const name=text(data.name,120), email=text(data.email,254).toLowerCase(), brief=text(data.brief,2400);
+    if(!name||!brief||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||data.consent!==true)throw issue(400,'Add your name, email, brief and permission to respond.');
+    limit('enquiries',25);limit('enquiries:'+email,4);
+    const creator=await publicCreator(text(data.creator,80));
+    if(!creator?.available)throw issue(404,'This creator is currently unavailable for enquiries.');
+    const reference=randomUUID();
+    await run('INSERT INTO creator_enquiries(id,creator_id,creator_name,client_name,email,brief,created) VALUES (?,?,?,?,?,?,?)',reference,creator.id,creator.name,name,email,brief,now);
+    return send({reference,preview:!auth},201);
+   }
+   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withWork(await withSpecialties(member)):null, hosted:Boolean(auth), liveAI:Boolean(apiKey&&model)});
    if(!member)throw issue(401,'Sign in to continue.');
    if(method==='PUT'&&pathname==='/api/password'&&auth){
     limit('password:'+member.id,5);
@@ -99,6 +129,16 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     const labels=Array.isArray(data.specialties)?[...new Map(data.specialties.slice(0,30).map(v=>text(v,40)).filter(Boolean).map(v=>[v.toLowerCase(),v])).values()].slice(0,8):null;
     await run('UPDATE members SET name=?,role=?,place=?,bio=?,portfolio=?,visible=?,available=? WHERE id=?',name,text(data.role,80),text(data.place,100),text(data.bio,500),portfolio,Number(data.visible===true),Number(data.available===true),member.id);
     if(labels)await run('INSERT INTO creator_specialties VALUES (?,?) ON CONFLICT(owner) DO UPDATE SET labels=excluded.labels',member.id,JSON.stringify(labels));
+    return send({ok:true});
+   }
+   if(method==='PUT'&&pathname==='/api/work'){
+    if(!Array.isArray(data.items)||data.items.length>3)throw issue(400,'Add up to three projects.');
+    const items=data.items.map(item=>{
+     const title=text(item?.title,100), credit=text(item?.credit,140), url=httpsLink(item?.url);
+     if(!title||!credit||!url)throw issue(400,'Give each project a title, credit and HTTPS link.');
+     return {title,credit,url};
+    });
+    await run('INSERT INTO creator_work VALUES (?,?) ON CONFLICT(owner) DO UPDATE SET items=excluded.items',member.id,JSON.stringify(items));
     return send({ok:true});
    }
    if(pathname==='/api/projects'&&method==='GET')return send(await sql('SELECT id,title,brief,due,budget FROM projects WHERE owner=? ORDER BY '+(store?'sequence':'rowid')+' DESC',member.id));

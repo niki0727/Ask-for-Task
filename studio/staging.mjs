@@ -12,7 +12,9 @@ if(process.argv.includes('--print-schema')){
  for(const name of required)if(!env[name])throw Error('Missing '+name);
  const origin=new URL(env.STUDIO_ORIGIN);
  if(origin.protocol!=='https:'||origin.origin!==env.STUDIO_ORIGIN)throw Error('STUDIO_ORIGIN must be an HTTPS origin.');
- const store=await postgresStore(env.STUDIO_DATABASE_URL);
  const allowedEmails=new Set(env.STUDIO_PILOT_EMAILS.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean));
- studio({origin:origin.origin,store,allowedEmails,auth:hostedAuth({url:env.STUDIO_SUPABASE_URL,key:env.STUDIO_SUPABASE_KEY,admin:env.STUDIO_SUPABASE_ADMIN_KEY})}).listen(Number(env.PORT||8786),'0.0.0.0');
+ if(!allowedEmails.size||[...allowedEmails].some(email=>!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)))throw Error('STUDIO_PILOT_EMAILS must list valid test inboxes.');
+ const auth=hostedAuth({url:env.STUDIO_SUPABASE_URL,key:env.STUDIO_SUPABASE_KEY,admin:env.STUDIO_SUPABASE_ADMIN_KEY});
+ const store=await postgresStore(env.STUDIO_DATABASE_URL);
+ studio({origin:origin.origin,store,allowedEmails,auth}).listen(Number(env.PORT||8786),'0.0.0.0');
 }
