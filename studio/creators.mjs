@@ -9,7 +9,7 @@ const nikita = {
  specialties: ['Events', 'Portraits', 'Hospitality'],
  available: true,
  works: [
-  {title: 'District · Vilnius nightlife', credit: 'Event photography by Nikita Piazenko', url: site + '/portfolio/events/#project-8', image: site + '/portfolio/images/district-boat-dj-under-red-light-vilnius-small.webp', alt: 'DJ performing in red light at the District boat event'},
+  {title: 'District · Vilnius nightlife', credit: 'Event photography by Nikita Piazenko', url: site + '/portfolio/events/#project-8', image: site + '/portfolio/images/district-boat-dj-under-red-light-vilnius.webp', imageSmall: site + '/portfolio/images/district-boat-dj-under-red-light-vilnius-small.webp', alt: 'DJ performing in red light at the District boat event'},
   {title: 'Elysium Lifestyle · June 2026 cover', credit: 'Editorial photography by Nikita Piazenko', url: site + '/portfolio/people/#project-0'}
  ]
 };
@@ -44,7 +44,7 @@ export function creatorPage(creator, hosted) {
   <p id="enquiry-status" role="status"></p>
  </form>` : '<p class="muted">Currently closed to enquiries through A4T Studio.</p>';
  const work = works.length ? `<section class="section"><h2>Selected work</h2><div class="grid">${works.map(item => `
- <article>${item.image ? `<img class="work-preview" src="${escape(item.image)}" alt="${escape(item.alt)}" width="800" height="532" loading="lazy">` : ''}
+ <article>${item.image ? `<img class="work-preview" src="${escape(item.image)}" ${item.imageSmall ? `srcset="${escape(item.imageSmall)} 800w, ${escape(item.image)} 1920w" sizes="(max-width: 760px) 90vw, 600px"` : ''} alt="${escape(item.alt)}" width="1920" height="1277" loading="lazy">` : ''}
  <h3><a href="${escape(item.url)}">${escape(item.title)}</a></h3><p class="muted">${escape(item.credit)}</p></article>`).join('')}</div></section>` : '';
  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
  <title>${escape(name)} · Ask for Task Studio</title><link rel="stylesheet" href="/studio.css"><script src="/enquiry.js" defer></script></head>

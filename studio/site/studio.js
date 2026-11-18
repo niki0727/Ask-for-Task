@@ -71,7 +71,7 @@ async function directory(){
   if(p.works?.length){
    const item=p.works[0];
    if(item.image){
-    const img=el('img','');img.className='work-preview';img.src=item.image;img.alt=item.alt;img.loading='lazy';img.width=800;img.height=532;a.prepend(img);
+    const img=el('img','');img.className='work-preview';img.src=item.image;if(item.imageSmall){img.srcset=item.imageSmall+' 800w, '+item.image+' 1920w';img.sizes='(max-width: 760px) 90vw, 600px';}img.alt=item.alt;img.loading='lazy';img.width=800;img.height=532;a.prepend(img);
    }
    const work=el('p','');const link=el('a',item.title);link.href=item.url;
    work.append(link,' · '+item.credit);a.append(work);
