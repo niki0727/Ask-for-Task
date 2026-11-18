@@ -88,8 +88,10 @@ async function directory(){
 async function refresh(){
  const {member,liveAI,hosted:staging}=await api('session');
  hosted=Boolean(staging);
- $('password-login').hidden=!hosted||Boolean(member);
- if(hosted)$('access-help').textContent='We’ll email you a one-time link to open your Studio account.';
+ $('password-option').hidden=!hosted||Boolean(member);
+ $('password-option').open=false;
+ $('workspace-title').textContent=member?'Your studio':'Welcome to Studio';
+ if(hosted)$('access-help').textContent='New here or returning? Enter your email and we’ll send you a sign-in link.';
  $('save-phrase').hidden=!hosted||!recentlyVerified;
  $('phrase-note').textContent=!hosted?'Try a phrase locally. Saving it is available in staging.':recentlyVerified?'You can set or replace your passphrase now.':'Open a fresh email link to set or replace your passphrase.';
  $('access').hidden=Boolean(member);$('member').hidden=!member;
@@ -140,7 +142,7 @@ bind('access',async f=>{
  const link=$('access-link');
  link.hidden=true;link.removeAttribute('href');
  const data=await api('access','POST',fields(f));
- if(data.sent){$('notice').textContent='Check your inbox for your Studio link.';return;}
+ if(data.sent){$('notice').textContent='Check your inbox. Open the Studio email and follow the sign-in link.';return;}
  link.href=data.localLink;
  link.hidden=false;
  $('notice').textContent='Your access link is ready.';

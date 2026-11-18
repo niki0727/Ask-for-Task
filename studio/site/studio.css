@@ -41,3 +41,14 @@
 #work summary{cursor:pointer}
 #work-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,225px),1fr));gap:12px;margin-block:16px}
 #work-fields fieldset{min-width:0;border:1px solid var(--line)}
+
+#access,#password-option{width:100%;max-width:480px}
+#access{padding:clamp(20px,4vw,32px)}
+#access h3{font-size:1.4rem}
+#access .muted{margin-block:12px 22px}
+#access button{width:100%;margin-top:8px}
+#access p:has(#access-link[hidden]){display:none}
+#password-option{margin-top:18px}
+#password-option>summary{cursor:pointer;text-decoration:underline;text-underline-offset:4px;font-size:.95rem}
+#password-login{margin-top:16px;padding:24px}
+#notice:empty{display:none}
