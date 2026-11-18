@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import {createServer} from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {createHash, randomBytes, randomUUID} from 'node:crypto';
@@ -8,6 +9,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+import {generateProfileDraft, readProfilePage} from './profile-draft.mjs';
 import {creatorPage, featuredCreators, httpsLink} from './creators.mjs';
 
 const schema=readFileSync(new URL('./schema.sql',import.meta.url),'utf8');
@@ -26,26 +28,36 @@ const staticFiles={
 export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,store,auth,origin,allowedEmails}={}){
  if(origin&&(!auth||!allowedEmails?.size))throw Error('Hosted Studio requires verified authentication and named pilot email addresses.');
  const db=store?null:new DatabaseSync(file);
- if(db)db.exec('PRAGMA foreign_keys=ON;'+schema);
+ if(db){
+  db.exec('PRAGMA foreign_keys=ON;'+schema);
+  if(!db.prepare('PRAGMA table_info(members)').all().some(column=>column.name==='details')){
+   db.exec("ALTER TABLE members ADD COLUMN details TEXT NOT NULL DEFAULT '{}'");
+  }
+ }
  const sql=(q,...args)=>store?store.all(q,args):db.prepare(q).all(...args);
  const one=(q,...args)=>store?store.one(q,args):db.prepare(q).get(...args);
  const run=(q,...args)=>store?store.run(q,args):db.prepare(q).run(...args);
  const withSpecialties=async row=>({...row,specialties:JSON.parse((await one('SELECT labels FROM creator_specialties WHERE owner=?',row.id))?.labels||'[]')});
  const withWork=async row=>({...row,works:JSON.parse((await one('SELECT items FROM creator_work WHERE owner=?',row.id))?.items||'[]')});
- const publicFields='id,name,role,place,bio,portfolio,available';
+ const publicFields='id,name,role,place,bio,portfolio,available,details';
+ const withDetails=async row=>{
+  const {details,...profile}=row;
+  const avatar=await one('SELECT owner FROM creator_avatars WHERE owner=?',row.id);
+  return {...profile,...JSON.parse(details||'{}'),avatar:avatar?'/api/avatar/'+row.id:''};
+ };
  async function publicCreator(id){
   const featured=featuredCreators.find(creator=>creator.id===id);
   if(featured)return featured;
   const row=await one('SELECT '+publicFields+' FROM members WHERE id=? AND visible=1',id);
-  if(row)return withWork(await withSpecialties(row));
+  if(row)return withDetails(await withWork(await withSpecialties(row)));
  }
  const cookie=(value,max)=>`studio_session=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${max}${origin?'; Secure':''}`;
  const limiter=new Map();
  function limit(key,max){const now=Date.now();for(const [k,v] of limiter)if(v.until<now)limiter.delete(k);const v=limiter.get(key)||{count:0,until:now+60000};if(++v.count>max)throw issue(429,'Please wait a minute and try again.');limiter.set(key,v);}
- async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>20000)throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
+ async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>(req.url==='/api/avatar'?70000:req.url==='/api/profile-draft'?50000:20000))throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
  const server=createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-  res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https://askfortask.co.uk; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+  res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https: blob:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
   const send=(data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   try{
    const base=origin||`http://${req.headers.host}`, host=new URL(base);
@@ -66,6 +78,16 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
    const session=req.headers.cookie?.match(/(?:^|;\s*)studio_session=([a-f0-9]{64})(?:;|$)/)?.[1];
    const member=session&&await one('SELECT members.* FROM members JOIN sessions ON sessions.owner=members.id WHERE sessions.token=? AND sessions.expires>?',hash(session),now);
    const data=['POST','PUT','PATCH'].includes(method)?await body(req):{};
+   const avatarPath=pathname.match(/^\/api\/avatar\/([a-f0-9-]{36})$/);
+   if(method==='GET'&&avatarPath){
+    const id=avatarPath[1];
+    const owner=await one('SELECT id FROM members WHERE id=? AND visible=1',id);
+    if(!owner&&member?.id!==id)throw issue(404,'Photo unavailable.');
+    const photo=await one('SELECT data FROM creator_avatars WHERE owner=?',id);
+    if(!photo)throw issue(404,'Photo unavailable.');
+    res.writeHead(200,{'Content-Type':'image/jpeg','Cache-Control':'no-store'});
+    res.end(Buffer.from(photo.data,'base64'));return;
+   }
    if(method==='POST'&&pathname==='/api/access'){
     const email=text(data.email,254).toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw issue(400,'Enter a valid email address.');
@@ -97,7 +119,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
    }
    if(method==='GET'&&pathname==='/api/directory'){
     const rows=await sql('SELECT '+publicFields+' FROM members WHERE visible=1 ORDER BY name LIMIT 100');
-    return send([...featuredCreators,...await Promise.all(rows.map(async row=>withWork(await withSpecialties(row))))]);
+    return send([...featuredCreators,...await Promise.all(rows.map(async row=>withDetails(await withWork(await withSpecialties(row)))))]);
    }
    if(method==='POST'&&pathname==='/api/enquiries'){
     const name=text(data.name,120), email=text(data.email,254).toLowerCase(), brief=text(data.brief,2400);
@@ -109,8 +131,35 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     await run('INSERT INTO creator_enquiries(id,creator_id,creator_name,client_name,email,brief,created) VALUES (?,?,?,?,?,?,?)',reference,creator.id,creator.name,name,email,brief,now);
     return send({reference,preview:!auth},201);
    }
-   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withWork(await withSpecialties(member)):null, hosted:Boolean(auth), liveAI:Boolean(apiKey&&model)});
+   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withDetails(await withWork(await withSpecialties(member))):null, hosted:Boolean(auth), liveAI:Boolean(apiKey&&model)});
    if(!member)throw issue(401,'Sign in to continue.');
+   if(pathname==='/api/avatar'&&method==='PUT'){
+    const photo=typeof data.image==='string'?data.image:'';
+    if(!/^[A-Za-z0-9+/]+={0,2}$/.test(photo))throw issue(400,'Choose a JPEG photo.');
+    const bytes=Buffer.from(photo,'base64');
+    if(bytes.length>48000||bytes.length<4||bytes[0]!==255||bytes[1]!==216||bytes.at(-2)!==255||bytes.at(-1)!==217)throw issue(400,'Choose a photo under 48 KB after resizing.');
+    let clean;
+    try{clean=await sharp(bytes,{limitInputPixels:1000000}).resize(384,384,{fit:'cover',withoutEnlargement:true}).jpeg({quality:82}).toBuffer();}
+    catch{throw issue(400,'This photo could not be read. Choose another JPEG.');}
+    if(clean.length>48000)throw issue(400,'Choose a smaller photo.');
+    await run('INSERT INTO creator_avatars VALUES (?,?) ON CONFLICT(owner) DO UPDATE SET data=excluded.data',member.id,clean.toString('base64'));
+    return send({avatar:'/api/avatar/'+member.id});
+   }
+   if(pathname==='/api/avatar'&&method==='DELETE'){
+    await run('DELETE FROM creator_avatars WHERE owner=?',member.id);return send({ok:true});
+   }
+   if(pathname==='/api/profile-source'&&method==='POST'){
+    limit('profile-source:'+member.id,5);
+    try{return send(await readProfilePage(text(data.url,500)));}
+    catch(error){if(error.status)throw error;throw issue(422,'This page cannot be read. Paste your existing bio instead.');}
+   }
+   if(pathname==='/api/profile-draft'&&method==='POST'){
+    if(data.consent!==true)throw issue(400,'Allow sending your source text to OpenAI to prepare a draft.');
+    const source=text(data.source,8000);
+    if(source.length<30)throw issue(400,'Add at least a few sentences about your work.');
+    limit('profile-draft:'+member.id,4);
+    return send(await generateProfileDraft({source,tone:text(data.tone,80),apiKey,model,fetchAI}));
+   }
    if(method==='PUT'&&pathname==='/api/password'&&auth){
     limit('password:'+member.id,5);
     const proof=req.headers.cookie?.match(/(?:^|; *)studio_verified=([\w.-]+)(?:;|$)/)?.[1];
@@ -127,7 +176,16 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     if(!name)throw issue(400,'Add your display name.');
     if(portfolio){try{const u=new URL(portfolio);if(!['https:','http:'].includes(u.protocol)||u.username||u.password)throw 0;}catch{throw issue(400,'Enter an HTTP or HTTPS portfolio link.');}}
     const labels=Array.isArray(data.specialties)?[...new Map(data.specialties.slice(0,30).map(v=>text(v,40)).filter(Boolean).map(v=>[v.toLowerCase(),v])).values()].slice(0,8):null;
-    await run('UPDATE members SET name=?,role=?,place=?,bio=?,portfolio=?,visible=?,available=? WHERE id=?',name,text(data.role,80),text(data.place,100),text(data.bio,500),portfolio,Number(data.visible===true),Number(data.available===true),member.id);
+    const previousDetails=JSON.parse(member.details||'{}');
+    const links=Object.hasOwn(data,'socials')?data.socials:previousDetails.socials||[];
+    if(!Array.isArray(links)||links.length>4)throw issue(400,'Add up to four social or portfolio links.');
+    const socials=links.map(link=>{
+     const url=httpsLink(link?.url),label=text(link?.label,40);
+     if(!url||!label)throw issue(400,'Give each link a label and an HTTPS address.');
+     return {label,url};
+    });
+    const details={headline:Object.hasOwn(data,'headline')?text(data.headline,100):previousDetails.headline||'',remote:Object.hasOwn(data,'remote')?data.remote===true:previousDetails.remote===true,socials};
+    await run('UPDATE members SET name=?,role=?,place=?,bio=?,portfolio=?,visible=?,available=?,details=? WHERE id=?',name,text(data.role,80),text(data.place,100),text(data.bio,500),portfolio,Number(data.visible===true),Number(data.available===true),JSON.stringify(details),member.id);
     if(labels)await run('INSERT INTO creator_specialties VALUES (?,?) ON CONFLICT(owner) DO UPDATE SET labels=excluded.labels',member.id,JSON.stringify(labels));
     return send({ok:true});
    }
@@ -136,7 +194,9 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     const items=data.items.map(item=>{
      const title=text(item?.title,100), credit=text(item?.credit,140), url=httpsLink(item?.url);
      if(!title||!credit||!url)throw issue(400,'Give each project a title, credit and HTTPS link.');
-     return {title,credit,url};
+     const image=item.image?httpsLink(item.image):'';
+     if(item.image&&!image)throw issue(400,'Use an HTTPS image address.');
+     return {title,credit,url,...(image?{image,alt:text(item.alt,180)||title}:{})};
     });
     await run('INSERT INTO creator_work VALUES (?,?) ON CONFLICT(owner) DO UPDATE SET items=excluded.items',member.id,JSON.stringify(items));
     return send({ok:true});

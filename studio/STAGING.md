@@ -25,3 +25,11 @@ Use only sample enquiry details and controlled inboxes during the pilot. Designa
 4. Record the handoff time, missing brief details, and whether the quote needs a deposit, fixed fee, milestones or cancellation terms. Decide the booking and commission model from the pilot before implementing payments.
 
 Before accepting real briefs, confirm who checks the queue, what response expectation can be met, and the privacy and retention arrangements for Studio enquiries and any subsequent sharing.
+
+## Creator editor
+
+Apply the current generated schema before deploying this release. It adds the private members.details JSON text column and creator_avatars table. Older profiles receive empty optional details. Avatar uploads are cropped in the browser, checked and re-encoded by the server, and capped at 48 KB per creator. The public photo route requires a published profile, while the owner can view their own unpublished photo. Full-size work remains hosted at the creator's project links.
+
+The profile editor can read public HTTPS HTML pages and lets creators review the extracted text. Login-protected social pages fall back to pasted bios. Imports reject private and reserved IP addresses, pin the resolved public IP during each connection, validate every redirect, and limit response size and duration.
+
+Nikita chose to connect AI later on 19 November. Set STUDIO_OPENAI_KEY and STUDIO_OPENAI_MODEL in the host to enable the draft controls. The source text is sent to OpenAI only after explicit opt-in. Drafts use structured output and remain editable before application to the profile form. Applying a draft does not save or publish it. AI provider behavior has been tested with an injected response. Live AI requires separate verification when credentials are configured.

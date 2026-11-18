@@ -4,8 +4,8 @@ export async function postgresStore(connectionString){
  const query=(q,args)=>{let n=0;return pool.query(q.replaceAll('?',()=>'$'+ ++n),args);};
  const store={all:async(q,a)=>(await query(q,a)).rows,one:async(q,a)=>(await query(q,a)).rows[0],run:async(q,a)=>({changes:(await query(q,a)).rowCount}),close:()=>pool.end()};
  try{
-  await pool.query(`SELECT members.id, projects.sequence, tasks.sequence
-   FROM members, links, sessions, creator_specialties, creator_work, creator_enquiries, projects, tasks
+  await pool.query(`SELECT members.id, members.details, creator_avatars.owner, projects.sequence, tasks.sequence
+   FROM creator_avatars, members, links, sessions, creator_specialties, creator_work, creator_enquiries, projects, tasks
    LIMIT 0`);
  }catch(error){
   await pool.end();

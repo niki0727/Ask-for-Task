@@ -10,3 +10,5 @@ CREATE TABLE IF NOT EXISTS creator_enquiries(
  client_name TEXT NOT NULL, email TEXT NOT NULL, brief TEXT NOT NULL,
  created BIGINT NOT NULL, handed_off BIGINT
 );
+
+CREATE TABLE IF NOT EXISTS creator_avatars(owner TEXT PRIMARY KEY REFERENCES members(id) ON DELETE CASCADE, data TEXT NOT NULL);
