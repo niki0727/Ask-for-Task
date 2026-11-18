@@ -98,6 +98,7 @@ async function refresh(){
  $('save-phrase').hidden=!hosted||!recentlyVerified;
  $('phrase-note').textContent=!hosted?'Try a phrase locally. Saving it is available in staging.':recentlyVerified?'You can set or replace your passphrase now.':'Open a fresh email link to set or replace your passphrase.';
  $('access').hidden=Boolean(member);$('member').hidden=!member;
+ if(!member)resetProfileEditor();
  $('nav-work').textContent=member?'My studio':'Sign in';
  $('share').hidden=!liveAI;
  $('ai-draft-controls').hidden=!liveAI;
@@ -177,6 +178,29 @@ bind('access',async f=>{
  link.focus();
 });
 
+function resetProfileEditor(){
+ $('profile').reset();
+ specialties=[];
+ renderSocials([]);
+ renderWork([]);
+ closeCrop();
+ showAvatar('');
+ $('import-source').value='';
+ $('import-url').value='';
+ $('import-status').textContent='';
+ $('draft-consent').checked=false;
+ $('review-draft').reset();
+ $('review-draft').hidden=true;
+ draftSpecialties=[];
+ $('draft-specialties').textContent='';
+ $('profile-status').textContent='';
+ $('work-status').textContent='';
+ $('avatar-status').textContent='';
+ $('draft-tools').open=false;
+ showPanel('profile-panel');
+ drawSpecialties();
+ updateProfilePreview();
+}
 function readSocials(){
  return [...$('social-fields').children].map(row=>({
   label:row.querySelector('[data-social-label]').value.trim(),
@@ -376,11 +400,13 @@ async function resumeIntent(){
 bind('password-login',async f=>{
  await api('password-sign-in','POST',fields(f));f.reset();recentlyVerified=false;await resumeIntent();
 });
-guard(async()=>{
+async function openAccessLink(){
  const url=new URL(location.href);
  const localCode=url.searchParams.get('access');
  const emailCode=new URLSearchParams(url.hash.slice(1)).get('studio_access');
  if(!localCode&&!emailCode){await refresh();return;}
+ $('notice').textContent='';
+ $('confirm-email').hidden=true;
  history.replaceState(null,'','/#workspace');
  if(localCode){await api('verify','POST',{code:localCode});await resumeIntent();return;}
  await refresh();
@@ -390,4 +416,8 @@ guard(async()=>{
   try{await api('verify','POST',{code:emailCode});recentlyVerified=true;confirm.hidden=true;await resumeIntent();}
   finally{confirm.disabled=false;}
  });
+}
+window.addEventListener('hashchange',()=>{
+ if(new URLSearchParams(location.hash.slice(1)).has('studio_access'))guard(openAccessLink);
 });
+guard(openAccessLink);
