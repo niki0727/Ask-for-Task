@@ -422,6 +422,6 @@ async function openAccessLink(){
  });
 }
 window.addEventListener('hashchange',()=>{
- if(new URLSearchParams(location.hash.slice(1)).has('studio_access'))guard(openAccessLink);
+ if(new URLSearchParams(location.hash.slice(1)).has('studio_access')||location.hash==='#inbox')guard(openAccessLink);
 });
 guard(openAccessLink);
