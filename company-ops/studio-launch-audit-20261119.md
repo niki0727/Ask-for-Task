@@ -1,6 +1,6 @@
 # Studio launch audit
 
-Reviewed on 19 November 2026. Nikita Piazenko owns Studio operations. The public app is https://studio.askfortask.co.uk. The release is merged into master and deployed from master at 1eb71f3.
+Reviewed on 19 November 2026. Nikita Piazenko owns Studio operations. The public app is https://studio.askfortask.co.uk. The application release is merged into master and deployed from master at 8047d69. The main website is deployed as Cloudflare Worker version df8d177a-8dca-431c-a5cd-5be3d7f2885d.
 
 ## Public access
 
@@ -22,7 +22,7 @@ Alerts carry a reference and operator link, while the private brief stays in Stu
 ## Verification
 
 - Eight integration and import tests passed, including operator isolation, failed-alert retention and retry, concurrent-worker claims, public registration, avatar privacy, profile persistence and project ownership.
-- The dependency audit reported zero known vulnerabilities.
+- The Studio production dependency audit reported zero known vulnerabilities. The separately pinned root Wrangler development toolchain reported four high advisories; no toolchain upgrade is included in this release.
 - Profile and operator layouts were checked at 320, 390 and 1440 pixels without horizontal overflow.
 - Same-tab sign-in, sign-out draft cleanup, selected-work ordering, public source import and returning email access were checked.
 - Public app and privacy routes returned HTTP 200.
@@ -37,3 +37,9 @@ The job runs daily at 03:20 local Mac time and retains encrypted snapshots for 3
 Nikita chose to keep everything free. Render retains its idle shutdown, so a first visit after inactivity can be slow.
 
 Provider references are https://render.com/docs/free and https://supabase.com/docs/guides/platform/backups.
+
+## Main website alignment — final public release
+
+The main website now uses the same approved outlined A4T mark as Studio, provides Creator Studio navigation and sends its creator call to action to public onboarding. The professional CV application remains available as a secondary route. Studio provides a Services link to the main site and identifies the operating company; creator profiles and privacy pages share the same logo. The main homepage layout and service proposition are retained.
+
+All 50 main-site tests, the 29-page site audit, eight Studio integration tests and the Worker dry-run passed. Live main homepage, Photography, Work, professional entry and SVG asset responses exactly matched the released files. Public Studio, shared logo, privacy and Nikita's creator profile returned HTTP 200. Both live pages had no captured console errors or warnings. Live Studio showed the verified-email sign-in instructions, creator profile/enquiry links and an active drawing. Render confirmed 8047d69 succeeded and live.
