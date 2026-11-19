@@ -20,6 +20,7 @@ const token=()=>randomBytes(32).toString('hex');
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const issue=(status,message)=>Object.assign(new Error(message),{status});
 const staticFiles={
+ '/brand.svg':['../public/assets/a4t-mark-soft.svg','image/svg+xml'],
  '/':['site/index.html','text/html; charset=utf-8'],
  '/privacy/':['site/privacy.html','text/html; charset=utf-8'],
  '/studio.css':['site/studio.css','text/css'],

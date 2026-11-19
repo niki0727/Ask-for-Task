@@ -5,7 +5,7 @@
 @media(max-width:760px){.sketch{width:min(100%,430px);margin-inline:auto}}
 
 .brand{display:inline-flex;align-items:center;flex:none;min-height:44px;color:#33466d}
-.brand svg{display:block;width:clamp(76px,9vw,102px);height:auto}
+.brand img{display:block;width:clamp(76px,9vw,102px);height:auto}
 .brand-slash{stroke:var(--accent)}
 .hero{padding-block:clamp(34px,6vw,88px) clamp(22px,4vw,52px)}
 .explore-next{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:14px 0;font-size:.9rem;font-weight:700;text-decoration:none}

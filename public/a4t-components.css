@@ -662,12 +662,12 @@ li + li {
 }
 
 .brand-mark {
-  width: 40px;
-  height: 40px;
-  flex: 0 0 40px;
-  border-radius: var(--radius-control);
-  background: var(--paper);
-  object-fit: cover;
+  width: 100px;
+  height: 43px;
+  flex: 0 0 100px;
+  border-radius: var(--radius-none);
+  background: transparent;
+  object-fit: contain;
 }
 
 .nav-links {
@@ -3301,9 +3301,9 @@ footer {
   }
 
   .brand-mark {
-    width: 38px;
+    width: 88px;
     height: 38px;
-    flex-basis: 38px;
+    flex-basis: 88px;
   }
 
   .top-action {
@@ -8386,11 +8386,11 @@ dd {
 }
 
 .brand-mark {
-  width: 42px;
-  height: 42px;
-  flex-basis: 42px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
+  width: 100px;
+  height: 43px;
+  flex-basis: 100px;
+  border: 0;
+  border-radius: var(--radius-none);
 }
 
 .nav-links a::after {

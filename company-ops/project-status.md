@@ -88,3 +88,56 @@ As of: 25 August 2026 (Europe/Athens)
 - **Database:** Remote migration `0007_create_form_rate_limits.sql` applied to `askfortask_messages`; Wrangler reports no pending migrations.
 - **Live verification:** The apex homepage, contact, privacy, Terms, and contact-config routes returned HTTP 200; `www` redirected to the apex with HTTP 301; HSTS and CSP were present; the API remained `no-store`; the custom missing-page route returned HTTP 404; and contact configuration reported Resend, sender, recipient, and D1 configured. No live customer form was submitted.
 - **Next action:** Owner: Nikita Piazenko. Monitor submissions and Worker errors. No further production change is committed.
+
+## 18 November 2026 — Studio pilot hiring-readiness audit
+
+- **Status:** Local pilot reviewed at `bc6d829`. Chrome verified the drawing in view, reduced-motion behavior, no horizontal overflow at 320, 390 and 1440 pixels, local access, photography specialty selection, directory opt-in, and project/task persistence after reload. Both Studio server tests passed.
+- **Primary gap:** A public profile can show availability and link to a portfolio. It has no profile-specific enquiry route, and the general Studio contact link appears below the directory. The pilot has no booking or payment flow.
+- **Next action:** Nikita Piazenko owns the decision. Make a studio-managed enquiry available from creator cards, pilot with a small roster of consenting creators and real work samples, and verify hosted sign-in and end-to-end enquiry delivery before inviting companies. No date committed.
+
+## 18 November 2026 — Creator portfolio and hiring pilot
+
+- **Status:** Implemented in the local Studio preview. Explore leads with Nikita's published work. Members can add three credited project links without uploading media. Available public profiles accept guest enquiries, which are stored with the server-resolved creator and a reference.
+- **Verification:** Chrome at 320 and 390 px, local creator publishing and guest submission, both Studio integration tests, disposable PostgreSQL, and operator retrieval, handoff status and cleanup of a synthetic enquiry.
+- **Next action:** Nikita Piazenko owns the hosted pilot. The dedicated staging host, verified sender and test inboxes still need to be configured before testing real email delivery and a human handoff. No date committed.
+
+## 19 November 2026 — Creator profile editor
+
+- **Scope:** Profile, private projects and account navigation, live profile preview, compact avatar cropping, introduction and bio, remote availability, social links, selected-project ordering and image links, and public-page text import.
+- **Verification:** Photo validation and privacy, older-profile compatibility, optional details persistence, public profile output, private-address import rejection, source limits, and structured AI drafts tested locally. PostgreSQL tests passed. The staging schema now includes profile details and avatars.
+- **Owner decision:** Nikita requested profile tools now and AI connection later. Live generation remains dependent on the host's OpenAI key and selected model.
+- **Staging release:** Deployed commit 2817ea8. Real email sign-in opened the new creator editor, and hosted public-page import returned the photography page text for review. Existing creator fields and the saved private project remain available. Avatar and publishing QA used disposable local accounts.
+
+## 19 November 2026 — Public launch audit
+
+- **Outcome:** Controlled staging pilot verified. Public onboarding, enquiry operations, and recovery/availability remain the three launch priorities.
+- **Fixes:** Same-tab email links now work without reloading. Sign-out clears imported source and pending creator drafts before another member uses the editor. Preview footer wording corrected.
+- **Evidence:** Four tests passed, dependency audit clear, guest enquiry accepted and retrieved from staging, synthetic record cleaned up, browser regression checks passed. Audit fixes committed as 23cffda.
+- **Owner:** Nikita Piazenko. AI connection remains deferred. Production date and budget remain uncommitted.
+- **Record:** company-ops/studio-launch-audit-20261119.md.
+
+## 19 November 2026 — Public Studio launch preparation
+
+- **User decision:** Keep all infrastructure free. Use studio.askfortask.co.uk for the public app and retain the current Render and Supabase services.
+- **Prepared:** A4T-only enquiry inbox, private notes, reply links, handoff statuses, durable alert retries and idempotency, public confirmed-email registration, persistent submission counters, and canonical-origin redirects.
+- **Infrastructure:** Cloudflare CNAME added. Render reports the domain verified and its certificate issued. Private database schema upgrades applied.
+- **Recovery:** An encrypted export of the Studio and Auth schemas restored successfully into a temporary local database. A Mac LaunchAgent is registered for daily 03:20 backups with 30-day retention. This depends on Nikita's Mac and retains copies locally.
+- **Remaining dependency:** The existing working Resend sending key must be pasted into STUDIO_RESEND_KEY in the prepared Render form before real alert delivery can be verified.
+- **Public verification:** studio.askfortask.co.uk returns HTTP 200. Registration is open, the old Render address redirects, a real sign-in email points to the public domain, and the owner can review a synthetic guest enquiry in the A4T inbox.
+- **Merged:** ac217bd is on master and codex/studio-pilot. Public web code cbcaf6b is deployed. The additional commit fixes the installed local backup scheduler's locale.
+- **Scheduled recovery evidence:** The launchd job ran successfully with exit code 0 and restored 37 tables from an encrypted snapshot. Free hosting retains its idle shutdown. Backups remain on Nikita's Mac.
+- **Outstanding:** Email alerts require the saved Resend key in Render. Passwords is locked; the owner input request remains pending. Synthetic public enquiry 1cd4f0d1-bceb-430d-ba1d-e8c8d328560d is retained for the delivery test.
+
+## 19 November 2026 — Public launch verification complete
+
+- **Live release:** 1eb71f3 is merged into master and deployed from master at studio.askfortask.co.uk.
+- **Resolved:** The owner supplied the Resend key. Both queued and fresh synthetic enquiries generated alerts on their first attempts. Actual Outlook receipt, correct references, public inbox links and same-tab navigation were verified.
+- **Operator check:** Both synthetic tests were closed through the A4T inbox with notes. The open queue is empty. No human handoff was claimed for these automated tests.
+- **Recovery:** The scheduled Mac backup job exited with code 0 and restored a 37-table encrypted snapshot. Daily 03:20 scheduling and 30-day local retention are configured.
+- **Agreed limits:** Hosting remains free with idle shutdown. Backup copies depend on the owner's Mac. AI remains deferred.
+
+### 19 November 2026 — Main website and public Studio alignment
+
+Final release review connects the main website's Creator Studio navigation and homepage creator call to action to https://studio.askfortask.co.uk. The approved outlined blue A4T mark with lime slash is shared across the main-site headers, Studio, creator profiles and privacy page. Studio links back to A4T services and identifies ASK FOR TASK LTD. The existing main homepage layout and client services remain in place; the CV application remains a secondary route.
+
+Verification: main-site tests and 29-page audit pass, all 38 photography stories cleared in the existing register, Studio's eight integration tests pass, production Studio dependencies have zero reported vulnerabilities, and Worker deployment dry-run passes. Mobile menu and 320/390/1440-pixel layouts checked without overflow. Root development tooling has four reported high advisories in Wrangler's transitive development dependencies; these are not Studio runtime dependencies. No toolchain upgrade is bundled into this branding release.
