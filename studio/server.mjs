@@ -1,4 +1,6 @@
 import sharp from 'sharp';
+import {schemaUpgrades} from './schema-upgrades.mjs';
+import {enquiryQueue} from './enquiry-alerts.mjs';
 import {createServer} from 'node:http';
 import {DatabaseSync} from 'node:sqlite';
 import {createHash, randomBytes, randomUUID} from 'node:crypto';
@@ -19,24 +21,32 @@ const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const issue=(status,message)=>Object.assign(new Error(message),{status});
 const staticFiles={
  '/':['site/index.html','text/html; charset=utf-8'],
+ '/privacy/':['site/privacy.html','text/html; charset=utf-8'],
  '/studio.css':['site/studio.css','text/css'],
  '/studio.js':['site/studio.js','text/javascript'],
+ '/operator.js':['site/operator.js','text/javascript'],
  '/enquiry.js':['site/enquiry.js','text/javascript'],
  '/sketch.js':['site/sketch.js','text/javascript'],
  '/showcase.jpg':['../public/assets/photography/event-dj.jpg','image/jpeg']
 };
-export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,store,auth,origin,allowedEmails}={}){
- if(origin&&(!auth||!allowedEmails?.size))throw Error('Hosted Studio requires verified authentication and named pilot email addresses.');
+export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,store,auth,origin,allowedEmails,registrationOpen=false,operatorEmails=new Set(),sendAlert,redirectOrigins=[]}={}){
+ if(origin&&(!auth||(!registrationOpen&&!allowedEmails?.size)))throw Error('Hosted Studio requires verified authentication and a configured registration mode.');
  const db=store?null:new DatabaseSync(file);
  if(db){
   db.exec('PRAGMA foreign_keys=ON;'+schema);
-  if(!db.prepare('PRAGMA table_info(members)').all().some(column=>column.name==='details')){
-   db.exec("ALTER TABLE members ADD COLUMN details TEXT NOT NULL DEFAULT '{}'");
+  for(const [table,columns]of Object.entries(schemaUpgrades)){
+   const existing=new Set(db.prepare('PRAGMA table_info('+table+')').all().map(column=>column.name));
+   for(const [name,definition]of Object.entries(columns))if(!existing.has(name))db.exec('ALTER TABLE '+table+' ADD COLUMN '+name+' '+definition);
   }
  }
  const sql=(q,...args)=>store?store.all(q,args):db.prepare(q).all(...args);
  const one=(q,...args)=>store?store.one(q,args):db.prepare(q).get(...args);
  const run=(q,...args)=>store?store.run(q,args):db.prepare(q).run(...args);
+ const queue=enquiryQueue({one,run,sendAlert});
+ const drainAlerts=()=>queue.drain().catch(()=>console.error('Studio enquiry alert worker needs attention.'));
+ const alertTimer=sendAlert?setInterval(drainAlerts,60000):null;
+ alertTimer?.unref();
+ if(sendAlert)void drainAlerts();
  const withSpecialties=async row=>({...row,specialties:JSON.parse((await one('SELECT labels FROM creator_specialties WHERE owner=?',row.id))?.labels||'[]')});
  const withWork=async row=>({...row,works:JSON.parse((await one('SELECT items FROM creator_work WHERE owner=?',row.id))?.items||'[]')});
  const publicFields='id,name,role,place,bio,portfolio,available,details';
@@ -52,16 +62,26 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
   if(row)return withDetails(await withWork(await withSpecialties(row)));
  }
  const cookie=(value,max)=>`studio_session=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${max}${origin?'; Secure':''}`;
- const limiter=new Map();
- function limit(key,max){const now=Date.now();for(const [k,v] of limiter)if(v.until<now)limiter.delete(k);const v=limiter.get(key)||{count:0,until:now+60000};if(++v.count>max)throw issue(429,'Please wait a minute and try again.');limiter.set(key,v);}
+ async function limit(key,max){
+  const now=Date.now(),expires=now+60000;
+  const record=await one(`INSERT INTO request_limits(key,count,expires) VALUES (?,1,?)
+   ON CONFLICT(key) DO UPDATE SET count=CASE WHEN request_limits.expires<? THEN 1 ELSE request_limits.count+1 END,
+   expires=CASE WHEN request_limits.expires<? THEN ? ELSE request_limits.expires END RETURNING count`,hash(key),expires,now,now,expires);
+  await run('DELETE FROM request_limits WHERE expires<?',now);
+  if(record.count>max)throw issue(429,'Please wait a minute and try again.');
+ }
  async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>(req.url==='/api/avatar'?70000:req.url==='/api/profile-draft'?50000:20000))throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
  const server=createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https: blob:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+  if(origin)res.setHeader('Strict-Transport-Security','max-age=31536000');
   const send=(data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
   try{
    const base=origin||`http://${req.headers.host}`, host=new URL(base);
    if(!origin&&!['127.0.0.1','localhost','[::1]'].includes(host.hostname))throw issue(403,'This build is local only.');
+   if(origin&&req.method==='GET'&&redirectOrigins.some(value=>new URL(value).host===req.headers.host)){
+    res.writeHead(302,{Location:origin+req.url});res.end();return;
+   }
    if((origin&&req.headers.host!==host.host)||(req.headers.origin&&req.headers.origin!==base))throw issue(403,'Invalid origin.');
    const {pathname}=new URL(req.url,base), method=req.method;
    const profilePath=pathname.match(/^\/creators\/([a-z0-9-]{1,80})\/?$/);
@@ -91,20 +111,20 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
    if(method==='POST'&&pathname==='/api/access'){
     const email=text(data.email,254).toLowerCase();
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw issue(400,'Enter a valid email address.');
-    limit('access',25);limit('access:'+email,5);
-    if(auth&&allowedEmails&&!allowedEmails.has(email))return send({sent:true});
+    await limit('access',25);await limit('access:'+email,5);
+    if(auth&&!registrationOpen&&allowedEmails&&!allowedEmails.has(email))return send({sent:true});
     if(auth){await auth.send(email,text(data.name,80));return send({sent:true});}
     const code=token();await run('DELETE FROM links WHERE expires<?',now);await run('INSERT INTO links VALUES (?,?,?,?)',hash(code),email,text(data.name,80),now+600000);
     return send({localLink:'/?access='+code});
    }
    const authCookie=(value,max)=>`studio_verified=${value}; HttpOnly; SameSite=Strict; Secure; Path=/api/password; Max-Age=${max}`;
    if(method==='POST'&&(pathname==='/api/verify'||pathname==='/api/password-sign-in')){
-    limit('verify',30);
+    await limit('verify',30);
     const usingPassword=pathname==='/api/password-sign-in';
     if(usingPassword&&!auth)throw issue(404,'Password sign-in is only available in staging.');
     const verified=auth?(usingPassword?await auth.login(text(data.email,254).toLowerCase(),(typeof data.password==='string'?data.password.slice(0,128):'')):await auth.verify(text(data.code,256))):null;
     const link=verified?.user||await one('DELETE FROM links WHERE token=? AND expires>? RETURNING email,name',hash(text(data.code,64)),now);
-    if(verified&&allowedEmails&&!allowedEmails.has(verified.user.email))throw issue(403,'This account is not enabled for the pilot.');
+    if(verified&&!registrationOpen&&allowedEmails&&!allowedEmails.has(verified.user.email))throw issue(403,'This account is not enabled for the pilot.');
     if(!link)throw issue(400,'This link is invalid or expired. Request a new one.');
     const id=verified?.user.id||randomUUID();
     await run("INSERT INTO members(id,email,name,role) VALUES (?,?,?,?) ON CONFLICT(email) DO NOTHING",id,link.email,text(link.user_metadata?.name||link.name,80)||'Studio member','');
@@ -124,15 +144,38 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
    if(method==='POST'&&pathname==='/api/enquiries'){
     const name=text(data.name,120), email=text(data.email,254).toLowerCase(), brief=text(data.brief,2400);
     if(!name||!brief||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||data.consent!==true)throw issue(400,'Add your name, email, brief and permission to respond.');
-    limit('enquiries',25);limit('enquiries:'+email,4);
+    await limit('enquiries',25);await limit('enquiries:'+email,4);
     const creator=await publicCreator(text(data.creator,80));
     if(!creator?.available)throw issue(404,'This creator is currently unavailable for enquiries.');
     const reference=randomUUID();
     await run('INSERT INTO creator_enquiries(id,creator_id,creator_name,client_name,email,brief,created) VALUES (?,?,?,?,?,?,?)',reference,creator.id,creator.name,name,email,brief,now);
-    return send({reference,preview:!auth},201);
+    send({reference,preview:!auth},201);
+    void drainAlerts();return;
    }
-   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withDetails(await withWork(await withSpecialties(member))):null, hosted:Boolean(auth), liveAI:Boolean(apiKey&&model)});
+   if(method==='GET'&&pathname==='/api/session')return send({member:member?await withDetails(await withWork(await withSpecialties(member))):null, hosted:Boolean(auth), registrationOpen:Boolean(registrationOpen), operator:Boolean(member&&operatorEmails.has(member.email)), liveAI:Boolean(apiKey&&model)});
    if(!member)throw issue(401,'Sign in to continue.');
+   if(pathname.startsWith('/api/operator/')){
+    if(!operatorEmails.has(member.email))throw issue(403,'This inbox is available to A4T operators.');
+    if(pathname==='/api/operator/enquiries'&&method==='GET'){
+     return send(await sql(`SELECT id,creator_name,client_name,email,brief,created,handed_off,review_status,operator_note,
+      notification_sent,notification_attempts,notification_error FROM creator_enquiries ORDER BY created DESC LIMIT 200`));
+    }
+    const enquiry=pathname.match(/^\/api\/operator\/enquiries\/([a-f0-9-]{36})(?:\/(retry-alert))?$/);
+    if(enquiry&&method==='PATCH'){
+     const [,id,retry]=enquiry;
+     if(retry){
+      const result=await run('UPDATE creator_enquiries SET notification_attempts=0,notification_next=0,notification_error=? WHERE id=? AND notification_sent IS NULL','',id);
+      if(!result.changes)throw issue(404,'This alert is already accepted or unavailable.');
+      void drainAlerts();return send({ok:true});
+     }
+     const status=text(data.status,20),note=text(data.note,1000);
+     if(!['new','contacted','handed-off','closed'].includes(status))throw issue(400,'Choose a valid enquiry status.');
+     const result=await run('UPDATE creator_enquiries SET review_status=?,operator_note=?,handed_off=? WHERE id=?',status,note,status==='handed-off'?now:null,id);
+     if(!result.changes)throw issue(404,'Enquiry unavailable.');
+     return send({ok:true});
+    }
+    throw issue(404,'Inbox action unavailable.');
+   }
    if(pathname==='/api/avatar'&&method==='PUT'){
     const photo=typeof data.image==='string'?data.image:'';
     if(!/^[A-Za-z0-9+/]+={0,2}$/.test(photo))throw issue(400,'Choose a JPEG photo.');
@@ -149,7 +192,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     await run('DELETE FROM creator_avatars WHERE owner=?',member.id);return send({ok:true});
    }
    if(pathname==='/api/profile-source'&&method==='POST'){
-    limit('profile-source:'+member.id,5);
+    await limit('profile-source:'+member.id,5);
     try{return send(await readProfilePage(text(data.url,500)));}
     catch(error){if(error.status)throw error;throw issue(422,'This page cannot be read. Paste your existing bio instead.');}
    }
@@ -157,11 +200,11 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     if(data.consent!==true)throw issue(400,'Allow sending your source text to OpenAI to prepare a draft.');
     const source=text(data.source,8000);
     if(source.length<30)throw issue(400,'Add at least a few sentences about your work.');
-    limit('profile-draft:'+member.id,4);
+    await limit('profile-draft:'+member.id,4);
     return send(await generateProfileDraft({source,tone:text(data.tone,80),apiKey,model,fetchAI}));
    }
    if(method==='PUT'&&pathname==='/api/password'&&auth){
-    limit('password:'+member.id,5);
+    await limit('password:'+member.id,5);
     const proof=req.headers.cookie?.match(/(?:^|; *)studio_verified=([\w.-]+)(?:;|$)/)?.[1];
     const password=data.password;
     if(!proof)throw issue(403,'Open a fresh email link before setting a passphrase.');
@@ -226,7 +269,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     if(route==='tasks'&&task&&method==='PATCH'){if(!(await run('UPDATE tasks SET done=? WHERE id=? AND project=?',Number(data.done===true),task,id)).changes)throw issue(404,'Task not found.');return send({ok:true});}
     if(route==='tasks'&&task&&method==='DELETE'){if(!(await run('DELETE FROM tasks WHERE id=? AND project=?',task,id)).changes)throw issue(404,'Task not found.');return send({ok:true});}
     if(route==='assist'&&!task&&method==='POST'){
-     limit('assistant:'+member.id,8);
+     await limit('assistant:'+member.id,8);
      const question=text(data.question,1200);if(!question)throw issue(400,'Ask a question first.');
      const open=(await tasks()).filter(t=>!t.done);
      if(!apiKey||!model||data.share!==true)return send({mode:'guide',answer:localGuide(project,open,question)});
@@ -240,9 +283,9 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     }
    }
    throw issue(404,'Route not found.');
-  }catch(e){if(!res.headersSent)send({error:e.status?e.message:'Something went wrong.'},e.status||500);}
+  }catch(e){if(e.status===429)res.setHeader('Retry-After','60');if(!res.headersSent)send({error:e.status?e.message:'Something went wrong.'},e.status||500);}
  });
- server.once('close',()=>{if(db)db.close();else void store.close();});return server;
+ server.once('close',()=>{if(alertTimer)clearInterval(alertTimer);if(db)db.close();else void store.close();});return server;
 }
 function localGuide(p,open,q){
  const first=open[0]?.title||'agree the first deliverable';

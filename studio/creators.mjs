@@ -39,7 +39,7 @@ export function creatorPage(creator, hosted) {
   <label>Your name<input name="name" autocomplete="name" maxlength="120" required></label>
   <label>Email<input name="email" type="email" autocomplete="email" maxlength="254" required></label>
   <label>Project brief<textarea name="brief" rows="5" maxlength="2400" required></textarea></label>
-  <label class="check"><input name="consent" type="checkbox" required><span>A4T Studio may use my details to respond to this enquiry. <a href="${site}/privacy/">Privacy policy</a></span></label>
+  <label class="check"><input name="consent" type="checkbox" required><span>A4T Studio may use my details to respond to this enquiry. <a href="/privacy/">Privacy policy</a></span></label>
   <button>Send enquiry</button>
   <p id="enquiry-status" role="status"></p>
  </form>` : '<p class="muted">Currently closed to enquiries through A4T Studio.</p>';

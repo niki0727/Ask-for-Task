@@ -89,8 +89,11 @@ async function directory(){
  if(!people.length)$('people').append(el('p','Public profiles appear here when creators choose to share them.'));
 }
 async function refresh(){
- const {member,liveAI,hosted:staging}=await api('session');
+ const {member,operator,liveAI,hosted:staging}=await api('session');
  hosted=Boolean(staging);
+ $('operator-tab').hidden=!operator;
+ window.dispatchEvent(new CustomEvent('studio-operator-change',{detail:Boolean(operator)}));
+ if(!operator){$('inbox-list').replaceChildren();$('inbox-status').textContent='';}
  $('password-option').hidden=!hosted||Boolean(member);
  $('password-option').open=false;
  $('workspace-title').textContent=member?'Your studio':'Welcome to Studio';
@@ -355,7 +358,7 @@ function showPanel(id){
  for(const panel of document.querySelectorAll('.workspace-panel'))panel.hidden=panel.id!==id;
  for(const tab of document.querySelectorAll('[data-panel]'))tab.setAttribute('aria-pressed',String(tab.dataset.panel===id));
 }
-for(const tab of document.querySelectorAll('[data-panel]'))tab.onclick=()=>showPanel(tab.dataset.panel);
+for(const tab of document.querySelectorAll('[data-panel]'))tab.onclick=()=>{showPanel(tab.dataset.panel);if(tab.dataset.panel==='inbox-panel')window.dispatchEvent(new Event('studio-inbox-open'));};
 function showIntent(intent){
  if(!Object.hasOwn(intentCopy,intent))return;
  const target=$('member').hidden?'access':intent==='creator'?'profile':'project';
@@ -396,6 +399,7 @@ async function resumeIntent(){
  const intent=sessionStorage.getItem('studio-intent');
  sessionStorage.removeItem('studio-intent');
  await refresh();showIntent(intent);
+ if(sessionStorage.getItem('studio-inbox-return')==='yes'&&!$('operator-tab').hidden){sessionStorage.removeItem('studio-inbox-return');showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}
 }
 bind('password-login',async f=>{
  await api('password-sign-in','POST',fields(f));f.reset();recentlyVerified=false;await resumeIntent();
@@ -404,7 +408,7 @@ async function openAccessLink(){
  const url=new URL(location.href);
  const localCode=url.searchParams.get('access');
  const emailCode=new URLSearchParams(url.hash.slice(1)).get('studio_access');
- if(!localCode&&!emailCode){await refresh();return;}
+ if(!localCode&&!emailCode){if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');await refresh();if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}return;}
  $('notice').textContent='';
  $('confirm-email').hidden=true;
  history.replaceState(null,'','/#workspace');

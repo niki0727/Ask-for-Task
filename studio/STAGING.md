@@ -33,3 +33,25 @@ Apply the current generated schema before deploying this release. It adds the pr
 The profile editor can read public HTTPS HTML pages and lets creators review the extracted text. Login-protected social pages fall back to pasted bios. Imports reject private and reserved IP addresses, pin the resolved public IP during each connection, validate every redirect, and limit response size and duration.
 
 Nikita chose to connect AI later on 19 November. Set STUDIO_OPENAI_KEY and STUDIO_OPENAI_MODEL in the host to enable the draft controls. The source text is sent to OpenAI only after explicit opt-in. Drafts use structured output and remain editable before application to the profile form. Applying a draft does not save or publish it. AI provider behavior has been tested with an injected response. Live AI requires separate verification when credentials are configured.
+
+## Public Studio configuration
+
+The public address is https://studio.askfortask.co.uk. The existing Render service and Supabase project are being reused to keep costs at zero. Set STUDIO_ORIGIN to that address, STUDIO_REDIRECT_ORIGINS to the previous HTTPS Render origin, and update Supabase's Auth Site URL to the public address. Old Render GET links redirect to the canonical address.
+
+Set STUDIO_REGISTRATION=open to accept confirmed-email registrations beyond the pilot list. Submission counters persist in the private database across app restarts. Keep Supabase's email confirmation and provider abuse limits enabled.
+
+STUDIO_OPERATOR_EMAILS lists the verified A4T inbox owners allowed to review client enquiries. The public signup form cannot grant this access. Operators use the Enquiries tab, record private notes and status, and open a reply in their email app. They mark a handoff only after the creator has received the agreed brief.
+
+Email alerts use STUDIO_RESEND_KEY, STUDIO_ALERT_FROM and STUDIO_ALERT_TO. The key must permit sending from the verified auth.askfortask.co.uk domain. Alerts include the creator name, enquiry reference and operator-inbox link. The private brief stays in Studio. Accepted provider requests are recorded separately from actual inbox delivery. Failed alerts stay with the enquiry and retry with increasing delays, up to six attempts. Operators can retry a failed alert. A database claim prevents concurrent workers from sending the same queued alert; provider idempotency protects ambiguous request retries.
+
+## Free backup and recovery setup
+
+On Nikita's Mac, the backup tool is installed under ~/Library/Application Support/A4T Studio. Its protected configuration directory holds database-url.txt, the official Supabase database CA certificate, a local AES-256-GCM encryption key and encrypted snapshots. It exports the Studio and Auth schemas using one consistent database snapshot. Each backup is restored into a temporary local PostgreSQL instance and every restored table count is checked against that snapshot.
+
+The per-column pg_attver metadata in Supabase exports is omitted only during standard PostgreSQL restore verification. COPY data remains intact. The original encrypted archive retains the complete provider dump.
+
+The LaunchAgent uk.co.askfortask.studio-backup runs daily at 03:20 local Mac time. The Mac must be available to run it. Verified snapshots are kept for 30 days. Files and the encryption key remain on this Mac, so this setup does not provide an off-device copy.
+
+Run the installed backup.mjs with backup for a fresh export and restore check. Run it with verify followed by an encrypted archive path to repeat the restore check. Backup output and errors are logged privately beside the configuration. Keep the backup-key file together with a protected recovery copy of the archives if arranging off-device storage later.
+
+The Render Free instance still spins down when idle. This is the agreed zero-cost availability tradeoff.
