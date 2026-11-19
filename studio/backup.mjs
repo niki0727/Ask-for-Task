@@ -21,7 +21,7 @@ try{key=await readFile(keyPath);}catch(error){
 }
 if(key.length!==32)throw Error('The local backup encryption key is invalid.');
 function childProcess(command,args,env={}){
- const child=spawn(command,args,{env:{...process.env,...env},stdio:['pipe','pipe','pipe']});
+ const child=spawn(command,args,{env:{...process.env,LC_ALL:'C',LANG:'C',...env},stdio:['pipe','pipe','pipe']});
  let errorText='';
  child.stderr.on('data',data=>{errorText=(errorText+data).slice(-5000);});
  const done=new Promise((resolve,reject)=>{
@@ -114,8 +114,9 @@ if(command==='backup'){
  const temporary=await mkdtemp(join(tmpdir(),'a4t-restore-'));
  const cluster=join(temporary,'db');let started=false,client;
  try{
-  await run('initdb',['-D',cluster,'-A','trust','--no-locale']);
-  await run('pg_ctl',['-D',cluster,'-o',"-h '' -k "+temporary,'-l',join(temporary,'postgres.log'),'start']);
+  await run('initdb',['-D',cluster,'-A','trust','--no-locale','--encoding=UTF8']);
+  try{await run('pg_ctl',['-D',cluster,'-o',"-h '' -k "+temporary,'-l',join(temporary,'postgres.log'),'start']);}
+  catch(error){throw new Error(error.message+'\n'+await readFile(join(temporary,'postgres.log'),'utf8'));}
   started=true;
   const environment={PGHOST:temporary,PGPORT:'5432',PGUSER:userInfo().username,PGSSLMODE:'disable'};
   const archive=childProcess('pg_restore',['--no-owner','--no-privileges','--file=-']);
