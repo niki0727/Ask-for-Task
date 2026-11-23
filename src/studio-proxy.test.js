@@ -25,3 +25,11 @@ test('Studio rejects cross-site writes and handles cold-start failures without l
  const large=await proxyStudio(request('https://askfortask.co.uk'),async()=>{throw Object.assign(Error(),{status:413});},fetcher);
  assert.equal(large.status,413);
 });
+test('the Worker preserves Studio API paths instead of adding page trailing slashes',async()=>{
+ const {default:worker}=await import('./worker.js');const previous=globalThis.fetch;let target;
+ globalThis.fetch=async(url)=>{target=url;return Response.json({member:null});};
+ try{
+  const response=await worker.fetch(new Request('https://askfortask.co.uk/studio/api/session'),{});
+  assert.equal(response.status,200);assert.equal(target,'https://studio.askfortask.co.uk/studio/api/session');
+ }finally{globalThis.fetch=previous;}
+});

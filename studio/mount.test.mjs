@@ -20,3 +20,10 @@ test('mounted Studio keeps login, profiles, session cookies and logout on the ma
  const logout=await fetch(origin+'/studio/api/logout',{method:'POST',headers:{Origin:origin,Cookie:cookie.split(';')[0],'Content-Type':'application/json'},body:'{}'});assert.match(logout.headers.get('set-cookie'),/Path=\/studio\/; Max-Age=0/);
  assert.deepEqual(mountData({avatar:'/api/avatar/abc',bio:'/api/avatar/keep-my-words'},'/studio'),{avatar:'/studio/api/avatar/abc',bio:'/api/avatar/keep-my-words'});
 });
+
+test('old Studio links redirect to the integrated site while browser email fragments survive',async t=>{
+ const {get}=await import('node:http');
+ const server=studio({origin:'https://studio.askfortask.co.uk',auth:{},registrationOpen:true}).listen(0,'127.0.0.1');await once(server,'listening');t.after(()=>new Promise(resolve=>server.close(resolve)));
+ const response=await new Promise((resolve,reject)=>get({hostname:'127.0.0.1',port:server.address().port,path:'/',headers:{Host:'studio.askfortask.co.uk'}},r=>{r.resume();resolve({status:r.statusCode,location:r.headers.location});}).on('error',reject));
+ assert.equal(response.status,302);assert.equal(response.location,'https://askfortask.co.uk/studio/');
+});

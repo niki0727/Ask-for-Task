@@ -87,6 +87,9 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
    }
    if((origin&&req.headers.host!==host.host)||(req.headers.origin&&req.headers.origin!==base))throw issue(403,'Invalid origin.');
    const requestPath=new URL(req.url,base).pathname, pathname=mount?requestPath.slice(mount.length):requestPath, method=req.method;
+   if(origin==='https://studio.askfortask.co.uk' && !mount && method==='GET' && !pathname.startsWith('/api/')){
+    res.writeHead(302,{Location:'https://askfortask.co.uk/studio'+req.url});res.end();return;
+   }
    const profilePath=pathname.match(/^\/creators\/([a-z0-9-]{1,80})\/?$/);
    if(method==='GET'&&profilePath){
     const creator=await publicCreator(profilePath[1]);

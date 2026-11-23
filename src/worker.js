@@ -796,6 +796,11 @@ async function handleRequest(request, env) {
       return handlePartnerRedirect(request, env, url);
     }
 
+    if (url.pathname.startsWith("/studio/")) {
+      if (redirectToCanonical) return Response.redirect(url.toString(),301);
+      return proxyStudio(request,readBodyBytes);
+    }
+
     const isNotFoundAlias = ["/404", "/404/", "/404.html"].includes(url.pathname);
     if (isNotFoundAlias) {
       if (redirectToCanonical) {
@@ -820,8 +825,6 @@ async function handleRequest(request, env) {
     if (redirectToCanonical) {
       return Response.redirect(url.toString(), 301);
     }
-
-    if (url.pathname.startsWith("/studio/")) return proxyStudio(request, readBodyBytes);
 
     if (url.pathname === "/api/contact-config") {
       return json({
