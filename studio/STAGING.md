@@ -55,3 +55,9 @@ The LaunchAgent uk.co.askfortask.studio-backup runs daily at 03:20 local Mac tim
 Run the installed backup.mjs with backup for a fresh export and restore check. Run it with verify followed by an encrypted archive path to repeat the restore check. Backup output and errors are logged privately beside the configuration. Keep the backup-key file together with a protected recovery copy of the archives if arranging off-device storage later.
 
 The Render Free instance still spins down when idle. This is the agreed zero-cost availability tradeoff.
+
+## Public website integration — 23 November 2026
+
+The user-facing workspace is now https://askfortask.co.uk/studio/ and homepage email access uses /studio/api/access. Keep STUDIO_ORIGIN=https://studio.askfortask.co.uk for the fixed application upstream: the Worker verifies same-site writes and forwards them with the upstream origin. The Node app recognizes the /studio/ mount, emits mounted URLs and scopes its cookies to that path. Direct page links on the former Studio origin redirect to the main website, including existing email and alert links. Do not point the proxy upstream back to askfortask.co.uk, which would create a loop.
+
+The same Supabase accounts and database remain in use. No migration is required. The verified public test record is in company-ops/studio-homepage-integration-20261123.md. A fresh sign-in on the main domain is expected for members whose previous browser session belongs to the old subdomain.
