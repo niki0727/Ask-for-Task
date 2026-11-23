@@ -143,3 +143,11 @@ Final release review connects the main website's Creator Studio navigation and h
 Verification: main-site tests and 29-page audit pass, all 38 photography stories cleared in the existing register, Studio's eight integration tests pass, production Studio dependencies have zero reported vulnerabilities, and Worker deployment dry-run passes. Mobile menu and 320/390/1440-pixel layouts checked without overflow. Root development tooling has four reported high advisories in Wrangler's transitive development dependencies; these are not Studio runtime dependencies. No toolchain upgrade is bundled into this branding release.
 
 Release verified public: main Worker version df8d177a-8dca-431c-a5cd-5be3d7f2885d and Studio application commit 8047d69. Render reports succeeded/live. Main release files match public responses, Studio logo/profile/privacy routes return 200, and both public pages show no captured browser console errors or warnings.
+
+### 23 November 2026 — Creator Studio integrated into the homepage
+
+Nikita requested prominent creator membership and sign-in on the main homepage, with Studio feeling part of the same website. The opening section now contains Creator Studio email access, creator discovery and workspace entry alongside the existing client-service proposition. All main-site creator links point to /studio/ on askfortask.co.uk.
+
+The same application, accounts and database now support the /studio/ mount. A fixed-upstream Worker route forwards only Studio cookies, bounds request bodies, rejects cross-site writes and preserves application security headers. Session and email-verification cookies stay scoped to /studio/. Profile/avatar URLs, private projects, operator calls and sign-out respect the mount. Existing standalone routes remain available during rollout; canonical redirects will follow after the main route is verified.
+
+Verification before release: 53 tests pass, including new same-site forwarding, cross-site rejection, failure handling, mounted sign-in/session/logout and profile URL coverage. The site audit and Worker dry-run pass. Chrome confirmed local sign-in into the mounted workspace and no mobile horizontal overflow; the homepage exposes both client and creator routes immediately. No database migration or paid infrastructure is required.

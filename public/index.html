@@ -87,7 +87,7 @@
     }
   </script>
   <link rel="stylesheet" href="/a4t-system.css?v=abb1e54c02be">
-  <link rel="stylesheet" href="/a4t-components.css?v=2e8e6e11b0e6">
+  <link rel="stylesheet" href="/a4t-components.css?v=c813fcf6e208">
 </head>
 <body class="home-index">
   <header class="nav">
@@ -103,7 +103,7 @@
         <a href="/brand-development/">Brand development</a>
         <a href="/ventures/">Work</a>
         <a href="/about/">About</a>
-        <a href="https://studio.askfortask.co.uk/">Creator Studio</a>
+        <a href="/studio/">Creator Studio</a>
         <a class="nav-mobile-contact" href="/contact/?topic=Project%20scoping%20call">Start a project</a>
       </nav>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" data-menu-toggle>
@@ -117,14 +117,28 @@
   <main>
     <section class="home-hero">
       <div class="container home-hero-inner">
-        <div class="eyebrow">Founder-led design studio</div>
-        <h1 class="responsive-title">A design studio that gets the work finished.</h1>
-        <p>Brand, websites, apps and photography, planned with you and delivered by founder Nikita Piazenko with the right specialists for each brief.</p>
-        <div class="home-actions">
-          <button class="button button-primary home-desktop-action" type="button" data-project-assistant-open>Describe your project</button>
-          <a class="button button-primary home-mobile-action" href="#explore">Explore what we do</a>
-          <a class="text-link" href="#work">See work you can verify &rarr;</a>
+        <div class="home-hero-copy">
+          <div class="eyebrow">Founder-led design studio</div>
+          <h1 class="responsive-title">A design studio that gets the work finished.</h1>
+          <p>Brand, websites, apps and photography. Planned with you, delivered by Nikita Piazenko and the right specialists.</p>
+          <div class="home-actions">
+            <a class="button button-primary" href="/contact/?topic=Project%20scoping%20call">Start a project</a>
+            <a class="button button-secondary" href="#creator-studio">Join or sign in</a>
+          </div>
         </div>
+        <aside class="home-studio" id="creator-studio" aria-labelledby="home-studio-title">
+          <div class="section-kicker">The A4T creative community</div>
+          <h2 id="home-studio-title">Creator Studio</h2>
+          <p>Your work, your profile, your next project. Join the community or pick up where you left off.</p>
+          <form id="home-studio-access" action="/studio/#workspace" method="get">
+            <label for="home-studio-email">Email</label>
+            <input id="home-studio-email" name="email" type="email" autocomplete="email" maxlength="254" placeholder="you@example.com" required>
+            <button class="button button-primary" type="submit">Continue with email</button>
+            <p class="home-studio-status" id="home-studio-status" role="status" aria-live="polite">We’ll email you a sign-in link. No password needed.</p>
+          </form>
+          <div class="home-studio-links"><a href="/studio/#directory">Explore creators &rarr;</a><a href="/studio/#workspace">Open your workspace &rarr;</a></div>
+          <small>New here? Your account starts with the same link. <a href="/studio/privacy/">Privacy</a></small>
+        </aside>
       </div>
     </section>
 
@@ -135,7 +149,7 @@
           <a href="/website-development/"><span>Websites</span><small>Plan and build</small></a>
           <a href="/app-development/"><span>Apps</span><small>Idea to release</small></a>
           <a href="/photography/"><span>Photography</span><small>People, places, products</small></a>
-          <a href="/ventures/"><span>Our work</span><small>See what we have made</small></a>
+          <a href="/studio/#directory"><span>Creators</span><small>Explore work &amp; talent</small></a>
         </div>
       </div>
     </nav>
@@ -212,7 +226,7 @@
         </div>
         <div>
           <p>Create a profile, share selected work, and let clients enquire through A4T Studio. Choose when to publish and when you’re open to projects.</p>
-          <a class="button button-secondary" href="https://studio.askfortask.co.uk/#workspace">Join as a creator</a>
+          <a class="button button-secondary" href="/studio/#workspace">Join as a creator</a>
         </div>
       </div>
     </section>
@@ -225,7 +239,7 @@
     </section>
   </main>
 
-  <footer class="site-footer"><div class="container footer-inner"><div class="footer-company"><strong>A4T Studio</strong><span>A4T Studio is the trading name of ASK FOR TASK LTD, registered in England and Wales under company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.</span></div><nav class="footer-links" aria-label="Footer links"><a href="/services/">Services</a><a href="/brand-development/">Brand development</a><a href="/ventures/">Work</a><a href="https://studio.askfortask.co.uk/">Creator Studio</a><a href="/about/">About</a><a href="/about/#company-timeline">History</a><a href="/safety/">Trust &amp; standards</a><a href="/privacy/">Privacy</a><a href="/cookies/">Cookies</a><a href="/faq/">FAQ</a><a href="/terms/">Terms</a></nav></div><div class="container footer-meta"><a href="tel:+447404810279">+44 7404 810279</a><a href="mailto:admin@askfortask.co.uk">admin@askfortask.co.uk</a><a href="https://find-and-update.company-information.service.gov.uk/company/14697408" rel="noopener noreferrer">Company no. 14697408 &nearr;</a><a href="/go/nikita-linkedin?source=home" rel="noopener noreferrer">Nikita Piazenko on LinkedIn &nearr;</a><span>Nikita aims to reply by the end of the next business day. A detailed scope may take longer.</span></div></footer>
-  <script src="/script.js?v=92f91dd44499"></script>
+  <footer class="site-footer"><div class="container footer-inner"><div class="footer-company"><strong>A4T Studio</strong><span>A4T Studio is the trading name of ASK FOR TASK LTD, registered in England and Wales under company number 14697408. Registered office: The Matilda House, St. Katharines Way, London, England, E1W 1LF.</span></div><nav class="footer-links" aria-label="Footer links"><a href="/services/">Services</a><a href="/brand-development/">Brand development</a><a href="/ventures/">Work</a><a href="/studio/">Creator Studio</a><a href="/about/">About</a><a href="/about/#company-timeline">History</a><a href="/safety/">Trust &amp; standards</a><a href="/privacy/">Privacy</a><a href="/cookies/">Cookies</a><a href="/faq/">FAQ</a><a href="/terms/">Terms</a></nav></div><div class="container footer-meta"><a href="tel:+447404810279">+44 7404 810279</a><a href="mailto:admin@askfortask.co.uk">admin@askfortask.co.uk</a><a href="https://find-and-update.company-information.service.gov.uk/company/14697408" rel="noopener noreferrer">Company no. 14697408 &nearr;</a><a href="/go/nikita-linkedin?source=home" rel="noopener noreferrer">Nikita Piazenko on LinkedIn &nearr;</a><span>Nikita aims to reply by the end of the next business day. A detailed scope may take longer.</span></div></footer>
+  <script src="/script.js?v=a302aff466f3"></script>
 </body>
 </html>

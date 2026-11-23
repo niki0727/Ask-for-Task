@@ -1,3 +1,4 @@
+import {proxyStudio} from './studio-proxy.js';
 import { Buffer } from "node:buffer";
 
 const jsonHeaders = {
@@ -128,9 +129,10 @@ function json(data, status = 200, additionalHeaders = {}) {
   });
 }
 
-function withSecurityHeaders(response) {
+function withSecurityHeaders(response, studio=false) {
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(securityHeaders)) {
+    if (studio && name === "content-security-policy" && headers.has(name)) continue;
     headers.set(name, value);
   }
 
@@ -819,6 +821,8 @@ async function handleRequest(request, env) {
       return Response.redirect(url.toString(), 301);
     }
 
+    if (url.pathname.startsWith("/studio/")) return proxyStudio(request, readBodyBytes);
+
     if (url.pathname === "/api/contact-config") {
       return json({
         ok: true,
@@ -1276,7 +1280,7 @@ async function handleRequest(request, env) {
 
 export default {
   async fetch(request, env) {
-    return withSecurityHeaders(await handleRequest(request, env));
+    return withSecurityHeaders(await handleRequest(request, env),new URL(request.url).pathname.startsWith("/studio/"));
   },
 
   async scheduled(controller, env) {

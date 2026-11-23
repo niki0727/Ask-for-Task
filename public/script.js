@@ -809,3 +809,21 @@ professionalForm?.addEventListener("submit", async (event) => {
     }
   }
 });
+
+// The homepage uses the same verified-email flow as the Studio workspace.
+const studioAccess=document.getElementById('home-studio-access');
+if(studioAccess) studioAccess.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const button=studioAccess.querySelector('button');
+  const message=document.getElementById('home-studio-status');
+  button.disabled=true;message.textContent='Sending your sign-in link…';
+  const waiting=setTimeout(()=>{message.textContent='Studio is waking up. Your request is still sending…';},8000);
+  try{
+    const response=await fetch('/studio/api/access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:studioAccess.elements.email.value.trim()})});
+    const result=await response.json();
+    if(!response.ok) throw Error(result.error||'Please try again.');
+    message.textContent='Check your inbox. Open the link to join or return to your Studio.';
+    button.textContent='Send another link';
+  }catch(error){message.textContent=error.message||'Studio is temporarily unavailable. Please try again.';}
+  finally{clearTimeout(waiting);button.disabled=false;}
+});

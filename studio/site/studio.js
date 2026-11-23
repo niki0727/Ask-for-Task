@@ -1,9 +1,10 @@
+const studioBase=document.querySelector('meta[name=studio-base]')?.content||'';
 const $=id=>document.getElementById(id);
 const fields=form=>Object.fromEntries(new FormData(form));
 const el=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
 let active=null, hosted=false, recentlyVerified=false;
 async function api(path,method='GET',payload){
- const r=await fetch('/api/'+path,{method,...(payload?{headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{})});
+ const r=await fetch(studioBase+'/api/'+path,{method,...(payload?{headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{})});
  const data=await r.json();
  if(!r.ok)throw Error(data.error);return data;
 }
@@ -68,7 +69,7 @@ async function directory(){
  $('people').replaceChildren(...people.map(p=>{
   const a=el('article','');a.append(el('h3',p.name),el('p',[p.role,p.place].filter(Boolean).join(' · ')),el('p',p.bio));
   if(p.specialties?.length){const list=el('ul','');list.className='disciplines';list.append(...p.specialties.map(label=>el('li',label)));a.append(list);}
-  const route='/creators/'+encodeURIComponent(p.id);
+  const route=studioBase+'/creators/'+encodeURIComponent(p.id);
   const profile=el('a','View creator profile ↗');profile.href=route;
   if(p.works?.length){
    const item=p.works[0];
@@ -107,7 +108,7 @@ async function refresh(){
  $('ai-draft-controls').hidden=!liveAI;
  $('draft-unavailable').hidden=liveAI;
  $('ai-mode').textContent=liveAI?'Use the local guide or opt in to live AI for this request.':'Local planning guide · live AI is not configured.';
- if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href='/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);renderSocials(member.socials||[]);showAvatar(member.avatar);updateProfilePreview();await projects();}
+ if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href=studioBase+'/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);renderSocials(member.socials||[]);showAvatar(member.avatar);updateProfilePreview();await projects();}
  await directory();
 }
 function addWork(item={}){
@@ -340,7 +341,7 @@ bind('profile',async f=>{
   const {member}=await api('session');
   $('identity').textContent=member.name;
   $('public-profile-link').hidden=!member.visible;
-  $('public-profile-link').href='/creators/'+encodeURIComponent(member.id);
+  $('public-profile-link').href=studioBase+'/creators/'+encodeURIComponent(member.id);
   await directory();
   status.textContent='Saved';
  }catch(error){status.textContent=error.message;}
@@ -408,10 +409,10 @@ async function openAccessLink(){
  const url=new URL(location.href);
  const localCode=url.searchParams.get('access');
  const emailCode=new URLSearchParams(url.hash.slice(1)).get('studio_access');
- if(!localCode&&!emailCode){if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');await refresh();if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}return;}
+ if(!localCode&&!emailCode){if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');await refresh();if(location.hash==='#workspace')$('workspace').scrollIntoView({block:'start'});if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}return;}
  $('notice').textContent='';
  $('confirm-email').hidden=true;
- history.replaceState(null,'','/#workspace');
+ history.replaceState(null,'',studioBase+'/#workspace');
  if(localCode){await api('verify','POST',{code:localCode});await resumeIntent();return;}
  await refresh();
  const confirm=$('confirm-email');confirm.hidden=false;confirm.focus();

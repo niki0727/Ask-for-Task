@@ -4831,6 +4831,31 @@ footer {
   padding-block: 84px;
 }
 
+/* The community and client services share the homepage's opening section. */
+.home-hero-copy { min-width: 0; display: grid; gap: 22px; align-content: center; }
+.home-hero-copy > p { color: var(--ink-soft); font-size: 19px; line-height: 1.55; max-width: 55ch; }
+.home-studio { padding: 28px; border: 1px solid var(--line); background: var(--paper); scroll-margin-top: 90px; min-width: 0; }
+.home-studio h2 { margin: 12px 0; font-size: 34px; line-height: 1.1; }
+.home-studio > p { font-size: 15px; line-height: 1.55; margin: 0 0 18px; }
+.home-studio label { display: block; font-size: 14px; margin-bottom: 6px; font-weight: 650; }
+.home-studio input { width: 100%; min-height: 48px; padding: 12px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; border-radius: var(--radius-control); }
+.home-studio button { width: 100%; margin-top: 10px; }
+.home-studio-status { min-height: 42px; margin: 10px 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.home-studio-links { display: flex; flex-wrap: wrap; gap: 12px 20px; font-size: 14px; font-weight: 650; margin-bottom: 14px; }
+.home-studio small { display: block; font-size: 12px; color: var(--ink-soft); }
+@media (min-width: 901px) {
+  .home-index .home-hero-inner { grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); gap: 54px; padding-block: 54px; }
+  .home-index .home-hero h1 { font-size: clamp(42px, 4.6vw, 62px); }
+}
+@media (max-width: 900px) {
+  .home-index .home-hero-inner { padding-block: 30px; gap: 28px; }
+  .home-hero-copy { gap: 16px; }
+  .home-hero-copy .home-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .home-hero-copy .home-actions .button { padding-inline: 10px; font-size: 13px; }
+  .home-studio { padding: 22px; }
+  .home-studio h2 { font-size: 28px; }
+}
+
 .home-hero h1 {
   max-width: 960px;
   font-size: 58px;

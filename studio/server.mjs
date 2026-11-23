@@ -1,3 +1,4 @@
+import {studioMount,mountHTML,mountData} from './mount.mjs';
 import sharp from 'sharp';
 import {schemaUpgrades} from './schema-upgrades.mjs';
 import {enquiryQueue} from './enquiry-alerts.mjs';
@@ -62,7 +63,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
   const row=await one('SELECT '+publicFields+' FROM members WHERE id=? AND visible=1',id);
   if(row)return withDetails(await withWork(await withSpecialties(row)));
  }
- const cookie=(value,max)=>`studio_session=${value}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${max}${origin?'; Secure':''}`;
+ const cookie=(value,max,mount='')=>`studio_session=${value}; HttpOnly; SameSite=Strict; Path=${mount}/; Max-Age=${max}${origin?'; Secure':''}`;
  async function limit(key,max){
   const now=Date.now(),expires=now+60000;
   const record=await one(`INSERT INTO request_limits(key,count,expires) VALUES (?,1,?)
@@ -71,12 +72,13 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
   await run('DELETE FROM request_limits WHERE expires<?',now);
   if(record.count>max)throw issue(429,'Please wait a minute and try again.');
  }
- async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>(req.url==='/api/avatar'?70000:req.url==='/api/profile-draft'?50000:20000))throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
+ async function body(req){if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))throw issue(415,'Send JSON.');let parts=[],size=0;for await(const part of req){size+=part.length;if(size>(req.url.replace(/^\/studio(?=\/)/,'')==='/api/avatar'?70000:req.url.replace(/^\/studio(?=\/)/,'')==='/api/profile-draft'?50000:20000))throw issue(413,'That request is too large.');parts.push(part);}try{const b=JSON.parse(Buffer.concat(parts));if(!b||Array.isArray(b)||typeof b!=='object')throw 0;return b;}catch{throw issue(400,'Invalid request.');}}
  const server=createServer(async(req,res)=>{
   res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
   res.setHeader('Content-Security-Policy',"default-src 'self'; img-src 'self' https: blob:; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
   if(origin)res.setHeader('Strict-Transport-Security','max-age=31536000');
-  const send=(data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
+  const mount=studioMount(req.url);
+  const send=(data,status=200)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(mountData(data,mount)));};
   try{
    const base=origin||`http://${req.headers.host}`, host=new URL(base);
    if(!origin&&!['127.0.0.1','localhost','[::1]'].includes(host.hostname))throw issue(403,'This build is local only.');
@@ -84,16 +86,16 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     res.writeHead(302,{Location:origin+req.url});res.end();return;
    }
    if((origin&&req.headers.host!==host.host)||(req.headers.origin&&req.headers.origin!==base))throw issue(403,'Invalid origin.');
-   const {pathname}=new URL(req.url,base), method=req.method;
+   const requestPath=new URL(req.url,base).pathname, pathname=mount?requestPath.slice(mount.length):requestPath, method=req.method;
    const profilePath=pathname.match(/^\/creators\/([a-z0-9-]{1,80})\/?$/);
    if(method==='GET'&&profilePath){
     const creator=await publicCreator(profilePath[1]);
     res.writeHead(creator?200:404,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Robots-Tag':'noindex'});
-    res.end(creatorPage(creator,Boolean(auth)));return;
+    res.end(mountHTML(creatorPage(creator,Boolean(auth)),mount));return;
    }
    if(!pathname.startsWith('/api/')){
     if(method!=='GET'||!Object.hasOwn(staticFiles,pathname))throw issue(404,'Page not found.');
-    const [path,type]=staticFiles[pathname];const data=await readFile(new URL(path,import.meta.url));res.writeHead(200,{'Content-Type':type});res.end(data);return;
+    const [path,type]=staticFiles[pathname];const data=await readFile(new URL(path,import.meta.url));res.writeHead(200,{'Content-Type':type});res.end(type.startsWith('text/html')?mountHTML(data.toString(),mount):data);return;
    }
    const now=Date.now();
    const session=req.headers.cookie?.match(/(?:^|;\s*)studio_session=([a-f0-9]{64})(?:;|$)/)?.[1];
@@ -118,7 +120,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     const code=token();await run('DELETE FROM links WHERE expires<?',now);await run('INSERT INTO links VALUES (?,?,?,?)',hash(code),email,text(data.name,80),now+600000);
     return send({localLink:'/?access='+code});
    }
-   const authCookie=(value,max)=>`studio_verified=${value}; HttpOnly; SameSite=Strict; Secure; Path=/api/password; Max-Age=${max}`;
+   const authCookie=(value,max)=>`studio_verified=${value}; HttpOnly; SameSite=Strict; Secure; Path=${mount}/api/password; Max-Age=${max}`;
    if(method==='POST'&&(pathname==='/api/verify'||pathname==='/api/password-sign-in')){
     await limit('verify',30);
     const usingPassword=pathname==='/api/password-sign-in';
@@ -135,7 +137,7 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     await run('DELETE FROM sessions WHERE expires<?',now);
     const key=token();
     await run('INSERT INTO sessions VALUES (?,?,?)',hash(key),who.id,now+86400000);
-    res.setHeader('Set-Cookie',auth?[cookie(key,86400),authCookie(usingPassword?'':verified.access_token,usingPassword?0:600)]:cookie(key,86400));
+    res.setHeader('Set-Cookie',auth?[cookie(key,86400,mount),authCookie(usingPassword?'':verified.access_token,usingPassword?0:600)]:cookie(key,86400,mount));
     return send({ok:true});
    }
    if(method==='GET'&&pathname==='/api/directory'){
@@ -213,8 +215,8 @@ export function studio({file=':memory:', apiKey='', model='', fetchAI=fetch,stor
     await auth.password(proof,member.id,password);
     res.setHeader('Set-Cookie',authCookie('',0));return send({ok:true});
    }
-   if(method==='POST'&&pathname==='/api/logout'){await run('DELETE FROM sessions WHERE token=?',hash(session));res.setHeader('Set-Cookie',auth?[cookie('',0),authCookie('',0)]:cookie('',0));return send({ok:true});}
-   if(method==='DELETE'&&pathname==='/api/account'){if(auth)await auth.remove(member.id);await run('DELETE FROM links WHERE email=?',member.email);await run('DELETE FROM members WHERE id=?',member.id);res.setHeader('Set-Cookie',auth?[cookie('',0),authCookie('',0)]:cookie('',0));return send({ok:true});}
+   if(method==='POST'&&pathname==='/api/logout'){await run('DELETE FROM sessions WHERE token=?',hash(session));res.setHeader('Set-Cookie',auth?[cookie('',0,mount),authCookie('',0)]:cookie('',0,mount));return send({ok:true});}
+   if(method==='DELETE'&&pathname==='/api/account'){if(auth)await auth.remove(member.id);await run('DELETE FROM links WHERE email=?',member.email);await run('DELETE FROM members WHERE id=?',member.id);res.setHeader('Set-Cookie',auth?[cookie('',0,mount),authCookie('',0)]:cookie('',0,mount));return send({ok:true});}
    if(method==='PUT'&&pathname==='/api/profile'){
     const name=text(data.name,80),portfolio=text(data.portfolio,500);
     if(!name)throw issue(400,'Add your display name.');

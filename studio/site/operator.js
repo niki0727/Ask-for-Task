@@ -5,7 +5,7 @@
  let rows=[];
  let generation=0;
  async function request(path,method='GET',data){
-  const response=await fetch('/api/operator/'+path,{
+  const response=await fetch((document.querySelector('meta[name=studio-base]')?.content||'')+'/api/operator/'+path,{
    method,...(data?{headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}:{})
   });
   const result=await response.json();

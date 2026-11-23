@@ -7,7 +7,7 @@ if (enquiry) enquiry.addEventListener('submit', async event => {
  button.disabled = true;
  status.textContent = 'Sending…';
  try {
-  const response = await fetch('/api/enquiries', {
+  const response = await fetch((document.querySelector('meta[name=studio-base]')?.content||'')+'/api/enquiries', {
    method: 'POST', headers: {'Content-Type': 'application/json'},
    body: JSON.stringify({...fields, creator: enquiry.dataset.creator, consent: fields.consent === 'on'})
   });

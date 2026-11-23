@@ -25,6 +25,7 @@ const legacyPublicStylesheets = [
   "/a4t-evolution-20260724.css",
   "/a4t-polish-20260805.css",
 ];
+const studioRoutes = new Map([["/studio/", path.resolve("studio/site/index.html")], ["/studio/privacy/", path.resolve("studio/site/privacy.html")]]);
 const canonicalBrandMark = "/assets/a4t-mark-soft.svg";
 const canonicalCompanySocialImage = "https://askfortask.co.uk/assets/a4t-studio-social.png";
 const activeComponentStylesheets = [
@@ -294,8 +295,8 @@ for (const file of htmlFiles) {
       continue;
     }
     const canonicalPath = pathname === "/" ? "/" : `${pathname.replace(/\/+$/, "")}/`;
-    if (!routes.has(canonicalPath)) errors.push(`${label}: internal page does not exist (${href})`);
-    const targetFile = routes.get(canonicalPath);
+    if (!routes.has(canonicalPath) && !studioRoutes.has(canonicalPath)) errors.push(`${label}: internal page does not exist (${href})`);
+    const targetFile = routes.get(canonicalPath) || studioRoutes.get(canonicalPath);
     const fragment = new URL(href, origin).hash.slice(1);
     if (targetFile && fragment && !fs.readFileSync(targetFile, "utf8").includes(`id="${decodeURIComponent(fragment)}"`)) {
       errors.push(`${label}: internal anchor does not exist (${href})`);
