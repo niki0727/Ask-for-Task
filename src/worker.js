@@ -892,7 +892,7 @@ async function handleRequest(request, env) {
              name, email, topic, region, budget, target_date, message, consent, source, created_at,
              request_id, notification_status
            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-           ON CONFLICT(request_id) DO NOTHING
+           ON CONFLICT(request_id) WHERE request_id IS NOT NULL DO NOTHING
            RETURNING id`
         )
           .bind(

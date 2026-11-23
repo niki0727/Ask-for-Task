@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { DatabaseSync } from "node:sqlite";
+import { readFileSync, readdirSync } from "node:fs";
 
 import worker, {
   makeEmailHtml,
@@ -714,4 +716,41 @@ test("does not expose retention cleanup as a public API", async () => {
 
   assert.equal(response.status, 404);
   assertSecurityHeaders(response);
+});
+
+
+test("contact submissions use the deployed partial unique index and notify only once on retry", async (t) => {
+  const sqlite = new DatabaseSync(":memory:");
+  t.after(() => sqlite.close());
+  const migrations = new URL("../migrations/", import.meta.url);
+  for (const file of readdirSync(migrations).filter(file => file.endsWith(".sql")).sort()) {
+    sqlite.exec(readFileSync(new URL(file, migrations), "utf8"));
+  }
+  const binding = {
+    prepare(sql) {
+      return { bind(...values) {
+        return {
+          async first() { return sqlite.prepare(sql).get(...values) || null; },
+          async run() { sqlite.prepare(sql).run(...values); return { success: true }; }
+        };
+      } };
+    }
+  };
+  let notifications = 0;
+  t.mock.method(globalThis, "fetch", async () => {
+    notifications += 1;
+    return Response.json({ id: "verified-notification" }, { status: 202 });
+  });
+  const key = crypto.randomUUID();
+  const request = () => contactRequest(validPayload, { headers: { "idempotency-key": key } });
+  const env = createEnv({ DB: binding });
+  const first = await worker.fetch(request(), env);
+  assert.equal(first.status, 200);
+  assert.deepEqual(await first.json(), { ok: true });
+  const retry = await worker.fetch(request(), env);
+  assert.equal(retry.status, 200);
+  assert.deepEqual(await retry.json(), { ok: true, duplicate: true });
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS total FROM contact_messages").get().total, 1);
+  assert.equal(sqlite.prepare("SELECT notification_status FROM contact_messages").get().notification_status, "sent");
+  assert.equal(notifications, 1);
 });
