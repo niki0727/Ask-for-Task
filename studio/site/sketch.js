@@ -1,4 +1,4 @@
-// A4T line studies. Choose once per visit and leave the finished drawing still.
+// A4T line studies, drawn in a shuffled sequence.
 const palette={fine:'#778174',ink:'#3d4a40',accent:'#526044'};
 const angle=Math.random()-.5;
 const point=(x,y,z)=>[276+x*.95-y*(.65+angle*.12),222+x*(.28+angle*.08)+y*.38-z];
@@ -51,61 +51,102 @@ const studies=[
   'M258 212Q250 178 280 147Q294 132 319 119'
  ],['M273 159Q253 144 259 128Q274 134 273 159M288 141Q289 119 305 111Q307 128 288 141M298 135Q321 130 331 112Q331 131 298 135','M211 257Q251 277 305 257M214 266Q251 288 302 266','M190 308Q252 299 327 309'])
 ];
-const ink=document.querySelector('#ink');
-const motion=matchMedia('(prefers-reduced-motion: reduce)');
-const chosen=studies[Math.floor(Math.random()*studies.length)];
-document.querySelector('#drawing-title').textContent=chosen.title;
-const strokes=chosen.strokes.map(({d,tone,width})=>{
- const path=document.createElementNS('http://www.w3.org/2000/svg','path');
- for(const [key,value] of Object.entries({d,stroke:palette[tone],'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round'}))path.setAttribute(key,value);
- return {path,length:0,progress:0};
-});
-ink.replaceChildren(...strokes.map(s=>s.path));
-for(const stroke of strokes)stroke.length=stroke.path.getTotalLength();
-let frame=0;
-function finish(){
- cancelAnimationFrame(frame);
- for(const {path} of strokes){path.removeAttribute('stroke-dasharray');path.removeAttribute('stroke-dashoffset');}
+const ink = document.querySelector('#ink');
+const title = document.querySelector('#drawing-title');
+const toggle = document.querySelector('#sketch-toggle');
+const motion = matchMedia('(prefers-reduced-motion: reduce)');
+const drawingTime = 7600;
+const holdTime = 3000;
+const fadeTime = 650;
+const cycleTime = drawingTime + holdTime + fadeTime;
+const sequence = [...studies];
+for (let index = sequence.length - 1; index > 0; index--) {
+ const other = Math.floor(Math.random() * (index + 1));
+ [sequence[index], sequence[other]] = [sequence[other], sequence[index]];
 }
-function draw(){
- finish();
- if(motion.matches||document.hidden)return;
- for(const stroke of strokes){
-  stroke.progress=0;
-  stroke.path.setAttribute('stroke-dasharray',stroke.length+1);
-  stroke.path.setAttribute('stroke-dashoffset',stroke.length+1);
- }
- const start=performance.now();
- function tick(now){
-  const elapsed=now-start;
-  for(const [i,stroke] of strokes.entries()){
-   const p=Math.max(0,Math.min(1,(elapsed-i/strokes.length*2100)/760));
-   if(stroke.progress===p)continue;
-   stroke.progress=p;
-   stroke.path.setAttribute('stroke-dashoffset',(stroke.length+1)*(1-p*p*(3-2*p)));
+
+let current = 0;
+let strokes = [];
+let elapsed = 0;
+let previousTime;
+let frame;
+let inView = false;
+let paused = false;
+
+function renderStudy() {
+ const study = sequence[current];
+ title.textContent = study.title;
+ const paths = study.strokes.flatMap(({d,tone,width}) => d.split(/(?=[Mm])/).map(segment => {
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const attributes = {d:segment,stroke:palette[tone],'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round'};
+  for (const [name,value] of Object.entries(attributes)) path.setAttribute(name,value);
+  return path;
+ }));
+ ink.replaceChildren(...paths);
+ const lengths = paths.map(path => Math.max(1, path.getTotalLength()));
+ const totalLength = lengths.reduce((sum,length) => sum + length, 0);
+ let start = 0;
+ strokes = paths.map((path,index) => {
+  const duration = lengths[index] / totalLength * drawingTime;
+  const stroke = {path,length:lengths[index] + 1,start,duration,progress:null};
+  start += duration;
+  return stroke;
+ });
+}
+
+function paint(time) {
+ for (const stroke of strokes) {
+  const progress = Math.max(0, Math.min(1, (time - stroke.start) / stroke.duration));
+  if (progress === stroke.progress) continue;
+  stroke.progress = progress;
+  if (progress === 1) {
+   stroke.path.removeAttribute('stroke-dasharray');
+   stroke.path.removeAttribute('stroke-dashoffset');
+  } else {
+   stroke.path.setAttribute('stroke-dasharray', stroke.length);
+   stroke.path.setAttribute('stroke-dashoffset', stroke.length * (1 - progress));
   }
-  if(elapsed<2860)frame=requestAnimationFrame(tick);else finish();
  }
- frame=requestAnimationFrame(tick);
+ ink.setAttribute('opacity', 1 - Math.max(0, time - drawingTime - holdTime) / fadeTime);
 }
-// A deep link may land below the hero. Wait until the drawing is in view.
-let entered=false, played=false;
-const observer=new IntersectionObserver(([entry])=>{
- entered=entry.intersectionRatio>=.2;
- if(!entered && played)finish();
- maybeDraw();
-},{threshold:.2});
-function maybeDraw(){
- if(played||!entered||motion.matches||document.hidden)return;
- played=true;
- draw();
+
+function advance(now) {
+ frame = undefined;
+ if (previousTime !== undefined) elapsed += Math.min(now - previousTime, 64);
+ previousTime = now;
+ if (elapsed >= cycleTime) {
+  elapsed = 0;
+  current = (current + 1) % sequence.length;
+  renderStudy();
+ }
+ paint(elapsed);
+ frame = requestAnimationFrame(advance);
 }
-observer.observe(ink.ownerSVGElement);
-motion.addEventListener('change',()=>{
- if(motion.matches)finish();
- else maybeDraw();
+
+function updatePlayback() {
+ toggle.hidden = motion.matches;
+ toggle.textContent = paused ? 'Resume drawing' : 'Pause drawing';
+ if (!motion.matches && !paused && inView && !document.hidden) {
+  if (frame === undefined) frame = requestAnimationFrame(advance);
+  return;
+ }
+ cancelAnimationFrame(frame);
+ frame = undefined;
+ previousTime = undefined;
+ // Reduced motion shows a finished study without cycling.
+ if (motion.matches) paint(drawingTime);
+}
+
+renderStudy();
+paint(motion.matches ? drawingTime : 0);
+updatePlayback();
+toggle.addEventListener('click', () => {
+ paused = !paused;
+ updatePlayback();
 });
-document.addEventListener('visibilitychange',()=>{
- if(document.hidden)finish();
- else maybeDraw();
-});
+new IntersectionObserver(([entry]) => {
+ inView = entry.intersectionRatio >= .2;
+ updatePlayback();
+}, {threshold:.2}).observe(ink.ownerSVGElement);
+motion.addEventListener('change', updatePlayback);
+document.addEventListener('visibilitychange', updatePlayback);
