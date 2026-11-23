@@ -10854,3 +10854,47 @@ dd {
 .breadcrumbs li + li::before { content:"/"; color:var(--muted); }
 .breadcrumbs a { text-decoration:underline; text-underline-offset:3px; }
 .breadcrumbs [aria-current="page"] { color:var(--muted); }
+
+.writing-proof-visual {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(22px, 3vw, 40px);
+  background: #172e3b;
+  color: #f7f7f3;
+}
+
+.writing-proof-kicker,
+.writing-proof-foot {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.writing-proof-kicker {
+  color: #b5cbd0;
+}
+
+.writing-proof-visual > strong {
+  color: #f7f7f3;
+  font-size: clamp(30px, 4vw, 56px);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.writing-proof-visual > strong span {
+  color: #d45048;
+}
+
+.writing-proof-foot {
+  display: flex;
+  justify-content: space-between;
+  color: #e2e8e7;
+}
+
+.work-evidence-item figure.writing-proof-visual {
+  border-color: #172e3b;
+}
+

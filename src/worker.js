@@ -20,7 +20,7 @@ export const PARTNER_DESTINATIONS = Object.freeze({
   "dmar-international": "https://www.dmarinternational.com/",
   "dmar-linkedin": "https://www.linkedin.com/company/dmar-international/",
   "nikita-linkedin": "https://www.linkedin.com/in/nikita-piazenko-530566113/",
-  "nk-sports": "https://nksports.eu/",
+  "nk-sports": "https://www.linkedin.com/in/nikita-kuzminov-199735252/",
   "photography-instagram": "https://www.instagram.com/piazenko_nikita/",
   "photography-portfolio": "https://askfortask.co.uk/portfolio/",
   "pinglo": "https://pingloapp.com/",

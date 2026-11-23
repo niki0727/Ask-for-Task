@@ -445,3 +445,9 @@ if (!fs.existsSync(visibilityFile) || !fs.readFileSync(path.join(publicDir, "sit
  console.error("Missing published AI visibility offer, sitemap entry or contact option.");
  process.exitCode = 1;
 }
+
+const writingHome = fs.readFileSync(path.join(publicDir, "index.html"), "utf8");
+if (/<a\b[^>]*class="[^"]*writing-proof-visual[^"]*"[^>]*\baria-label=/i.test(writingHome)) {
+ console.error("Writing partner proof must retain its visible text as its accessible name.");
+ process.exitCode = 1;
+}
