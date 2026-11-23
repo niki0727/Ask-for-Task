@@ -203,10 +203,10 @@ if (topicField) {
   const requestedTopic = query.get("topic");
   const requestedBrief = query.get("brief");
   const topicAliases = new Map([
-    ["app development", "Brand, website, or app"],
-    ["website development", "Brand, website, or app"],
-    ["brand development", "Brand, website, or app"],
-    ["graphic design", "Brand, website, or app"],
+    ["app development", "App development"],
+    ["website development", "Website development"],
+    ["brand development", "Brand development"],
+    ["graphic design", "Brand development"],
     ["project scoping call", "Brand, website, or app"],
     ["photography package", "Photography or aerial content"],
     ["drone and aerial content", "Photography or aerial content"],

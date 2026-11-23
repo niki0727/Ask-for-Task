@@ -230,6 +230,19 @@ for (const file of htmlFiles) {
       const schema = JSON.parse(match[1]);
       const entities = schema["@graph"] || [schema];
       for (const entity of entities) {
+        if (entity["@type"] === "BreadcrumbList") {
+          const navigation = html.match(/<nav\b[^>]*aria-label="Breadcrumb"[^>]*>([\s\S]*?)<\/nav>/i)?.[1] || "";
+          const labels = [...navigation.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)]
+            .map((item) => textContent(item[1]));
+          const items = entity.itemListElement || [];
+          if (JSON.stringify(labels) !== JSON.stringify(items.map((item) => item.name))) {
+            errors.push(`${label}: breadcrumb schema must match the visible navigation`);
+          }
+          if (items.some((item, index) => item.position !== index + 1)
+            || items.at(-1)?.item !== `${origin}${route}`) {
+            errors.push(`${label}: breadcrumb positions or final canonical URL are incorrect`);
+          }
+        }
         if (entity["@id"] === `${origin}/#organization` && entity.sameAs?.some(url =>
           /linkedin\.com\/in\/|instagram\.com\/piazenko_nikita|apps\.apple\.com/.test(url))) {
           errors.push(`${label}: company sameAs must not identify a founder profile or app listing`);
@@ -424,4 +437,11 @@ if (errors.length) {
   process.exitCode = 1;
 } else {
   console.log(`Site audit passed for ${htmlFiles.length} HTML pages and ${indexableRoutes.size} indexable routes.`);
+}
+
+// Preserve the published service across full-site releases.
+const visibilityFile = path.join(publicDir, "ai-visibility", "index.html");
+if (!fs.existsSync(visibilityFile) || !fs.readFileSync(path.join(publicDir, "sitemap.xml"), "utf8").includes("https://askfortask.co.uk/ai-visibility/") || !fs.readFileSync(path.join(publicDir, "contact", "index.html"), "utf8").includes("<option>AI search visibility</option>")) {
+ console.error("Missing published AI visibility offer, sitemap entry or contact option.");
+ process.exitCode = 1;
 }

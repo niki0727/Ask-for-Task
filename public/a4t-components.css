@@ -10846,3 +10846,11 @@ dd {
     line-height: 1.25;
   }
 }
+
+
+.breadcrumbs { padding-block:18px; font-size:14px; line-height:1.5; }
+.breadcrumbs ol { display:flex; flex-wrap:wrap; gap:6px 10px; margin:0; padding:0; list-style:none; }
+.breadcrumbs li { display:flex; align-items:baseline; gap:10px; margin:0; }
+.breadcrumbs li + li::before { content:"/"; color:var(--muted); }
+.breadcrumbs a { text-decoration:underline; text-underline-offset:3px; }
+.breadcrumbs [aria-current="page"] { color:var(--muted); }
