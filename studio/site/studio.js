@@ -67,24 +67,49 @@ $('specialty-custom').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preve
 async function directory(){
  const people=await api('directory');
  $('people').replaceChildren(...people.map(p=>{
-  const a=el('article','');a.append(el('h3',p.name),el('p',[p.role,p.place].filter(Boolean).join(' · ')),el('p',p.bio));
-  if(p.specialties?.length){const list=el('ul','');list.className='disciplines';list.append(...p.specialties.map(label=>el('li',label)));a.append(list);}
+  const a=el('article','');
+  a.className='directory-card';
   const route=studioBase+'/creators/'+encodeURIComponent(p.id);
-  const profile=el('a','View creator profile ↗');profile.href=route;
-  if(p.works?.length){
-   const item=p.works[0];
-   if(item.image){
-    const img=el('img','');img.className='work-preview';img.src=item.image;if(item.imageSmall){img.srcset=item.imageSmall+' 800w, '+item.image+' 1920w';img.sizes='(max-width: 760px) 90vw, 600px';}img.alt=item.alt;img.loading='lazy';img.width=800;img.height=532;a.prepend(img);
-   }
-   const work=el('p','');const link=el('a',item.title);link.href=item.url;
-   work.append(link,' · '+item.credit);a.append(work);
+  const identity=el('div','');
+  identity.className='directory-identity';
+  if(p.avatar){
+   const avatar=el('img','');
+   avatar.src=p.avatar;avatar.alt='';avatar.className='avatar directory-avatar';
+   avatar.width=40;avatar.height=40;avatar.loading='lazy';
+   identity.append(avatar);
   }
-  if(p.avatar){const avatar=el('img','');avatar.src=p.avatar;avatar.alt='';avatar.className='avatar card-avatar';a.querySelector('h3').prepend(avatar);}
-  a.append(profile);
+  const heading=el('div','');
+  heading.append(el('h3',p.name));
+  const byline=[p.role,p.place].filter(Boolean).join(' · ');
+  if(byline)heading.append(el('p',byline));
+  identity.append(heading);
+  a.append(identity);
+
+  const hook=p.headline||p.bio;
+  if(hook){
+   const description=el('p',hook);
+   description.className='directory-hook';
+   a.append(description);
+  }
+  if(p.specialties?.length){
+   const list=el('ul','');
+   list.className='directory-specialties';
+   list.append(...p.specialties.slice(0,3).map(label=>el('li',label)));
+   a.append(list);
+  }
+
+  const footer=el('div','');
+  footer.className='directory-card-footer';
+  const discover=el('a',p.works?.length?'View profile & work →':'View profile →');
+  discover.href=route;
+  discover.setAttribute('aria-label',discover.textContent.replace(' →','')+' for '+p.name);
+  footer.append(discover);
   if(p.available){
-   const enquiry=el('a','Enquire about this creator');enquiry.href=route+'#enquiry';enquiry.className='button creator-enquiry';
-   a.append(el('p','Open to project enquiries'),enquiry);
+   const available=el('span','Open to enquiries');
+   available.className='directory-availability';
+   footer.append(available);
   }
+  a.append(footer);
   return a;
  }));
  if(!people.length)$('people').append(el('p','Public profiles appear here when creators choose to share them.'));
