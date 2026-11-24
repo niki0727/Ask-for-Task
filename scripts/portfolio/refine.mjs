@@ -100,7 +100,7 @@ export async function refinePortfolio(destination, source) {
   const photosOf = html => [...html.matchAll(/<a class="photo"[\s\S]*?<\/a>/g)].map(match => match[0]);
   const story = (name, photos, id, collapsible = false, collection = '') => {
     const denseLayout = name === 'FashionTV' ? ' data-layout="dense"' : name === 'CE LA VI' ? ' data-layout="editorial"' : '';
-    const gallery = `<div class="story-head"><h2>${escape(name)}</h2><button class="view-story" type="button" aria-label="View ${escape(name)} full screen" hidden>View story <span aria-hidden="true">↗</span></button></div>${name === 'District 29 · Boat to Gallery 1986' ? '<p class="story-deck">One summer-night event in Vilnius: District boat, then the later programme at Gallery 1986. The edit moves from the open air into the crowd and red-lit room.</p>' : ''}<div class="gallery" data-gallery>${photos.join('')}</div>`;
+    const gallery = `<div class="story-head"><h2>${escape(name)}</h2><button class="view-story" type="button" aria-label="View story: ${escape(name)} full screen" hidden>View story <span aria-hidden="true">↗</span></button></div>${name === 'District 29 · Boat to Gallery 1986' ? '<p class="story-deck">One summer-night event in Vilnius: District boat, then the later programme at Gallery 1986. The edit moves from the open air into the crowd and red-lit room.</p>' : ''}<div class="gallery" data-gallery>${photos.join('')}</div>`;
     if (!collapsible) return `<section class="story" id="${id}" aria-label="${escape(name)}"${denseLayout}>${gallery}</section>`;
     const preview = albumPreviews[name];
     const coverPhoto = preview?.key ? photos.find(photo => photoKey(photo) === preview.key) : photos[0];
@@ -285,7 +285,7 @@ export async function refinePortfolio(destination, source) {
         if (selectedPhotos.some(photo => !photo)) throw new Error('A selected work photograph is missing from the source archive.');
         const captionedPhotos = selectedPhotos.map((photo, index) => {
           const [category, title] = selectedWorkCaptions[selectedWorkOrder[index]];
-          return photo.replace('</a>', `<span class="opening-caption" aria-hidden="true"><span>${escape(category)}</span><strong>${escape(title)}</strong></span></a>`);
+          return photo.replace(/aria-label="([^"]*)"/, (_, label) => `aria-label="${escape(category)} ${escape(title)}. ${label}"`).replace('</a>', `<span class="opening-caption" aria-hidden="true"><span>${escape(category)}</span> <strong>${escape(title)}</strong></span></a>`);
         });
         return `<section class="opening" aria-label="Selected photographs"><div class="opening-head"><p>Selected work <span>/ Three stories</span></p><button class="view-story" type="button" hidden>View selection ↗</button></div><div class="gallery" data-gallery>${captionedPhotos.join('')}</div><p class="opening-note">People, place and the moments in between. Select a photograph to explore its story.</p></section>`;
       });

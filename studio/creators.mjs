@@ -69,7 +69,7 @@ export function creatorPage(creator, hosted) {
  </article>`).join('')}</div>
  </section>` : '';
  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
- <title>${escape(name)} · Ask for Task Studio</title><link rel="icon" href="/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/studio.css"><script src="/enquiry.js" defer></script></head>
+ <title>${escape(name)} · Ask for Task Studio</title><meta name="description" content="View ${escape(name)}'s public creator profile on A4T Studio. Explore the work and details they have chosen to share and send a project enquiry."><link rel="icon" href="/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/studio.css"><script src="/enquiry.js" defer></script></head>
  <body><header><a class="brand" href="https://askfortask.co.uk/" aria-label="Ask for Task Studio home"><img src="/brand.svg" width="100" height="43" alt=""></a><nav aria-label="Main"><a href="https://askfortask.co.uk/services/">Services</a><a href="/">Creator Studio</a></nav></header><main class="creator-page">
  <a class="creator-back" href="/#directory">← All creators</a>
  <section class="creator-intro" aria-labelledby="creator-name">
