@@ -61,3 +61,9 @@ The Render Free instance still spins down when idle. This is the agreed zero-cos
 The user-facing workspace is now https://askfortask.co.uk/studio/ and homepage email access uses /studio/api/access. Keep STUDIO_ORIGIN=https://studio.askfortask.co.uk for the fixed application upstream: the Worker verifies same-site writes and forwards them with the upstream origin. The Node app recognizes the /studio/ mount, emits mounted URLs and scopes its cookies to that path. Direct page links on the former Studio origin redirect to the main website, including existing email and alert links. Do not point the proxy upstream back to askfortask.co.uk, which would create a loop.
 
 The same Supabase accounts and database remain in use. No migration is required. The verified public test record is in company-ops/studio-homepage-integration-20261123.md. A fresh sign-in on the main domain is expected for members whose previous browser session belongs to the old subdomain.
+
+## Public access during backend startup
+
+The main site's Worker builds the Studio landing page, privacy page, bundled featured profiles and their assets from Studio source at deploy time. Live member profiles and account actions still use Render. When the backend returns a startup challenge or throttle, the Worker returns a retryable error for writes and can show the bundled featured profiles with a temporary availability notice. It does not retry writes automatically or pass provider challenge pages to users.
+
+The production Supabase Auth Site URL is https://askfortask.co.uk/studio without a trailing slash. The existing email templates append /#studio_access= followed by the one-time token. Keep the Render STUDIO_ORIGIN value as the separate upstream hostname. The production email destination and a returning session were verified after the change.
