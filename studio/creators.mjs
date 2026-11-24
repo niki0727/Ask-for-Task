@@ -4,6 +4,7 @@ const nikita = {
  name: 'Nikita Piazenko',
  role: 'Photographer',
  place: 'London',
+ headline: 'Portraits with character, and events as they felt.',
  bio: 'Photography for events, people and places.',
  portfolio: site + '/photography/',
  specialties: ['Events', 'Portraits', 'Hospitality'],
