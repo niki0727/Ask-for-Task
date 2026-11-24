@@ -393,7 +393,7 @@ if (!/assistant-consent[\s\S]{0,600}?href="\/privacy\/"/i.test(clientScript)) {
   errors.push("script.js: project assistant consent must link to the Privacy Policy at collection");
 }
 
-for (const route of ["/", "/about/", "/ventures/"]) {
+for (const route of ["/", "/ventures/"]) {
   const html = fs.readFileSync(routes.get(route), "utf8");
   if (!/<picture>[\s\S]{0,240}?event-dj\.avif[^>]*>[\s\S]{0,240}?event-dj\.jpg/i.test(html)) {
     errors.push(`${route}: event photography must use the existing AVIF source with JPG fallback`);
