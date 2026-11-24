@@ -122,8 +122,8 @@ async function refresh(){
  if(!operator){$('inbox-list').replaceChildren();$('inbox-status').textContent='';}
  $('password-option').hidden=!hosted||Boolean(member);
  $('password-option').open=false;
- $('workspace-title').textContent=member?'Your studio':'Welcome to Studio';
- if(hosted)$('access-help').textContent='New here or returning? Enter your email and we’ll send you a sign-in link.';
+ $('workspace-title').textContent=member?'Your workspace':'Join or sign in';
+ if(hosted)$('access-help').textContent='Use your email to join or sign in.';
  $('save-phrase').hidden=!hosted||!recentlyVerified;
  $('phrase-note').textContent=!hosted?'Try a phrase locally. Saving it is available in staging.':recentlyVerified?'You can set or replace your passphrase now.':'Open a fresh email link to set or replace your passphrase.';
  $('access').hidden=Boolean(member);$('member').hidden=!member;

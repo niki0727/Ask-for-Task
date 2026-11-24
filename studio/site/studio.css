@@ -12,13 +12,6 @@
 .brand img{display:block;width:clamp(76px,9vw,102px);height:auto}
 .brand-slash{stroke:var(--accent)}
 .hero{padding-block:clamp(34px,6vw,88px) clamp(22px,4vw,52px)}
-.explore-next{display:flex;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:14px 0;font-size:.9rem;font-weight:700;text-decoration:none}
-.explore-next:hover span:first-child{text-decoration:underline;text-underline-offset:.24em}
-.explore-next span:last-child{font-size:1.3rem}
-.journey-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:22px;margin:30px 0 4px}
-.journey-grid>div{border-top:1px solid var(--line);padding-top:18px}
-.journey-grid p{margin:.5em 0;color:#515e56}
-.journey-grid a{font-weight:700;text-underline-offset:.2em}
 @media(max-width:760px){.hero{gap:12px}.sketch{width:min(82%,340px)}header{align-items:center}}
 
 /* Discovery cards give the work room to speak on the creator's profile. */
@@ -35,7 +28,6 @@
 .directory-availability{color:#515e56}
 .directory-availability::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:#536d4f;margin-right:6px;vertical-align:.14em}
 
-.discipline-heading{margin-top:24px;font-size:1rem}
 .disciplines{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px;padding:0}
 .disciplines li{border:1px solid var(--line);border-radius:4px;padding:4px 10px;font-size:.875rem}
 
@@ -62,7 +54,6 @@
 
 #access,#password-option{width:100%;max-width:480px}
 #access{padding:clamp(20px,4vw,32px)}
-#access h3{font-size:1.4rem}
 #access .muted{margin-block:12px 22px}
 #access button{width:100%;margin-top:8px}
 #access p:has(#access-link[hidden]){display:none}
@@ -160,3 +151,42 @@ select{padding:10px;border:1px solid #7d887e;border-radius:4px;font:inherit;max-
 .studio-privacy{max-width:860px;padding-bottom:40px}
 .studio-privacy h1{font-size:clamp(2rem,5vw,3.6rem);letter-spacing:-.04em;line-height:1.08}
 .studio-privacy .section h2{font-size:1.35rem;letter-spacing:-.02em;margin-top:28px}
+
+/* A shared type scale and quieter controls for the studio and creator profiles. */
+:root{--paper:#faf9f6;--line:#dedfd7;--studio-blue:#2945a4}
+header nav,footer nav{gap:clamp(12px,3vw,28px);font-size:.94rem}
+header nav a,footer nav a{text-decoration:none}
+header nav a:hover,footer nav a:hover{text-decoration:underline;text-underline-offset:.22em}
+#nav-work{font-weight:650;color:var(--studio-blue)}
+.hero{padding-block:clamp(38px,6vw,80px);gap:clamp(22px,5vw,72px)}
+.hero h1{font-size:clamp(2.45rem,5vw,4.5rem);line-height:1.04;letter-spacing:-.045em;margin:10px 0 16px;max-width:15ch}
+.hero p:not(.label){font-size:1rem;margin:0 0 22px;max-width:40ch;color:#515e56}
+.hero .label{margin:0;font-size:.82rem;letter-spacing:.025em;text-transform:none;font-weight:650;color:var(--studio-blue)}
+.hero .actions{gap:10px}
+.button,button{font-size:.94rem;font-weight:650}
+.hero .button,#access button,.creator-intro .button,#enquiry button{background:var(--studio-blue);border-color:var(--studio-blue);color:#fff}
+.hero .button.outline{background:transparent;border-color:var(--line);color:var(--ink)}
+.hero .button:hover,#access button:hover,.creator-intro .button:hover,#enquiry button:hover{filter:brightness(.92)}
+.hero .button.outline:hover{background:#f1f1eb;filter:none}
+.hero .button{min-height:44px}
+.section{padding-block:clamp(28px,4vw,52px);scroll-margin-top:16px}
+.section h2{font-size:clamp(1.7rem,3vw,2.35rem);font-weight:650;line-height:1.15;letter-spacing:-.033em;margin:0 0 18px}
+#directory #people{margin:0}
+.directory-card{border-radius:6px;background:#fff;padding:18px;gap:10px}
+.directory-card-footer a{color:var(--studio-blue)}
+#access{border-radius:6px}
+#access .muted{margin:0 0 12px}
+#access .field-note,#access p:has(#access-link){margin:10px 0 0}
+#access .field-note a,#password-option>summary,.workspace-links a{font-size:.875rem;text-underline-offset:.2em}
+.workspace-links{display:flex;gap:8px 20px;flex-wrap:wrap;margin-top:18px;color:#515e56}
+.workspace-identity{justify-content:space-between}
+.workspace-nav{gap:4px;padding:4px;border:1px solid var(--line);border-radius:8px;background:#f2f2ec;width:fit-content;max-width:100%;margin:16px 0 26px}
+.workspace-tab{border:0;border-radius:5px;min-height:42px;padding:8px 13px;font-size:.9rem}
+.workspace-tab[aria-pressed=true]{background:#fff;color:var(--studio-blue);box-shadow:0 1px 3px #16211d20}
+.editor-heading h3{font-size:1.4rem;letter-spacing:-.02em}
+footer{flex-wrap:wrap;color:#515e56;font-size:.85rem;justify-content:space-between}
+@media(max-width:760px){
+ .hero{gap:18px;padding-block:30px}
+ .sketch{width:min(82%,280px)}
+ .workspace-tab{padding-inline:10px}
+}
