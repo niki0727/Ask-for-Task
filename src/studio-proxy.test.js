@@ -62,3 +62,14 @@ test('public Studio pages and signed-out session checks avoid the sleeping backe
  const internal=await worker.fetch(new Request('https://askfortask.co.uk/_studio-shell/'),env);
  assert.equal(internal.status,404);
 });
+
+test('featured creator profiles load from public assets with or without a trailing slash',async()=>{
+ const {default:worker}=await import('./worker.js');
+ const env={ASSETS:{fetch:async req=>new Response(new URL(req.url).pathname)}};
+ for(const suffix of ['', '/']){
+  const r=await worker.fetch(new Request('https://askfortask.co.uk/studio/creators/nikita-piazenko'+suffix),env);
+  assert.equal(r.status,200);
+  assert.equal(await r.text(),'/_studio-shell/creators/nikita-piazenko');
+  assert.equal(r.headers.get('X-Robots-Tag'),'noindex');
+ }
+});

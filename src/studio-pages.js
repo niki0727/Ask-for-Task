@@ -6,7 +6,7 @@ const policy = "default-src 'self'; img-src 'self' https: blob:; base-uri 'none'
 
 export async function studioPage(request, assets) {
   const url = new URL(request.url);
-  const route = url.pathname.slice('/studio/'.length);
+  const route = url.pathname.slice('/studio/'.length).replace(/^(creators\/[a-z0-9-]+)\/$/, '$1');
   if (!['GET', 'HEAD'].includes(request.method)) return null;
   if (!publicFiles.has(route) && !publicProfiles.has(route) && route !== 'brand.svg') return null;
 

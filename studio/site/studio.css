@@ -198,3 +198,36 @@ footer{flex-wrap:wrap;color:#515e56;font-size:.85rem;justify-content:space-betwe
 .directory-filters a:hover{text-decoration:underline;text-underline-offset:.2em}
 .directory-filters [aria-current]{color:var(--studio-blue);background:#edf0fa;font-weight:650}
 @media(max-width:640px){.directory-heading{display:grid;gap:8px}}
+
+/* Public profiles lead with the creator, followed by work and the brief. */
+.creator-page{max-width:1130px}
+.creator-back,.creator-text-link{color:var(--studio-blue);text-underline-offset:.2em;font-weight:650}
+.creator-back{display:inline-flex;align-items:center;min-height:44px;margin-top:14px;font-size:.9rem}
+.creator-intro{padding-block:clamp(20px,4vw,44px)}
+.creator-identity{display:flex;align-items:center;gap:16px}
+.creator-identity h1{font-size:clamp(2rem,5vw,3.75rem);margin:0 0 5px;overflow-wrap:anywhere}
+.creator-identity p{margin:0}
+.creator-identity .public-avatar{width:80px;height:80px;margin:0;flex:none}
+.creator-headline{margin:16px 0 5px;font-weight:600}
+.creator-bio{max-width:65ch;margin:5px 0 14px;white-space:pre-line;overflow-wrap:anywhere}
+.creator-actions{margin-top:16px}
+.creator-actions .button,.directory-card-footer a{min-height:44px}
+.creator-text-link{display:inline-flex;align-items:center;min-height:44px}
+.creator-work-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,255px),1fr));margin-bottom:0}
+.creator-work-card{padding:0;border-radius:6px;overflow:hidden}
+.creator-work-link{display:block;text-decoration:none}
+.creator-work-link:focus-visible{outline-offset:-4px}
+.creator-work-card .work-preview{aspect-ratio:5/3;margin:0;background:#eeeee8}
+.creator-work-caption{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:14px 16px 4px}
+.creator-work-caption h3{font-size:1rem;margin:0}
+.creator-work-link:hover h3{text-decoration:underline;text-underline-offset:.18em}
+.creator-work-card>p{font-size:.85rem;margin:0;padding:0 16px 14px}
+.creator-page #enquiry{max-width:670px;border-radius:6px;margin-top:8px}
+#enquiry .check{align-items:flex-start;font-weight:400;font-size:.9rem}
+#enquiry .check input{flex:none;margin-top:.3rem}
+#enquiry button{min-height:44px}
+#enquiry-status:empty{display:none}
+@media(max-width:480px){
+ .creator-identity .public-avatar{width:60px;height:60px}
+ .creator-work-card .work-preview{aspect-ratio:3/2}
+}
