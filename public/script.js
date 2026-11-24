@@ -17,6 +17,35 @@ const homeProjectRoute = document.querySelector("[data-home-project-route]");
 const reviewForm = document.getElementById("review-form");
 const reviewStatus = document.getElementById("review-status");
 
+const reviewThankYou = document.getElementById("review-thank-you");
+
+if (reviewForm) {
+  const reviewParams = new URLSearchParams(window.location.search);
+  for (const [fieldId, parameter] of [["review-service", "service"], ["review-relationship", "relationship"]]) {
+    const value = reviewParams.get(parameter);
+    const field = document.getElementById(fieldId);
+    if (value && field && [...field.options].some((option) => option.value === value)) {
+      field.value = value;
+    }
+  }
+
+  const reviewService = document.getElementById("review-service");
+  const thankYouForService = () => {
+    if (!reviewThankYou || !reviewService) return;
+    const service = reviewService.value;
+    const messages = {
+      "Photography and visual production": "Thank you for choosing to work with Nikita Piazenko on photography.",
+      "Project collaboration": "Thank you for choosing to collaborate with A4T Studio.",
+      Other: "Thank you for choosing to work with A4T Studio."
+    };
+    reviewThankYou.textContent = messages[service] || (service
+      ? `Thank you for choosing to work with us on ${service.toLowerCase()}.`
+      : "Thank you for choosing to work with A4T Studio.");
+  };
+  reviewService?.addEventListener("change", thankYouForService);
+  thankYouForService();
+}
+
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
 const pageProgress = document.createElement("div");

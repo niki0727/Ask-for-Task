@@ -7,7 +7,7 @@ const published = [];
 
 for (const route of ['events', 'hospitality', 'people', 'sport', 'aerial', 'products', 'streets', 'travel']) {
   const html = fs.readFileSync(`public/portfolio/${route}/index.html`, 'utf8');
-  for (const match of html.matchAll(/<section class="story"[^>]*aria-label="([^"]+)"/g)) {
+  for (const match of html.matchAll(/<(?:section|details) class="[^"]*\bstory\b[^"]*"[^>]*aria-label="([^"]+)"/g)) {
     published.push({ route, story: decode(match[1]) });
   }
 }

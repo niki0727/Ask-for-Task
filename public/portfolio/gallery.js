@@ -12,21 +12,51 @@ function layout(group) {
   const { gallery, photos } = group;
   const width = gallery.clientWidth;
   if (!width) return;
+  gallery.classList.remove('mobile-grid');
+  gallery.style.removeProperty('height');
   gallery.replaceChildren(...photos);
-  for (const photo of photos) { photo.style.removeProperty('width'); photo.style.removeProperty('flex'); }
+  for (const photo of photos) {
+    for (const property of ['width', 'flex', 'left', 'top']) photo.style.removeProperty(property);
+  }
   if (mobile.matches) {
-    for (const photo of photos) photo.style.width = `${Math.min(width, Number(photo.dataset.width))}px`;
+    const mobileGrid = !gallery.closest('.opening');
+    gallery.classList.toggle('mobile-grid', mobileGrid);
+    if (mobileGrid) {
+      // Independent column heights avoid blank blocks beside mixed portrait/landscape frames.
+      // Keep DOM order intact for keyboard navigation and the full-screen viewer.
+      const gap = 4;
+      const columnWidth = (width - gap) / 2;
+      const columnHeights = [0, 0];
+      for (const photo of photos) {
+        const column = columnHeights[0] <= columnHeights[1] ? 0 : 1;
+        photo.style.width = `${columnWidth}px`;
+        photo.style.left = `${column * (columnWidth + gap)}px`;
+        photo.style.top = `${columnHeights[column]}px`;
+        columnHeights[column] += columnWidth / Number(photo.dataset.ratio) + gap;
+      }
+      gallery.style.height = `${Math.max(...columnHeights) - gap}px`;
+    } else {
+      for (const photo of photos) photo.style.width = `${Math.min(width, Number(photo.dataset.width))}px`;
+    }
     gallery.dataset.layoutReady = 'true';
     return;
   }
   const opening = gallery.closest('.opening');
-  const gap = 14;
-  for (let start = 0; start < photos.length;) {
+  const dense = gallery.closest('[data-layout="dense"]');
+  const editorial = gallery.closest('[data-layout="editorial"]');
+  const gap = 4;
+  for (let start = 0, rowIndex = 0; start < photos.length; rowIndex++) {
     const left = photos.length - start;
-    const size = opening ? Math.min(3, left) : left === 3 ? 3 : Math.min(2, left);
+    // Keep longer stories visually full: three- and four-image rows are the
+    // default, while the final one or two frames can breathe when necessary.
+    // FashionTV alternates dense and spacious rows, like an edited contact
+    // sheet: five frames read smaller, while three or four can breathe.
+    const densePattern = [4, 5, 3, 5, 4];
+    const editorialPattern = photos.length === 19 ? [3, 4, 4, 4, 4] : [3, 4, 3, 4, 4];
+    const size = opening ? Math.min(3, left) : dense ? (left <= 2 ? left : left === 3 ? 3 : left === 4 ? 4 : Math.min(densePattern[rowIndex] || 4, left)) : editorial ? Math.min(editorialPattern[rowIndex] || 4, left) : left <= 2 ? left : left === 3 ? 3 : left === 4 ? 4 : rowIndex % 3 === 1 ? 4 : 3;
     const batch = photos.slice(start, start + size);
     const ratio = batch.reduce((sum, photo) => sum + Number(photo.dataset.ratio), 0);
-    const maxHeight = opening ? 650 : size === 1 ? 620 : 560;
+    const maxHeight = opening ? 650 : dense ? 430 : size === 1 ? 620 : 560;
     const height = Math.min(maxHeight, (width - gap * (size - 1)) / ratio, ...batch.map(photo => Number(photo.dataset.height)));
     const row = document.createElement('div'); row.className = 'gallery-row';
     for (const photo of batch) {
@@ -39,6 +69,25 @@ function layout(group) {
   gallery.dataset.layoutReady = 'true';
 }
 groups.forEach(layout);
+const albumStories = [...document.querySelectorAll('.album-story')];
+for (const story of albumStories) story.addEventListener('toggle', () => {
+  if (!story.open) return;
+  for (const other of albumStories) if (other !== story) other.open = false;
+  const group = groups.find(item => item.gallery.closest('.story') === story);
+  if (group) layout(group);
+});
+for (const link of document.querySelectorAll('.collection-jump a')) link.addEventListener('click', event => {
+  const target = document.getElementById(link.hash.slice(1));
+  if (!target?.matches('.album-story')) return;
+  event.preventDefault();
+  target.open = true;
+  history.pushState(history.state, '', link.hash);
+  requestAnimationFrame(() => requestAnimationFrame(() => target.scrollIntoView({ block: 'start', behavior: 'smooth' })));
+});
+if (location.hash) {
+  const target = document.getElementById(location.hash.slice(1));
+  if (target?.matches('.album-story')) target.open = true;
+}
 let resizeTimer;
 addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => groups.forEach(layout), 120); });
 
@@ -51,6 +100,7 @@ const status = document.getElementById('viewer-status');
 const previous = document.getElementById('previous-photo');
 const next = document.getElementById('next-photo');
 const nextStory = document.getElementById('next-story');
+const collectionLink = document.getElementById('view-collection');
 const overview = document.getElementById('viewer-overview');
 const overviewToggle = document.getElementById('toggle-overview');
 const fullscreen = document.getElementById('fullscreen-viewer');
@@ -86,6 +136,11 @@ async function show(index, updateURL = true) {
   next.disabled = active === group.photos.length - 1;
   nextStory.hidden = active !== group.photos.length - 1 || groupIndex === groups.length - 1;
   if (!nextStory.hidden) nextStory.setAttribute('aria-label', `Next story: ${groups[groupIndex + 1].title}`);
+  collectionLink.hidden = !photo.dataset.collectionHref;
+  if (!collectionLink.hidden) {
+    collectionLink.href = photo.dataset.collectionHref;
+    collectionLink.textContent = photo.dataset.collectionLabel || 'View related collection';
+  }
   error.hidden = true; stage.setAttribute('aria-busy', 'true');
   image.alt = photo.dataset.alt;
   for (const [i, button] of [...overview.children].entries()) button.setAttribute('aria-current', String(i === active));

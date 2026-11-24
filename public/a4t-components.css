@@ -10941,3 +10941,151 @@ dd {
   border-color: #172e3b;
 }
 
+
+/* Recovered photographer portrait and approved client reviews. */
+.photographer-profile-section {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.photographer-profile-section .photographer-profile-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 0.85fr);
+  align-items: center;
+  gap: clamp(36px, 6vw, 96px);
+}
+
+.photographer-profile-story {
+  max-width: 640px;
+}
+
+.photographer-profile-story h2 {
+  max-width: 600px;
+}
+
+.photographer-profile-art {
+  position: relative;
+  isolation: isolate;
+  align-self: stretch;
+  min-height: 620px;
+  margin: 0;
+  overflow: hidden;
+  border-radius: var(--radius-control);
+  background: var(--paper);
+}
+
+.photographer-profile-art::after {
+  position: absolute;
+  inset: 88% 0 0;
+  z-index: 2;
+  background: linear-gradient(0deg, var(--paper), transparent);
+  content: "";
+  pointer-events: none;
+}
+
+.photographer-profile-art > img {
+  position: absolute;
+  top: 3%;
+  left: 50%;
+  width: auto;
+  max-width: none;
+  height: 155%;
+  z-index: 1;
+  filter: saturate(0.86) contrast(1.01) drop-shadow(-5px 10px 11px rgb(16 22 23 / 13%));
+  transform: translateX(-50%);
+}
+
+.photographer-profile-copy p {
+  max-width: 720px;
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .photographer-profile-art > img {
+    height: 175%;
+  }
+}
+
+.photo-reviews-section {
+  padding-block: 76px;
+  border-block: 1px solid var(--line);
+  background: #f7f8f3;
+}
+
+.photo-reviews-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 32px;
+  margin-bottom: 30px;
+}
+
+.photo-reviews-heading h2 {
+  max-width: 620px;
+  margin: 0;
+}
+
+.photo-reviews-heading > p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+.photo-reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.photo-review-card {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+}
+
+.photo-review-quote {
+  margin: 0 0 28px;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.photo-review-attribution {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: var(--ink);
+}
+
+.photo-review-attribution span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.photo-reviews-action {
+  margin-top: 26px;
+}
+
+
+@media (max-width: 900px) {
+  .photographer-profile-section .photographer-profile-grid { grid-template-columns: 1fr; }
+  .photographer-profile-art { min-height: 540px; }
+}
+@media (max-width: 640px) {
+  .photographer-profile-section .photographer-profile-grid { gap: 32px; }
+  .photographer-profile-art { min-height: 460px; }
+  .photographer-profile-copy p { font-size: 16px; }
+  .photo-reviews-section { padding-block: 52px; }
+  .photo-reviews-heading { display: block; }
+  .photo-reviews-heading > p { margin-top: 18px; }
+  .photo-reviews-grid { grid-template-columns: 1fr; }
+  .photo-review-card { padding: 24px; }
+  .photo-review-quote { font-size: 18px; }
+}

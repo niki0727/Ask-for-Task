@@ -398,7 +398,7 @@ test("stores a review and records the notification result", async (t) => {
       name: "Client Name",
       email: "client@example.com",
       companyProject: "Website project",
-      service: "App or website development",
+      service: "Photography and visual production",
       relationship: "Client",
       reviewText: "Clear communication and a useful finished result.",
       contactConsent: true,

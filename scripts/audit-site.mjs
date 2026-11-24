@@ -399,6 +399,22 @@ for (const route of ["/", "/ventures/"]) {
     errors.push(`${route}: event photography must use the existing AVIF source with JPG fallback`);
   }
 }
+// Previously published photography features must survive a whole-site release.
+const photographyPage = fs.readFileSync(routes.get("/photography/"), "utf8");
+if (!/nikita-photographer-cutout\.png/.test(photographyPage)) {
+  errors.push("/photography/: the approved photographer cutout is missing");
+}
+if ((photographyPage.match(/class="photo-review-card"/g) || []).length < 2) {
+  errors.push("/photography/: previously published client reviews are missing");
+}
+for (const collection of ["events", "hospitality", "people", "sport", "aerial", "streets", "travel"]) {
+  const route = `/portfolio/${collection}/`;
+  const page = fs.readFileSync(routes.get(route), "utf8");
+  if (!/<details\b[^>]*class="[^"]*\balbum-story\b/.test(page)) {
+    errors.push(`${route}: the approved expandable album presentation is missing`);
+  }
+}
+
 for (const route of ["/case-studies/pinglo/", "/case-studies/dmar-international/"]) {
   const html = fs.readFileSync(routes.get(route), "utf8");
   if (!/<figure\b[^>]*class="[^"]*case-website-proof[^"]*"/i.test(html)) {
