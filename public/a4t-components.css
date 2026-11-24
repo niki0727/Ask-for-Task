@@ -5408,7 +5408,7 @@ footer {
 
 .founder-work-photo > img,
 .founder-work-photo > picture,
-.founder-work-product > div {
+.founder-work-product > .founder-product-link {
   width: 100%;
   height: auto;
   min-height: 0;
@@ -5453,15 +5453,48 @@ footer {
   object-fit: cover;
 }
 
-.founder-work-product > div {
-  display: grid;
-  place-items: center;
-  background: var(--paper);
+.founder-work-grid .founder-work-product {
+  border: 0;
+  background: transparent;
 }
 
-.founder-work-product img {
-  width: min(192px, 38%);
+.founder-work-product > .founder-product-link {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  background: transparent;
+}
+
+.pinglo-mark {
+  position: relative;
+  display: block;
+  width: min(360px, 78%);
   aspect-ratio: 1;
+}
+
+.pinglo-mark img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.founder-product-arrow {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.founder-work-product .founder-product-link:hover {
+  color: var(--blue);
+}
+
+.founder-work-grid .founder-work-product figcaption {
+  border-top: 0;
+  background: transparent;
 }
 
 .founder-work-grid figcaption {
