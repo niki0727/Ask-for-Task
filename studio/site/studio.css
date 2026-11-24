@@ -190,3 +190,11 @@ footer{flex-wrap:wrap;color:#515e56;font-size:.85rem;justify-content:space-betwe
  .sketch{width:min(82%,280px)}
  .workspace-tab{padding-inline:10px}
 }
+
+.directory-heading{display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:0 18px;margin-bottom:16px}
+.directory-heading h2{margin:0}
+.directory-filters{gap:5px;font-size:.87rem}
+.directory-filters a{display:inline-flex;min-height:44px;align-items:center;padding:4px 11px;border-radius:5px;text-decoration:none}
+.directory-filters a:hover{text-decoration:underline;text-underline-offset:.2em}
+.directory-filters [aria-current]{color:var(--studio-blue);background:#edf0fa;font-weight:650}
+@media(max-width:640px){.directory-heading{display:grid;gap:8px}}

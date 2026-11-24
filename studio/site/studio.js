@@ -65,7 +65,16 @@ roleInput.addEventListener('input',drawSpecialties);
 $('specialty-add').onclick=addSpecialty;
 $('specialty-custom').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSpecialty();}});
 async function directory(){
- const people=await api('directory');
+ const photographyOnly=new URLSearchParams(location.search).get('discipline')==='photography';
+ if(photographyOnly){
+  $('directory-title').textContent='Explore photographers';
+  $('directory-all').removeAttribute('aria-current');
+  $('directory-photography').setAttribute('aria-current','true');
+ }
+ const profiles=await api('directory');
+ const people=photographyOnly?profiles.filter(profile=>[profile.role,...(profile.specialties||[])].some(
+  label=>/\bphotograph(?:y|ers?|ic)\b/i.test(label)
+ )):profiles;
  $('people').replaceChildren(...people.map(p=>{
   const a=el('article','');
   a.className='directory-card';
@@ -112,7 +121,7 @@ async function directory(){
   a.append(footer);
   return a;
  }));
- if(!people.length)$('people').append(el('p','Public profiles appear here when creators choose to share them.'));
+ if(!people.length)$('people').append(el('p',photographyOnly?'No photographers have published a profile yet.':'Public profiles appear here when creators choose to share them.'));
 }
 async function refresh(){
  const {member,operator,liveAI,hosted:staging}=await api('session');
