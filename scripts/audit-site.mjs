@@ -68,7 +68,7 @@ function hasAccessibleName(tag, inner = "") {
     .some((match) => match[1].trim());
 }
 
-const htmlFiles = walk(publicDir).filter((file) => file.endsWith(".html")).sort();
+const htmlFiles = walk(publicDir).filter((file) => file.endsWith(".html") && !file.startsWith(path.join(publicDir, "_studio-shell", path.sep))).sort();
 const routes = new Map(htmlFiles.map((file) => [routeFor(file), file]));
 const indexableRoutes = new Set();
 const deployedStylesheets = fs.readdirSync(publicDir).filter((file) => file.endsWith(".css")).sort();

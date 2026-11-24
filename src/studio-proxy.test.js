@@ -6,7 +6,7 @@ test('Studio stays same-site while forwarding only its cookies to the fixed app'
  const request=new Request('https://askfortask.co.uk/studio/api/profile',{method:'PUT',headers:{Origin:'https://askfortask.co.uk',Cookie:'other=private; studio_session=abc; studio_verified=proof',Authorization:'Bearer unrelated','Content-Type':'application/json'},body:'{"name":"Test"}'});
  let called;
  const response=await proxyStudio(request,async r=>new Uint8Array(await r.arrayBuffer()),async(url,init)=>{
-  called={url,init};return new Response('{"ok":true}',{headers:{'Set-Cookie':'studio_session=new; Path=/studio/; HttpOnly; Secure','Content-Security-Policy':"default-src 'self'"}});
+  called={url,init};return new Response('{"ok":true}',{headers:{'Content-Type':'application/json','Set-Cookie':'studio_session=new; Path=/studio/; HttpOnly; Secure','Content-Security-Policy':"default-src 'self'"}});
  });
  assert.equal(called.url,'https://studio.askfortask.co.uk/studio/api/profile');
  assert.equal(called.init.headers.get('origin'),'https://studio.askfortask.co.uk');
@@ -29,7 +29,36 @@ test('the Worker preserves Studio API paths instead of adding page trailing slas
  const {default:worker}=await import('./worker.js');const previous=globalThis.fetch;let target;
  globalThis.fetch=async(url)=>{target=url;return Response.json({member:null});};
  try{
-  const response=await worker.fetch(new Request('https://askfortask.co.uk/studio/api/session'),{});
+  const response=await worker.fetch(new Request('https://askfortask.co.uk/studio/api/session',{headers:{Cookie:'studio_session=test'}}),{});
   assert.equal(response.status,200);assert.equal(target,'https://studio.askfortask.co.uk/studio/api/session');
  }finally{globalThis.fetch=previous;}
+});
+
+test('Render startup challenges stay out of the Studio UI and public discovery has a fallback', async()=>{
+ const challenge=async()=>new Response('<h1>Just a moment</h1>',{status:429,headers:{'CF-Mitigated':'challenge','X-Render-Routing':'hibernate-rate-limited','Content-Type':'text/html'}});
+ const directory=await proxyStudio(new Request('https://askfortask.co.uk/studio/api/directory'),null,challenge);
+ assert.equal(directory.headers.get('X-Studio-Directory'),'featured');
+ assert((await directory.json()).some(person=>person.id==='nikita-piazenko'));
+ const verify=new Request('https://askfortask.co.uk/studio/api/verify',{
+  method:'POST',headers:{Origin:'https://askfortask.co.uk','Content-Type':'application/json'},body:'{}'
+ });
+ const unavailable=await proxyStudio(verify,async()=>new Uint8Array(),challenge);
+ assert.equal(unavailable.status,503);
+ assert.equal(unavailable.headers.get('Retry-After'),'60');
+ assert.match((await unavailable.json()).error,/temporarily busy/);
+ const limited=await proxyStudio(new Request('https://askfortask.co.uk/studio/api/directory'),null,
+  async()=>Response.json({error:'Please wait before trying again.'},{status:429}));
+ assert.equal(limited.status,429);
+});
+
+test('public Studio pages and signed-out session checks avoid the sleeping backend',async()=>{
+ const {default:worker}=await import('./worker.js');
+ const env={ASSETS:{fetch:async req=>new Response(new URL(req.url).pathname)}};
+ const page=await worker.fetch(new Request('https://askfortask.co.uk/studio/?discipline=photography'),env);
+ assert.equal(await page.text(),'/_studio-shell/');
+ assert.match(page.headers.get('Content-Security-Policy'),/frame-ancestors 'none'/);
+ const session=await worker.fetch(new Request('https://askfortask.co.uk/studio/api/session'),env);
+ assert.equal((await session.json()).member,null);
+ const internal=await worker.fetch(new Request('https://askfortask.co.uk/_studio-shell/'),env);
+ assert.equal(internal.status,404);
 });

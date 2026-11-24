@@ -1,3 +1,4 @@
+import {studioPage} from './studio-pages.js';
 import {proxyStudio} from './studio-proxy.js';
 import { Buffer } from "node:buffer";
 
@@ -801,9 +802,13 @@ async function handleRequest(request, env) {
       return handlePartnerRedirect(request, env, url);
     }
 
+    if (url.pathname.startsWith("/_studio-shell/")) {
+      return new Response("Not found", {status:404});
+    }
+
     if (url.pathname.startsWith("/studio/")) {
       if (redirectToCanonical) return Response.redirect(url.toString(),301);
-      return proxyStudio(request,readBodyBytes);
+      return await studioPage(request, env.ASSETS) || proxyStudio(request, readBodyBytes);
     }
 
     const isNotFoundAlias = ["/404", "/404/", "/404.html"].includes(url.pathname);

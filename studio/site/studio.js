@@ -6,7 +6,9 @@ let active=null, hosted=false, recentlyVerified=false;
 async function api(path,method='GET',payload){
  const r=await fetch(studioBase+'/api/'+path,{method,...(payload?{headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{})});
  const data=await r.json();
- if(!r.ok)throw Error(data.error);return data;
+ if(!r.ok)throw Error(data.error);
+ if(path==='directory')$('directory-status').hidden=r.headers.get('X-Studio-Directory')!=='featured';
+ return data;
 }
 function bind(id,fn){$(id).addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;$('notice').textContent='';try{await fn(e.currentTarget);}catch(error){$('notice').textContent=error.message;}finally{button.disabled=false;}});}
 function click(id,fn){$(id).onclick=()=>guard(fn);}
@@ -143,7 +145,6 @@ async function refresh(){
  $('draft-unavailable').hidden=liveAI;
  $('ai-mode').textContent=liveAI?'Use the local guide or opt in to live AI for this request.':'Local planning guide · live AI is not configured.';
  if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href=studioBase+'/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);renderSocials(member.socials||[]);showAvatar(member.avatar);updateProfilePreview();await projects();}
- await directory();
 }
 function addWork(item={}){
  if($('work-fields').children.length>=3)return;
@@ -446,13 +447,17 @@ async function openAccessLink(){
  if(!localCode&&!emailCode){if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');await refresh();if(location.hash==='#workspace')$('workspace').scrollIntoView({block:'start'});if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}return;}
  $('notice').textContent='';
  $('confirm-email').hidden=true;
- history.replaceState(null,'',studioBase+'/#workspace');
- if(localCode){await api('verify','POST',{code:localCode});await resumeIntent();return;}
- await refresh();
+ if(localCode){
+  await api('verify','POST',{code:localCode});
+  history.replaceState(null,'',studioBase+'/#workspace');
+  await resumeIntent();
+  return;
+ }
+ $('workspace').scrollIntoView({block:'start'});
  const confirm=$('confirm-email');confirm.hidden=false;confirm.focus();
  confirm.onclick=()=>guard(async()=>{
   confirm.disabled=true;
-  try{await api('verify','POST',{code:emailCode});recentlyVerified=true;confirm.hidden=true;await resumeIntent();}
+  try{await api('verify','POST',{code:emailCode});history.replaceState(null,'',studioBase+'/#workspace');recentlyVerified=true;confirm.hidden=true;await resumeIntent();}
   finally{confirm.disabled=false;}
  });
 }
@@ -460,3 +465,4 @@ window.addEventListener('hashchange',()=>{
  if(new URLSearchParams(location.hash.slice(1)).has('studio_access')||location.hash==='#inbox')guard(openAccessLink);
 });
 guard(openAccessLink);
+directory().catch(() => { $('directory-status').hidden=false; });
