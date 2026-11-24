@@ -85,3 +85,12 @@ footer{border-top:1px solid var(--color-line,#d7dcd6);padding-top:24px;padding-b
 .enquiry-feature .enquiry-link{grid-column:2;grid-row:2/4;align-self:end;padding:0 20px;background:#e9d5b0;color:#17201d;text-decoration:none;font-size:13px;white-space:nowrap;transition:background .2s}
 .enquiry-feature .enquiry-link:hover{background:#fff0d2}
 @media(max-width:640px){.intro-actions{gap:6px 17px;margin-top:15px}.opening{padding:18px;margin-bottom:40px}.opening-head{margin-bottom:12px}.opening-caption{padding:30px 14px 13px}.opening-caption strong{font-size:18px}.opening-note{margin-top:14px}.enquiry-feature{display:block;padding:30px 22px}.enquiry-feature .enquiry-kicker{display:block;margin-bottom:20px}.enquiry-feature p{margin-bottom:22px}.enquiry-feature .enquiry-link{width:max-content}}
+
+/* Keep the name and navigation readable on narrow phones. */
+@media(max-width:360px){
+  .site-head{flex-wrap:wrap;gap:0;padding-block:4px}
+  .brand{display:flex;flex-wrap:wrap;gap:0 8px;min-width:0;white-space:normal;padding-top:0}
+  .brand span{display:inline}
+  .primary-nav{flex-basis:100%;min-width:0;justify-content:space-between}
+  .story{scroll-margin-top:116px}
+}
