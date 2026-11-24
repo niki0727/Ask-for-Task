@@ -153,3 +153,11 @@ The same application, accounts and database now support the /studio/ mount. A fi
 Verification before release: 53 tests pass, including new same-site forwarding, cross-site rejection, failure handling, mounted sign-in/session/logout and profile URL coverage. The site audit and Worker dry-run pass. Chrome confirmed local sign-in into the mounted workspace and no mobile horizontal overflow; the homepage exposes both client and creator routes immediately. No database migration or paid infrastructure is required.
 
 Public integration verified: application f90ad43 is live on Render, main Worker version 67462645-99d2-4b21-939c-b875ad26233b is deployed, and all 55 tests plus the main-site audit pass. A live check caught main-page trailing-slash normalization affecting mounted API calls; the routing order was corrected and covered by a Worker regression test. Real homepage email delivery, old-link redirect, email confirmation, returning member access, guest enquiry receipt, alert delivery and operator closure were verified. See studio-homepage-integration-20261123.md for the release evidence.
+
+### 24 November 2026 — Studio sign-in and creator onboarding
+
+The public sign-in request now reaches Supabase from Cloudflare while the free Studio app starts. A real request reached the owner’s Gmail inbox, and the form now confirms requests below the submit button. The app server still handles email verification and account sessions.
+
+The onboarding update adds a dedicated email-confirmation screen, discipline and specialty selectors, local city suggestions with free-text entry, and a shorter path to a private profile. Full portfolios use a link to the creator’s own work. Existing accounts keep their data. Passphrase setup remains optional and explains how to save and reuse the phrase.
+
+Verification covered the mounted Studio browser flow with simulated email verification, choosing and saving specialties and location, returning sign-in with a passphrase, and expired-link and temporary-error recovery. No schema changes or paid services are required.

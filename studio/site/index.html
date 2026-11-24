@@ -1,6 +1,15 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Ask for Task Studio — Make something worth showing</title><meta name="description" content="Share your creative work, find collaborators and enquire about projects through Ask for Task Studio."><link rel="icon" href="/brand.svg" type="image/svg+xml"><link rel="stylesheet" href="/studio.css"><script src="/studio.js" defer></script><script src="/operator.js" defer></script><script src="/sketch.js" defer></script></head><body>
 <header><a class="brand" href="https://askfortask.co.uk/" aria-label="Ask for Task Studio home"><img src="/brand.svg" width="100" height="43" alt=""></a><nav aria-label="Main"><a href="#directory">Creators</a><a href="#workspace" id="nav-work">Sign in</a></nav></header>
 <main>
+<section id="email-confirm" class="email-confirm" aria-labelledby="email-confirm-title" hidden>
+<div class="email-confirm-card">
+<h1 id="email-confirm-title" tabindex="-1">Confirm your email</h1>
+<p>Continue to your Creator Studio workspace with this one-time link.</p>
+<button type="button" id="confirm-email">Confirm and continue</button>
+<p id="confirm-status" role="status" aria-atomic="true"></p>
+<a id="new-email-link" href="/#workspace">Request a new sign-in link</a>
+</div>
+</section>
 <section class="hero" aria-labelledby="studio-title">
 <div class="hero-copy">
 <p class="label">Creator Studio</p>
@@ -21,29 +30,78 @@
 <div id="people" class="grid" aria-live="polite"></div>
 </section>
 <section id="workspace" class="section" aria-labelledby="workspace-title">
-<h2 id="workspace-title">Join or sign in</h2>
+<h2 id="workspace-title" tabindex="-1">Join or sign in</h2>
 <p id="notice" role="status"></p>
 <form id="access"><p id="access-intent" hidden></p><p class="muted" id="access-help">Use a sample email to try Studio locally.</p><label>Email<input type="email" name="email" autocomplete="email" maxlength="254" required></label><button>Send sign-in link</button><p id="access-status" role="status" aria-atomic="true"></p><p class="field-note"><a href="/privacy/">Studio privacy</a></p><p><a id="access-link" hidden>Open local access link →</a></p></form>
-<button type="button" id="confirm-email" hidden>Confirm email and open Studio</button>
-<details id="password-option" hidden><summary>Use a passphrase instead</summary><form id="password-login"><h3>Sign in</h3><label>Email<input type="email" name="email" autocomplete="username" required></label><label>Passphrase<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Sign in</button></form></details>
-<div class="workspace-links"><a href="#workspace" data-intent="project">Plan a project</a><a href="https://askfortask.co.uk/contact/?topic=Project%20scoping%20call">Contact A4T Studio</a></div>
+<details id="password-option" hidden><summary>Use a passphrase instead</summary><form id="password-login"><p class="muted">Use the passphrase you saved in your account. You can also request an email link above.</p><label>Email<input type="email" name="email" autocomplete="username" required></label><label>Passphrase<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Sign in</button></form></details>
+<div class="workspace-links" id="guest-workspace-links"><a href="#workspace" data-intent="project">Plan a project</a><a href="https://askfortask.co.uk/contact/?topic=Project%20scoping%20call">Contact A4T Studio</a></div>
 <div id="member" hidden><div class="actions workspace-identity"><strong id="identity"></strong><button type="button" class="outline" id="logout">Sign out</button></div>
 <nav class="workspace-nav" aria-label="Your workspace"><button type="button" class="workspace-tab" data-panel="profile-panel" aria-pressed="true">Profile</button><button type="button" class="workspace-tab" data-panel="projects-panel" aria-pressed="false">Projects</button><button type="button" id="operator-tab" class="workspace-tab" data-panel="inbox-panel" aria-pressed="false" hidden>Enquiries</button><button type="button" class="workspace-tab" data-panel="account-panel" aria-pressed="false">Account</button></nav>
 <div id="profile-panel" class="workspace-panel"><div class="profile-layout"><div class="profile-editor">
-<div class="editor-heading"><h3>Make it yours.</h3><p>Your work, your voice, your choice of when to share.</p></div>
+<div class="editor-heading"><h3>Your creator profile</h3><p>Save a private draft now. You can publish it when you’re ready.</p></div>
 <section class="avatar-editor" aria-labelledby="avatar-heading"><div class="avatar" id="avatar-current" aria-hidden="true">A4T</div><div><h4 id="avatar-heading">Profile photo</h4><label class="photo-choice" for="avatar-file">Choose a photo</label><input id="avatar-file" type="file" accept="image/jpeg,image/png,image/webp"><button id="avatar-remove" type="button" class="text-button" hidden>Remove photo</button><p class="muted">JPG, PNG or WebP, up to 8 MB.</p></div>
 <div id="avatar-crop" hidden><canvas id="avatar-canvas" width="384" height="384" aria-label="Profile photo crop preview"></canvas><label>Horizontal position<input id="avatar-x" type="range" min="0" max="100" value="50"></label><label>Vertical position<input id="avatar-y" type="range" min="0" max="100" value="50"></label><div class="actions"><button id="avatar-save" type="button">Save photo</button><button id="avatar-cancel" type="button" class="outline">Cancel</button></div></div><p id="avatar-status" role="status"></p></section>
 <details id="draft-tools"><summary>Start from an existing bio</summary><form id="profile-import"><p class="muted">Paste your bio or import it from a public page.</p><label for="import-url">Source link</label><div class="specialty-entry"><input id="import-url" type="url" maxlength="500" placeholder="https://your-portfolio.com/about"><button type="button" id="import-read" class="outline">Read page</button></div><label>Source text<textarea id="import-source" maxlength="8000" rows="6" placeholder="What you do, the work you enjoy, and how you approach it."></textarea></label><p id="import-status" role="status"></p><button type="button" id="import-copy" class="outline">Use as my bio</button><div id="ai-draft-controls" hidden><label>Tone<select id="draft-tone"><option>Natural and direct</option><option>Warm and personal</option><option>Concise and editorial</option></select></label><label class="check"><input id="draft-consent" type="checkbox"><span>Send this source text to OpenAI to draft my profile.</span></label><button>Generate a draft</button></div><p id="draft-unavailable" class="muted">AI drafting is coming soon. You can use and edit your existing bio now.</p></form>
 <form id="review-draft" hidden><h4>Review your draft</h4><label>Discipline<input name="role" maxlength="80"></label><label>Introduction<input name="headline" maxlength="100"></label><label>About your work<textarea name="bio" maxlength="500" rows="5"></textarea></label><p id="draft-specialties"></p><p class="muted">Check the facts and make it sound like you.</p><div class="actions"><button>Use this draft</button><button id="draft-discard" class="outline" type="button">Discard</button></div></form></details>
-<form id="profile"><h4>About you</h4><label>Display name<input name="name" maxlength="80" required></label><label>Introduction<input name="headline" maxlength="100" placeholder="A short line about your work"></label><label>Discipline or specialty<input name="role" list="creative-disciplines" maxlength="80" placeholder="e.g. Photographer &amp; filmmaker"></label><datalist id="creative-disciplines"><option value="Music &amp; sound"></option><option value="Photography"></option><option value="Film &amp; video"></option><option value="Design &amp; art direction"></option><option value="Illustration &amp; visual art"></option><option value="Animation &amp; 3D"></option><option value="Writing &amp; editorial"></option><option value="Fashion &amp; styling"></option><option value="Performance &amp; live arts"></option><option value="Architecture &amp; spatial design"></option><option value="Digital &amp; interactive"></option><option value="Creative production"></option></datalist><fieldset class="specialty-picker"><legend>What do you like to work on? <small>(optional)</small></legend><p class="muted" id="specialty-hint">Pick a discipline for ideas, or add your own.</p><div id="specialty-suggestions" class="specialty-chips"></div><div id="specialty-picked" class="specialty-chips" aria-label="Your specialties"></div><label for="specialty-custom">Add your own specialty</label><div class="specialty-entry"><input id="specialty-custom" maxlength="40" placeholder="e.g. Album covers"><button id="specialty-add" type="button" class="outline">Add</button></div><p id="specialty-status" role="status"></p></fieldset><label>Location<input name="place" maxlength="100"></label><label>About your work<textarea name="bio" maxlength="500" rows="5" placeholder="What do you make, who is it for, and how do you work?"></textarea></label><p id="bio-count" class="field-note">0 / 500</p><label class="check"><input name="remote" type="checkbox">Available for remote projects</label><label>Full portfolio<input name="portfolio" type="url" maxlength="500" placeholder="https://"></label><h4>Find you elsewhere</h4><p class="field-note">Add up to four links to your work or social profiles.</p><div id="social-fields"></div><button id="social-add" type="button" class="text-button">+ Add a link</button><h4>Visibility &amp; enquiries</h4><label class="check"><input type="checkbox" name="visible"> Show my profile in Explore</label><label class="check"><input type="checkbox" name="available"> Show that I’m open to project enquiries</label><div class="actions"><button>Save profile</button><span id="profile-status" role="status"></span><a id="public-profile-link" hidden>Open shareable profile ↗</a></div></form>
-<form id="work"><h4>Selected work</h4><p class="muted">Choose up to three projects. Add your credit and a link to the full work.</p><div id="work-fields"></div><div class="actions"><button>Save selected work</button><button id="work-add" type="button" class="text-button">+ Add a project</button></div><p id="work-status" role="status"></p></form>
+<form id="profile">
+<div class="profile-fields">
+<label>Display name<input name="name" maxlength="80" autocomplete="name" required></label>
+<label>Discipline<select id="discipline"><option value="">Choose a discipline</option><option>Music &amp; sound</option><option>Photography</option><option>Film &amp; video</option><option>Design &amp; art direction</option><option>Illustration &amp; visual art</option><option>Animation &amp; 3D</option><option>Writing &amp; editorial</option><option>Fashion &amp; styling</option><option>Performance &amp; live arts</option><option>Architecture &amp; spatial design</option><option>Digital &amp; interactive</option><option>Creative production</option><option value="other">Other · write your own</option></select></label>
+<label id="custom-discipline" hidden>Your discipline<input name="role" maxlength="80" placeholder="e.g. Photographer and filmmaker"></label>
+</div>
+<div class="specialty-picker">
+<label for="specialty-suggestions">Specialties <small>(optional)</small></label>
+<select id="specialty-suggestions"><option value="">Choose a discipline for suggestions</option></select>
+<div id="specialty-picked" class="specialty-chips" aria-label="Your specialties"></div>
+<div id="custom-specialty" hidden>
+<label for="specialty-custom">Your specialty</label>
+<div class="specialty-entry"><input id="specialty-custom" maxlength="40" placeholder="e.g. Album covers"><button id="specialty-add" type="button" class="outline">Add</button></div>
+</div>
+<p id="specialty-status" role="status"></p>
+</div>
+<div class="location-field">
+<label for="profile-location">Location <small>(optional)</small></label>
+<div class="location-control">
+<input id="profile-location" name="place" maxlength="100" placeholder="Start typing a city" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="location-options" aria-describedby="location-help">
+<ul id="location-options" role="listbox" aria-label="Suggested locations" hidden></ul>
+</div>
+<p class="field-note" id="location-help">Choose a suggestion or enter your own location.</p>
+</div>
+<label class="check"><input name="remote" type="checkbox">Available for remote projects</label>
+<label>About your work <small>(optional)</small><textarea name="bio" maxlength="500" rows="4" placeholder="Tell clients what you make and the kinds of projects you work on."></textarea></label>
+<p id="bio-count" class="field-note">0 / 500</p>
+<label>Full portfolio link <small>(optional)</small><input name="portfolio" type="url" inputmode="url" maxlength="500" placeholder="https://your-portfolio.com"></label>
+<details class="profile-extra" id="profile-extra">
+<summary>Introduction and social links</summary>
+<label>One-line introduction<input name="headline" maxlength="100" placeholder="A short line to introduce your work"></label>
+<div id="social-fields"></div>
+<button id="social-add" type="button" class="text-button">+ Add a link</button>
+</details>
+<div class="profile-publishing">
+<label class="check"><input type="checkbox" name="visible"> Publish my profile in Explore</label>
+<label class="check"><input type="checkbox" name="available"> Show that I’m open to project enquiries</label>
+</div>
+<div class="actions"><button class="onboarding-primary">Save profile</button><span id="profile-status" role="status"></span><a id="public-profile-link" hidden>Open shareable profile ↗</a></div>
+</form>
+<form id="work"><h4>Selected work</h4><p class="muted">Optional. Feature up to three projects with your credit and a link to each one.</p><div id="work-fields"></div><div class="actions"><button>Save selected work</button><button id="work-add" type="button" class="text-button">+ Add a project</button></div><p id="work-status" role="status"></p></form>
 </div><aside class="profile-preview" aria-label="Profile preview"><details id="profile-preview-details" open><summary>Preview your profile</summary><div class="avatar" id="preview-avatar" aria-hidden="true">A4T</div><h3 id="preview-name">Your name</h3><p id="preview-role" class="muted"></p><p id="preview-headline"></p><p id="preview-bio"></p><ul id="preview-specialties" class="disciplines"></ul><p id="preview-location" class="muted"></p><div id="preview-socials"></div><p id="preview-visibility" class="preview-status"></p></details></aside></div></div>
 <div id="projects-panel" class="workspace-panel" hidden><form id="project"><h3 id="project-heading">Start a project</h3><p class="muted">Your brief, budget and tasks are private. Saving a project does not send it to the studio.</p><label>Project name<input name="title" maxlength="100" required></label><label>What do you want to make?<textarea name="brief" rows="4" maxlength="2400" required></textarea></label><label>Target date<input name="due" type="date"></label><label>Working budget<input name="budget" maxlength="80" placeholder="Optional"></label><div class="actions"><button>Save project</button><button type="button" class="outline" id="new-project">New project</button></div></form>
 <template id="work-template"><fieldset><legend></legend><label>Project title<input name="title" maxlength="100"></label><label>Your credit<input name="credit" maxlength="140" placeholder="e.g. Photography by …"></label><label>Project link<input name="url" type="url" maxlength="500" placeholder="https://"></label><label>Image preview link <small>(optional)</small><input name="image" type="url" maxlength="500" placeholder="https://…/image.jpg"></label><p class="field-note">Use a direct image URL. Link to video, audio or a full project above.</p><label>Describe the image<input name="alt" maxlength="180" placeholder="For visitors using screen readers"></label></fieldset></template>
 <div id="projects" class="actions" aria-label="Saved projects"></div>
 <div id="desk" class="grid" hidden><article><h3>Project checklist</h3><ul id="tasks"></ul><form id="task"><label>Add a task<input name="title" maxlength="160" required></label><button>Add task</button></form><button type="button" class="outline" id="delete-project">Delete project</button></article>
 <form id="assist"><p class="label">Studio assistant</p><h3>Project help</h3><p class="muted" id="ai-mode"></p><label>What can we help with?<textarea name="question" maxlength="1200" required placeholder="How should I plan the schedule?"></textarea></label><label id="share" class="check" hidden><input type="checkbox" name="share"> Send this question and project details to OpenAI</label><button>Get help</button><pre id="answer" role="status"></pre></form></div>
-</div><div id="inbox-panel" class="workspace-panel" hidden><div class="inbox-heading"><h3>Client enquiries</h3><button type="button" id="inbox-refresh" class="outline">Refresh</button></div><p id="inbox-status" role="status"></p><label>Show<select id="inbox-filter"><option value="open">Open enquiries</option><option value="all">All enquiries</option></select></label><div id="inbox-list"></div></div><div id="account-panel" class="workspace-panel" hidden><h3>Account settings</h3><details class="account-access"><summary>Studio passphrase (optional)</summary><p>Keep using email links, or make a passphrase you can picture. Save it in your password manager so you can find it again.</p><p id="phrase-note" class="muted"></p><form id="phrase"><label>Passphrase<input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="128" required></label><div class="actions"><button type="button" class="outline" id="generate-phrase">Suggest a phrase</button><button type="button" class="outline" id="show-phrase" aria-pressed="false">Show phrase</button><button id="save-phrase" hidden>Save passphrase</button></div></form></details>
+</div><div id="inbox-panel" class="workspace-panel" hidden><div class="inbox-heading"><h3>Client enquiries</h3><button type="button" id="inbox-refresh" class="outline">Refresh</button></div><p id="inbox-status" role="status"></p><label>Show<select id="inbox-filter"><option value="open">Open enquiries</option><option value="all">All enquiries</option></select></label><div id="inbox-list"></div></div><div id="account-panel" class="workspace-panel" hidden><h3>Account settings</h3><details class="account-access" id="account-access">
+<summary>Studio passphrase <small>(optional)</small></summary>
+<p>Use your email and passphrase to sign in when you come back. Email links will still work.</p>
+<p id="phrase-note" class="muted"></p>
+<button type="button" id="password-email" class="outline" hidden>Email me a fresh link</button>
+<form id="phrase" hidden>
+<label>Passphrase<input name="password" type="password" autocomplete="new-password" minlength="15" maxlength="72" aria-describedby="phrase-help" required></label>
+<p id="phrase-help" class="field-note">Generate one or use your own with at least 15 characters. Save it in your password manager.</p>
+<div class="actions"><button type="button" class="outline" id="generate-phrase">Suggest a phrase</button><button type="button" class="outline" id="show-phrase" aria-pressed="false">Show phrase</button><button id="save-phrase" class="onboarding-primary">Save passphrase</button></div>
+</form>
+<p id="phrase-status" role="status" aria-atomic="true"></p>
+</details>
 <p><button type="button" class="outline" id="delete-account">Delete account</button></p>
 </div></div></section>
 </main><footer><a href="https://askfortask.co.uk/">Ask for Task Studio</a> · ASK FOR TASK LTD · Company 14697408 <nav aria-label="Footer"><a href="https://askfortask.co.uk/services/">Services</a><a href="/privacy/">Privacy</a></nav></footer></body></html>

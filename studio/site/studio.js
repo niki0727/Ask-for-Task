@@ -2,11 +2,11 @@ const studioBase=document.querySelector('meta[name=studio-base]')?.content||'';
 const $=id=>document.getElementById(id);
 const fields=form=>Object.fromEntries(new FormData(form));
 const el=(tag,value)=>{const n=document.createElement(tag);n.textContent=value;return n;};
-let active=null, hosted=false, recentlyVerified=false;
+let active=null, hosted=false, recentlyVerified=false, signedInMember=null;
 async function api(path,method='GET',payload){
  const r=await fetch(studioBase+'/api/'+path,{method,...(payload?{headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{})});
- const data=await r.json();
- if(!r.ok)throw Error(data.error);
+ const data=await r.json().catch(()=>null);
+ if(!r.ok||!data)throw Object.assign(Error(data?.error||'Studio could not complete this request. Try again.'),{status:r.status});
  if(path==='directory')$('directory-status').hidden=r.headers.get('X-Studio-Directory')!=='featured';
  return data;
 }
@@ -30,42 +30,201 @@ const specialtyIdeas={
 };
 let specialties=[];
 const roleInput=$('profile').elements.namedItem('role');
+const discipline=$('discipline');
+const specialtySelect=$('specialty-suggestions');
+function syncDiscipline(){
+ const role=roleInput.value.trim().toLowerCase();
+ const option=[...discipline.options].find(item=>item.value.toLowerCase()===role);
+ discipline.value=option?.value||(role?'other':'');
+ $('custom-discipline').hidden=discipline.value!=='other';
+}
 function drawSpecialties(){
  const role=roleInput.value.trim().toLowerCase();
- const choices=specialtyIdeas[role]||(role.includes('photo')?specialtyIdeas.photography:/music|sound|songwrit|beatmak/.test(role)?specialtyIdeas['music & sound']:/artist|visual art/.test(role)?specialtyIdeas['illustration & visual art']:[]);
- const button=(label,action)=>{const b=el('button',label);b.type='button';b.onclick=action;return b;};
- $('specialty-suggestions').replaceChildren(...choices.map(label=>{
-  const picked=specialties.some(s=>s.toLowerCase()===label.toLowerCase());
-  const b=button(label,()=>toggleSpecialty(label,label));
-  b.dataset.specialty=label;b.setAttribute('aria-pressed',String(picked));return b;
- }));
- $('specialty-picked').replaceChildren(...specialties.filter(label=>!choices.some(c=>c.toLowerCase()===label.toLowerCase())).map(label=>{
-  const b=button(label+' ×',()=>toggleSpecialty(label));
-  b.setAttribute('aria-label','Remove '+label);return b;
+ const group=Object.hasOwn(specialtyIdeas,role)?role:role.includes('photo')?'photography':
+  /music|sound|songwrit|beatmak/.test(role)?'music & sound':/artist|visual art/.test(role)?'illustration & visual art':'';
+ const suggestions=(specialtyIdeas[group]||[]).filter(label=>!specialties.some(item=>item.toLowerCase()===label.toLowerCase()));
+ const prompt=role?'Add a specialty':'Choose a discipline for suggestions';
+ specialtySelect.replaceChildren(new Option(prompt,''),...suggestions.map(label=>new Option(label)),new Option('Other · add your own','other'));
+ specialtySelect.disabled=specialties.length>=8;
+ $('specialty-picked').replaceChildren(...specialties.map((label,index)=>{
+  const button=el('button',label+' ×');
+  button.type='button';
+  button.setAttribute('aria-label','Remove '+label);
+  button.onclick=()=>{
+   specialties.splice(index,1);
+   drawSpecialties();
+   $('profile-status').textContent='Unsaved changes';
+   $('specialty-status').textContent='Removed '+label+'.';
+   specialtySelect.focus();
+  };
+  return button;
  }));
  updateProfilePreview();
 }
-function toggleSpecialty(label,restore){
- const index=specialties.findIndex(s=>s.toLowerCase()===label.toLowerCase());
- if(index>=0)specialties.splice(index,1);
- else if(specialties.length>=8){$('specialty-status').textContent='Choose up to eight specialties.';return;}
- else specialties.push(label);
+function addSpecialty(label){
+ if(!label)return false;
+ if(specialties.some(item=>item.toLowerCase()===label.toLowerCase())){
+  $('specialty-status').textContent='That specialty is already added.';
+  return false;
+ }
+ if(specialties.length>=8){
+  $('specialty-status').textContent='Choose up to eight specialties.';
+  return false;
+ }
+ specialties.push(label);
  drawSpecialties();
  $('profile-status').textContent='Unsaved changes';
- $('specialty-status').textContent=(index>=0?'Removed ':'Added ')+label+'.';
- if(restore)[...$('specialty-suggestions').children].find(b=>b.dataset.specialty===restore)?.focus();
- else $('specialty-custom').focus();
+ $('specialty-status').textContent=specialties.length===8?'Eight specialties added. Remove one to add another.':'Added '+label+'.';
+ return true;
 }
-function addSpecialty(){
- const input=$('specialty-custom'),label=input.value.trim();
- if(!label)return;
- if(specialties.some(s=>s.toLowerCase()===label.toLowerCase())){$('specialty-status').textContent='That specialty is already added.';return;}
- if(specialties.length>=8){$('specialty-status').textContent='Choose up to eight specialties.';return;}
- toggleSpecialty(label);input.value='';
-}
+discipline.addEventListener('change',()=>{
+ const custom=discipline.value==='other';
+ roleInput.value=custom?'':discipline.value;
+ $('custom-discipline').hidden=!custom;
+ if(custom)roleInput.focus();
+ drawSpecialties();
+});
 roleInput.addEventListener('input',drawSpecialties);
-$('specialty-add').onclick=addSpecialty;
-$('specialty-custom').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSpecialty();}});
+specialtySelect.addEventListener('change',()=>{
+ const custom=specialtySelect.value==='other';
+ $('custom-specialty').hidden=!custom;
+ if(custom)$('specialty-custom').focus();
+ else if(addSpecialty(specialtySelect.value)&&specialtySelect.disabled)$('specialty-picked').lastElementChild.focus();
+ specialtySelect.value='';
+});
+function addCustomSpecialty(){
+ const input=$('specialty-custom');
+ if(!addSpecialty(input.value.trim()))return;
+ input.value='';
+ $('custom-specialty').hidden=true;
+ (specialtySelect.disabled?$('specialty-picked').lastElementChild:specialtySelect).focus();
+}
+$('specialty-add').onclick=addCustomSpecialty;
+$('specialty-custom').addEventListener('keydown',event=>{
+ if(event.key==='Enter'){event.preventDefault();addCustomSpecialty();}
+});
+
+const cities={
+ 'United Kingdom':'London|Manchester|Birmingham|Leeds|Liverpool|Bristol|Brighton|Edinburgh|Glasgow|Cardiff|Belfast|Newcastle upon Tyne|Nottingham|Sheffield|Oxford|Cambridge|Bath|Bournemouth|Southampton|Portsmouth|York|Leicester|Reading|Aberdeen|Dundee|Swansea',
+ Ireland:'Dublin|Cork|Galway',
+ Lithuania:'Vilnius|Kaunas|Klaipėda|Šiauliai|Panevėžys',
+ Latvia:'Riga|Daugavpils',
+ Estonia:'Tallinn|Tartu',
+ France:'Paris|Lyon|Marseille|Bordeaux|Toulouse|Lille',
+ Germany:'Berlin|Hamburg|Munich|Cologne|Frankfurt|Leipzig|Düsseldorf',
+ Spain:'Madrid|Barcelona|Valencia|Seville|Málaga',
+ Italy:'Rome|Milan|Turin|Florence|Bologna|Naples',
+ Portugal:'Lisbon|Porto',
+ Netherlands:'Amsterdam|Rotterdam|Utrecht|The Hague',
+ Belgium:'Brussels|Antwerp|Ghent',
+ Switzerland:'Zurich|Geneva|Basel',
+ Austria:'Vienna|Salzburg',
+ Poland:'Warsaw|Kraków|Gdańsk|Wrocław',
+ Czechia:'Prague|Brno',
+ Denmark:'Copenhagen|Aarhus',
+ Norway:'Oslo|Bergen',
+ Sweden:'Stockholm|Gothenburg|Malmö',
+ Finland:'Helsinki|Tampere',
+ Iceland:'Reykjavík',
+ Greece:'Athens|Thessaloniki',
+ Ukraine:'Kyiv|Lviv|Odesa',
+ Romania:'Bucharest|Cluj-Napoca',
+ Hungary:'Budapest',
+ Croatia:'Zagreb|Split',
+ Turkey:'Istanbul|Ankara|İzmir',
+ 'United Arab Emirates':'Dubai|Abu Dhabi',
+ Egypt:'Cairo|Alexandria',
+ Morocco:'Casablanca|Marrakesh|Rabat',
+ Kenya:'Nairobi|Mombasa',
+ Nigeria:'Lagos|Abuja',
+ Ghana:'Accra',
+ 'South Africa':'Cape Town|Johannesburg|Durban',
+ India:'Mumbai|Delhi|Bengaluru|Pune|Hyderabad|Chennai|Kolkata',
+ Pakistan:'Karachi|Lahore|Islamabad',
+ Bangladesh:'Dhaka',
+ Thailand:'Bangkok|Chiang Mai',
+ Vietnam:'Hanoi|Ho Chi Minh City',
+ Philippines:'Manila|Cebu City',
+ Malaysia:'Kuala Lumpur|Penang',
+ Indonesia:'Jakarta|Bandung|Denpasar',
+ Singapore:'Singapore',
+ China:'Beijing|Shanghai|Shenzhen|Guangzhou|Hong Kong',
+ Japan:'Tokyo|Osaka|Kyoto|Fukuoka',
+ 'South Korea':'Seoul|Busan',
+ Australia:'Sydney|Melbourne|Brisbane|Perth|Adelaide|Canberra',
+ 'New Zealand':'Auckland|Wellington|Christchurch',
+ Canada:'Toronto|Vancouver|Montréal|Calgary|Ottawa|Edmonton|Halifax',
+ 'United States':'New York|Los Angeles|Chicago|San Francisco|Seattle|Austin|Boston|Miami|Washington, DC|Philadelphia|Portland|Atlanta|Denver|Detroit|Nashville|San Diego|Baltimore|New Orleans',
+ Mexico:'Mexico City|Guadalajara|Monterrey',
+ Colombia:'Bogotá|Medellín',
+ Peru:'Lima',
+ Brazil:'São Paulo|Rio de Janeiro|Brasília|Belo Horizonte',
+ Argentina:'Buenos Aires|Córdoba',
+ Chile:'Santiago|Valparaíso'
+};
+const normalizeLocation=value=>value.normalize('NFD').replace(/\p{Diacritic}/gu,'').trim().toLowerCase();
+const locations=Object.entries(cities).flatMap(([country,items])=>items.split('|').map(city=>({
+ label:city===country?city:city+', '+country,
+ city:normalizeLocation(city),
+ country:normalizeLocation(country),
+ search:normalizeLocation(city+', '+country)
+})));
+const locationInput=$('profile-location');
+const locationOptions=$('location-options');
+let highlightedLocation=-1;
+function closeLocations(){
+ locationOptions.hidden=true;
+ locationInput.setAttribute('aria-expanded','false');
+ locationInput.removeAttribute('aria-activedescendant');
+ highlightedLocation=-1;
+}
+function selectLocation(option){
+ locationInput.value=option.textContent;
+ locationInput.dispatchEvent(new Event('input',{bubbles:true}));
+ closeLocations();
+}
+function showLocations(){
+ const query=normalizeLocation(locationInput.value);
+ if(query.length<2){closeLocations();return;}
+ const matches=locations.filter(({search,city,country})=>search.startsWith(query)||city.startsWith(query)||country.startsWith(query)).slice(0,6);
+ closeLocations();
+ locationOptions.replaceChildren(...matches.map(({label},index)=>{
+  const option=el('li',label);
+  option.id='location-result-'+index;
+  option.setAttribute('role','option');
+  option.setAttribute('aria-selected','false');
+  option.addEventListener('mousedown',event=>event.preventDefault());
+  option.addEventListener('click',()=>selectLocation(option));
+  return option;
+ }));
+ locationOptions.hidden=!matches.length;
+ locationInput.setAttribute('aria-expanded',String(Boolean(matches.length)));
+}
+locationInput.addEventListener('input',showLocations);
+locationInput.addEventListener('blur',closeLocations);
+locationInput.addEventListener('focus',showLocations);
+locationInput.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&!locationOptions.hidden){
+  event.preventDefault();
+  closeLocations();
+ }
+ if(['ArrowDown','ArrowUp'].includes(event.key)){
+  if(locationOptions.hidden)showLocations();
+  if(locationOptions.hidden)return;
+  event.preventDefault();
+  const options=[...locationOptions.children],last=options.length-1;
+  highlightedLocation=event.key==='ArrowDown'?(highlightedLocation+1)%options.length:
+   highlightedLocation<=0?last:highlightedLocation-1;
+  options.forEach((option,index)=>option.setAttribute('aria-selected',String(index===highlightedLocation)));
+  locationInput.setAttribute('aria-activedescendant',options[highlightedLocation].id);
+  options[highlightedLocation].scrollIntoView({block:'nearest'});
+ }
+ if(event.key==='Enter'&&!locationOptions.hidden&&highlightedLocation>=0){
+  event.preventDefault();
+  selectLocation(locationOptions.children[highlightedLocation]);
+ }
+});
+
 async function directory(){
  const photographyOnly=new URLSearchParams(location.search).get('discipline')==='photography';
  if(photographyOnly){
@@ -128,6 +287,7 @@ async function directory(){
 async function refresh(){
  const {member,operator,liveAI,hosted:staging}=await api('session');
  hosted=Boolean(staging);
+ signedInMember=member;
  $('operator-tab').hidden=!operator;
  window.dispatchEvent(new CustomEvent('studio-operator-change',{detail:Boolean(operator)}));
  if(!operator){$('inbox-list').replaceChildren();$('inbox-status').textContent='';}
@@ -135,16 +295,16 @@ async function refresh(){
  $('password-option').open=false;
  $('workspace-title').textContent=member?'Your workspace':'Join or sign in';
  if(hosted)$('access-help').textContent='Use your email to join or sign in.';
- $('save-phrase').hidden=!hosted||!recentlyVerified;
- $('phrase-note').textContent=!hosted?'Try a phrase locally. Saving it is available in staging.':recentlyVerified?'You can set or replace your passphrase now.':'Open a fresh email link to set or replace your passphrase.';
+ updatePassphraseSetup();
  $('access').hidden=Boolean(member);$('member').hidden=!member;
+ $('guest-workspace-links').hidden=Boolean(member);
  if(!member)resetProfileEditor();
  $('nav-work').textContent=member?'My studio':'Sign in';
  $('share').hidden=!liveAI;
  $('ai-draft-controls').hidden=!liveAI;
  $('draft-unavailable').hidden=liveAI;
  $('ai-mode').textContent=liveAI?'Use the local guide or opt in to live AI for this request.':'Local planning guide · live AI is not configured.';
- if(member){$('identity').textContent=member.name;populate($('profile'),member);specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href=studioBase+'/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);renderSocials(member.socials||[]);showAvatar(member.avatar);updateProfilePreview();await projects();}
+ if(member){$('identity').textContent=member.name;populate($('profile'),member);if(member.name==='Studio member'&&!member.role&&!member.bio)$('profile').elements.namedItem('name').value='';syncDiscipline();specialties=member.specialties||[];const profileLink=$('public-profile-link');profileLink.hidden=!member.visible;profileLink.href=studioBase+'/creators/'+encodeURIComponent(member.id);$('specialty-custom').value='';$('specialty-status').textContent='';drawSpecialties();renderWork(member.works);renderSocials(member.socials||[]);showAvatar(member.avatar);updateProfilePreview();await projects();}
 }
 function addWork(item={}){
  if($('work-fields').children.length>=3)return;
@@ -185,8 +345,8 @@ bind('work',async ()=>{
  const status=$('work-status');
  try{
   await api('work','PUT',{items});
-  await directory();
   status.textContent='Selected work saved.';
+  directory().catch(()=>{$('directory-status').hidden=false;});
  }catch(error){status.textContent=error.message;}
 });
 async function projects(){
@@ -227,6 +387,10 @@ bind('access',async f=>{
 
 function resetProfileEditor(){
  $('profile').reset();
+ syncDiscipline();
+ $('custom-specialty').hidden=true;
+ $('profile-extra').open=false;
+ closeLocations();
  specialties=[];
  renderSocials([]);
  renderWork([]);
@@ -287,7 +451,7 @@ function updateProfilePreview(){
  $('preview-visibility').textContent=form.elements.visible.checked
   ? form.elements.available.checked?'Public · Open to enquiries':'Public profile'
   : 'Private · Visible only to you';
- const links=readSocials().filter(item=>/^https:\/\//i.test(item.url)&&item.label);
+ const links=[{label:'Full portfolio',url:value('portfolio')},...readSocials()].filter(item=>/^https?:\/\//i.test(item.url)&&item.label);
  $('preview-socials').replaceChildren(...links.map(item=>{
   const a=el('a',item.label+' ↗');a.href=item.url;a.rel='noopener noreferrer';return a;
  }));
@@ -372,6 +536,7 @@ bind('profile-import',async()=>{
 bind('review-draft',async form=>{
  for(const [name,value]of Object.entries(fields(form)))if(value.trim())$('profile').elements.namedItem(name).value=value;
  if(draftSpecialties.length)specialties=draftSpecialties;
+ syncDiscipline();
  drawSpecialties();updateProfilePreview();$('review-draft').hidden=true;
  $('profile-status').textContent='Draft applied · save when ready';
 });
@@ -381,12 +546,10 @@ bind('profile',async f=>{
  status.textContent='Saving…';
  try{
   await api('profile','PUT',{...d,specialties,socials:readSocials(),remote:Boolean(d.remote),visible:Boolean(d.visible),available:Boolean(d.available)});
-  const {member}=await api('session');
-  $('identity').textContent=member.name;
-  $('public-profile-link').hidden=!member.visible;
-  $('public-profile-link').href=studioBase+'/creators/'+encodeURIComponent(member.id);
-  await directory();
-  status.textContent='Saved';
+  $('identity').textContent=d.name.trim();
+  $('public-profile-link').hidden=!d.visible;
+  status.textContent=d.visible?'Profile published.':'Profile saved as a draft.';
+  directory().catch(()=>{$('directory-status').hidden=false;});
  }catch(error){status.textContent=error.message;}
 });
 bind('project',async f=>{const result=await api('projects'+(active?'/'+active:''),active?'PUT':'POST',fields(f));await projects();await openProject(result.id||active);$('notice').textContent='Project saved.';});
@@ -394,8 +557,8 @@ bind('task',async f=>{const id=active;await api('projects/'+id+'/tasks','POST',f
 bind('assist',async f=>{const d=fields(f),id=active;$('answer').textContent='Preparing a suggestion…';try{const result=await api('projects/'+id+'/assist','POST',{question:d.question,share:Boolean(d.share)});if(active===id)$('answer').textContent=(result.mode==='ai'?'Live AI':'Local guide')+'\n\n'+result.answer;}catch(e){if(active===id)$('answer').textContent=e.message;}});
 click('new-project',()=>clearProject());
 click('delete-project',async()=>{if(!confirm('Delete this project and its tasks?'))return;await api('projects/'+active,'DELETE');clearProject();await projects();});
-click('logout',async()=>{await api('logout','POST',{});clearProject();recentlyVerified=false;phraseInput.value='';$('access-link').hidden=true;await refresh();});
-click('delete-account',async()=>{if(!confirm('Delete your account, profile and saved projects?'))return;await api('account','DELETE');clearProject();recentlyVerified=false;phraseInput.value='';$('access-link').hidden=true;await refresh();});
+click('logout',async()=>{await api('logout','POST',{});clearProject();recentlyVerified=false;clearPhrase();$('account-access').open=false;$('access-link').hidden=true;await refresh();});
+click('delete-account',async()=>{if(!confirm('Delete your account, profile and saved projects?'))return;await api('account','DELETE');clearProject();recentlyVerified=false;clearPhrase();$('account-access').open=false;$('access-link').hidden=true;await refresh();});
 // Preserve the visitor’s chosen path through the local access link.
 const intentCopy={creator:'Sign in to create your creator profile.',project:'Sign in to start a private project.'};
 function showPanel(id){
@@ -423,6 +586,22 @@ $('nav-work').addEventListener('click',()=>{
  sessionStorage.removeItem('studio-intent');$('access-intent').hidden=true;
 });
 const phraseInput=$('phrase').elements.namedItem('password');
+function updatePassphraseSetup(){
+ $('phrase').hidden=!recentlyVerified;
+ $('password-email').hidden=!hosted||recentlyVerified||!signedInMember?.email;
+ $('phrase-note').textContent=!hosted?'Passphrase setup is available on the hosted site.':
+  recentlyVerified?'Set or replace your passphrase below.':'Open a fresh sign-in link to set or replace your passphrase.';
+}
+$('password-email').onclick=async()=>{
+ const button=$('password-email'),status=$('phrase-status');
+ button.disabled=true;
+ status.textContent='Sending your sign-in link…';
+ try{
+  await api('access','POST',{email:signedInMember.email});
+  status.textContent='Check your inbox. Open the link, then return to Account to set your passphrase.';
+ }catch(error){status.textContent=error.message;}
+ finally{button.disabled=false;}
+};
 const phraseWords='amber anchor apple apron atlas autumn birch bloom brass brook brush canvas cedar chalk clay cloud coral cotton dawn dune ember fern field flute fog forest frost glass grain harbour ink ivory ivy jade kite leaf linen lupin maple mist moss night oak ocean olive onyx opal paper pearl pine plum quartz rain reed ridge robin sage salt shell silk slate snow stone thyme'.split(' ');
 $('generate-phrase').onclick=()=>{
  const bytes=crypto.getRandomValues(new Uint8Array(6)),digits=crypto.getRandomValues(new Uint32Array(1))[0]%1000000;
@@ -433,12 +612,36 @@ $('show-phrase').onclick=()=>{
  const show=phraseInput.type==='password';phraseInput.type=show?'text':'password';
  $('show-phrase').textContent=show?'Hide phrase':'Show phrase';$('show-phrase').setAttribute('aria-pressed',String(show));
 };
+function clearPhrase(){
+ $('phrase').reset();
+ phraseInput.type='password';
+ $('show-phrase').textContent='Show phrase';
+ $('show-phrase').setAttribute('aria-pressed','false');
+ $('phrase-status').textContent='';
+}
 bind('phrase',async f=>{
  if(!hosted||!recentlyVerified)return;
- await api('password','PUT',fields(f));f.reset();recentlyVerified=false;
- phraseInput.type='password';$('show-phrase').textContent='Show phrase';$('show-phrase').setAttribute('aria-pressed','false');
- await refresh();$('notice').textContent='Passphrase saved. You can still use an email link.';
-});
+ const status=$('phrase-status'),data=fields(f);
+ if(new TextEncoder().encode(data.password).length>72){
+  status.textContent='This passphrase is too long. Shorten it or use the suggested phrase.';
+  return;
+ }
+ status.textContent='Saving your passphrase…';
+ try{
+  await api('password','PUT',data);
+  clearPhrase();
+  recentlyVerified=false;
+  updatePassphraseSetup();
+  status.textContent='Passphrase saved. Use it with your email the next time you sign in.';
+ }catch(error){
+  if(error.status===403){
+   recentlyVerified=false;
+   clearPhrase();
+   updatePassphraseSetup();
+  }
+  status.textContent=error.message;
+ }
+},$('phrase-status'));
 async function resumeIntent(){
  const intent=sessionStorage.getItem('studio-intent');
  sessionStorage.removeItem('studio-intent');
@@ -448,29 +651,72 @@ async function resumeIntent(){
 bind('password-login',async f=>{
  await api('password-sign-in','POST',fields(f));f.reset();recentlyVerified=false;await resumeIntent();
 });
+const confirmation=$('email-confirm');
+const confirmButton=$('confirm-email');
+const confirmStatus=$('confirm-status');
+function closeConfirmation(){
+ confirmation.hidden=true;
+ delete document.body.dataset.confirmingEmail;
+ history.replaceState(null,'',studioBase+'/#workspace');
+}
+function focusWorkspace(id='workspace-title'){
+ $('workspace').scrollIntoView({block:'start'});
+ $(id).focus({preventScroll:true});
+}
+$('new-email-link').addEventListener('click',event=>{
+ event.preventDefault();
+ closeConfirmation();
+ focusWorkspace();
+ $('access').elements.namedItem('email').focus({preventScroll:true});
+ guard(refresh);
+ directory().catch(()=>{$('directory-status').hidden=false;});
+});
 async function openAccessLink(){
  const url=new URL(location.href);
  const localCode=url.searchParams.get('access');
  const emailCode=new URLSearchParams(url.hash.slice(1)).get('studio_access');
- if(!localCode&&!emailCode){if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');await refresh();if(location.hash==='#workspace')$('workspace').scrollIntoView({block:'start'});if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}return;}
- $('notice').textContent='';
- $('confirm-email').hidden=true;
- if(localCode){
-  await api('verify','POST',{code:localCode});
-  history.replaceState(null,'',studioBase+'/#workspace');
-  await resumeIntent();
+ if(!localCode&&!emailCode){
+  if(location.hash==='#inbox')sessionStorage.setItem('studio-inbox-return','yes');
+  await refresh();
+  if(location.hash==='#workspace')$('workspace').scrollIntoView({block:'start'});
+  if(location.hash==='#inbox'&&!$('operator-tab').hidden){showPanel('inbox-panel');window.dispatchEvent(new Event('studio-inbox-open'));}
   return;
  }
- $('workspace').scrollIntoView({block:'start'});
- const confirm=$('confirm-email');confirm.hidden=false;confirm.focus();
- confirm.onclick=()=>guard(async()=>{
-  confirm.disabled=true;
-  try{await api('verify','POST',{code:emailCode});history.replaceState(null,'',studioBase+'/#workspace');recentlyVerified=true;confirm.hidden=true;await resumeIntent();}
-  finally{confirm.disabled=false;}
- });
+ if(localCode){
+  await api('verify','POST',{code:localCode});
+  closeConfirmation();
+  await resumeIntent();
+  focusWorkspace();
+  return;
+ }
+ document.body.dataset.confirmingEmail='';
+ confirmation.hidden=false;
+ confirmStatus.textContent='';
+ confirmButton.textContent='Confirm and continue';
+ confirmButton.disabled=false;
+ window.scrollTo(0,0);
+ $('email-confirm-title').focus({preventScroll:true});
+ confirmButton.onclick=async()=>{
+  confirmButton.disabled=true;
+  confirmStatus.textContent='Confirming your email…';
+  try{
+   await api('verify','POST',{code:emailCode});
+  }catch(error){
+   const expired=error.status===400;
+   confirmStatus.textContent=expired?'This link is invalid or has expired. Request a new one below.':error.message;
+   confirmButton.disabled=expired;
+   if(!expired)confirmButton.textContent='Try again';
+   return;
+  }
+  recentlyVerified=true;
+  closeConfirmation();
+  await guard(resumeIntent);
+  if(!document.activeElement.closest('#workspace'))focusWorkspace();
+  directory().catch(()=>{$('directory-status').hidden=false;});
+ };
 }
 window.addEventListener('hashchange',()=>{
  if(new URLSearchParams(location.hash.slice(1)).has('studio_access')||location.hash==='#inbox')guard(openAccessLink);
 });
 guard(openAccessLink);
-directory().catch(() => { $('directory-status').hidden=false; });
+if(confirmation.hidden)directory().catch(()=>{$('directory-status').hidden=false;});

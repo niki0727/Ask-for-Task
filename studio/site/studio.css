@@ -31,16 +31,45 @@
 .disciplines{list-style:none;display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px;padding:0}
 .disciplines li{border:1px solid var(--line);border-radius:4px;padding:4px 10px;font-size:.875rem}
 
-.specialty-picker{min-width:0;margin:18px 0;padding:12px 0;border:0;border-block:1px solid var(--line)}
-.specialty-picker legend{font-weight:700;padding:0 8px 0 0}
-.specialty-picker small{font-weight:400}
+.specialty-picker{min-width:0;margin:12px 0}
 .specialty-picker p{font-size:.875rem;margin:6px 0}
 .specialty-picker p:empty{display:none}
 .specialty-chips{display:flex;flex-wrap:wrap;gap:6px;margin-block:8px}
 .specialty-chips button{min-height:38px;background:transparent;border-color:#7d887e;font-size:.875rem;padding:5px 9px}
-.specialty-chips button[aria-pressed=true],#specialty-picked button{background:var(--accent);border-color:var(--ink)}
 .specialty-entry{display:flex;align-items:stretch;gap:8px}
 .specialty-entry input{min-width:0;margin-top:0}
+
+body[data-confirming-email] main>section:not(.email-confirm),body[data-confirming-email] header nav{display:none}
+.email-confirm{display:grid;place-items:center;min-height:65vh;padding-block:clamp(28px,7vw,84px)}
+.email-confirm-card{width:min(100%,460px);background:#fff;border:1px solid var(--line);border-radius:8px;padding:clamp(20px,5vw,40px)}
+.email-confirm h1{margin:0;font-size:clamp(1.8rem,4vw,2.5rem);line-height:1.12;letter-spacing:-.035em}
+.email-confirm p{color:#515e56;margin:12px 0 20px}
+.email-confirm #new-email-link{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;color:var(--studio-blue);font-size:.9rem;text-underline-offset:.2em}
+#confirm-status:empty,#phrase-status:empty,#access-status:empty{margin:0}
+.onboarding-primary,#confirm-email{min-height:44px;background:var(--studio-blue);border-color:var(--studio-blue);color:#fff}
+.onboarding-primary:hover,#confirm-email:hover{filter:brightness(.92)}
+#confirm-email{width:100%}
+.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
+.profile-fields label{min-width:0}
+#custom-discipline{grid-column:1/-1}
+.profile-editor label small,.account-access summary small{font-weight:400;color:#515e56}
+.profile-editor select{display:block;width:100%;min-height:44px;margin-top:4px;background:#fff;color:var(--ink)}
+.profile-editor .specialty-picker>label,.location-field>label{margin:0 0 4px}
+.specialty-chips:empty{display:none}
+#specialty-picked button{min-height:44px;background:#edf0fa;border-color:#cbd3ed;color:var(--studio-blue)}
+.location-field{margin-top:16px}
+.location-control{position:relative}
+#location-options{position:absolute;z-index:2;top:100%;left:0;right:0;margin:0;padding:4px;list-style:none;background:#fff;border:1px solid #9ca7c5;border-radius:5px;box-shadow:0 8px 18px #16211d19}
+#location-options li{padding:10px 12px;min-height:44px;line-height:1.4;cursor:pointer}
+#location-options li:hover,#location-options [aria-selected=true]{background:#edf0fa;color:var(--studio-blue)}
+.profile-extra,.profile-publishing{border-top:1px solid var(--line);margin-top:18px;padding-top:12px}
+.profile-extra summary,.account-access summary{cursor:pointer;font-weight:650}
+#phrase{margin-top:12px}
+@media(max-width:520px){
+ .profile-fields{grid-template-columns:1fr}
+ .email-confirm{min-height:min(65vh,460px)}
+ .profile-editor #profile>.actions{gap:8px 12px}
+}
 
 .work-preview{display:block;width:100%;height:auto;aspect-ratio:800/532;object-fit:cover;margin-bottom:18px}
 .creator-enquiry{margin-top:4px}
