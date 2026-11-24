@@ -25,6 +25,7 @@ export const PARTNER_DESTINATIONS = Object.freeze({
   "photography-instagram": "https://www.instagram.com/piazenko_nikita/",
   "photography-portfolio": "https://askfortask.co.uk/portfolio/",
   "pinglo": "https://pingloapp.com/",
+  "pinglo-web": "https://pingloapp.com/app",
   "pinglo-app-store": "https://apps.apple.com/gb/app/pinglo-lost-found/id6768083250"
 });
 
