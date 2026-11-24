@@ -10,7 +10,7 @@ async function api(path,method='GET',payload){
  if(path==='directory')$('directory-status').hidden=r.headers.get('X-Studio-Directory')!=='featured';
  return data;
 }
-function bind(id,fn){$(id).addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;$('notice').textContent='';try{await fn(e.currentTarget);}catch(error){$('notice').textContent=error.message;}finally{button.disabled=false;}});}
+function bind(id,fn,status=$('notice')){$(id).addEventListener('submit',async e=>{e.preventDefault();const button=e.submitter;button.disabled=true;status.textContent='';try{await fn(e.currentTarget);}catch(error){status.textContent=error.message;}finally{button.disabled=false;}});}
 function click(id,fn){$(id).onclick=()=>guard(fn);}
 async function guard(fn){try{await fn();}catch(e){$('notice').textContent=e.message;}}
 function populate(form,data){for(const item of form.elements)if(item.name&&item.type!=='file')item.type==='checkbox'?item.checked=Boolean(data[item.name]):item.value=data[item.name]||'';}
@@ -209,13 +209,21 @@ function clearProject(){active=null;$('project').reset();$('assist').reset();$('
 bind('access',async f=>{
  const link=$('access-link');
  link.hidden=true;link.removeAttribute('href');
- const data=await api('access','POST',fields(f));
- if(data.sent){$('notice').textContent='Check your inbox. Open the Studio email and follow the sign-in link.';return;}
+ const status=$('access-status');
+ status.textContent='Sending your sign-in link…';
+ const fallback='We couldn’t send your sign-in link. Please try again.';
+ const response=await fetch(studioBase+'/api/access',{
+  method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(fields(f))
+ }).catch(()=>{throw Error(fallback);});
+ const data=await response.json().catch(()=>null);
+ if(!response.ok)throw Error(data?.error||fallback);
+ if(data?.sent){status.textContent='Check your inbox for your sign-in link. If it isn’t there, check spam.';return;}
+ if(!data?.localLink)throw Error(fallback);
  link.href=data.localLink;
  link.hidden=false;
- $('notice').textContent='Your access link is ready.';
+ status.textContent='Your access link is ready.';
  link.focus();
-});
+},$('access-status'));
 
 function resetProfileEditor(){
  $('profile').reset();

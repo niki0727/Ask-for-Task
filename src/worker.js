@@ -1,5 +1,6 @@
 import {studioPage} from './studio-pages.js';
 import {proxyStudio} from './studio-proxy.js';
+import {hostedAuth} from '../studio/hosted-auth.mjs';
 import { Buffer } from "node:buffer";
 
 const jsonHeaders = {
@@ -276,6 +277,46 @@ function clean(value, max = 4000) {
 
 function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function requestStudioAccess(request, env) {
+  if (request.method !== "POST") {
+    return json({ error: "Use the sign-in form to request a link." }, 405, { allow: "POST" });
+  }
+  if (request.headers.get("origin") !== new URL(request.url).origin ||
+      request.headers.get("sec-fetch-site") === "cross-site") {
+    return json({ error: "Please submit from the A4T website." }, 403);
+  }
+
+  const retryHeaders = { "retry-after": "60" };
+  const tryLater = () => json(
+    { error: "Please wait a minute before requesting another sign-in link." },
+    429,
+    retryHeaders
+  );
+  try {
+    const payload = await readJsonBody(request, 2048);
+    const email = clean(payload.email).toLowerCase();
+    if (email.length > 254 || !isValidEmail(email)) {
+      return json({ error: "Enter a valid email address." }, 400);
+    }
+
+    const ip = request.headers.get("cf-connecting-ip") || "unavailable";
+    const requests = await env.STUDIO_ACCESS_LIMIT.limit({ key: "ip:" + ip });
+    if (!requests.success) return tryLater();
+    const emailKey = await sha256Hex(email);
+    const recipient = await env.STUDIO_ACCESS_LIMIT.limit({ key: "email:" + emailKey });
+    if (!recipient.success) return tryLater();
+
+    const auth = hostedAuth({ url: env.STUDIO_AUTH_URL, key: env.STUDIO_AUTH_PUBLISHABLE_KEY });
+    await auth.send(email, clean(payload.name, 80));
+    return json({ sent: true });
+  } catch (error) {
+    if (error instanceof HttpError) return json({ error: error.message }, error.status);
+    if (error.status === 429) return tryLater();
+    logTechnicalError("studio_sign_in_email_failed", error, error.status);
+    return json({ error: "We couldn’t send your sign-in link. Wait a minute and try again." }, 503, retryHeaders);
+  }
 }
 
 function readIdempotencyKey(request) {
@@ -809,6 +850,9 @@ async function handleRequest(request, env) {
 
     if (url.pathname.startsWith("/studio/")) {
       if (redirectToCanonical) return Response.redirect(url.toString(),301);
+      if (url.pathname === "/studio/api/access" && env.STUDIO_AUTH_PUBLISHABLE_KEY) {
+        return requestStudioAccess(request, env);
+      }
       return await studioPage(request, env.ASSETS) || proxyStudio(request, readBodyBytes);
     }
 

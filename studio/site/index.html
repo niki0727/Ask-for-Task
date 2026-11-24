@@ -23,7 +23,7 @@
 <section id="workspace" class="section" aria-labelledby="workspace-title">
 <h2 id="workspace-title">Join or sign in</h2>
 <p id="notice" role="status"></p>
-<form id="access"><p id="access-intent" hidden></p><p class="muted" id="access-help">Use a sample email to try Studio locally.</p><label>Email<input type="email" name="email" autocomplete="email" maxlength="254" required></label><button>Send sign-in link</button><p class="field-note"><a href="/privacy/">Studio privacy</a></p><p><a id="access-link" hidden>Open local access link →</a></p></form>
+<form id="access"><p id="access-intent" hidden></p><p class="muted" id="access-help">Use a sample email to try Studio locally.</p><label>Email<input type="email" name="email" autocomplete="email" maxlength="254" required></label><button>Send sign-in link</button><p id="access-status" role="status" aria-atomic="true"></p><p class="field-note"><a href="/privacy/">Studio privacy</a></p><p><a id="access-link" hidden>Open local access link →</a></p></form>
 <button type="button" id="confirm-email" hidden>Confirm email and open Studio</button>
 <details id="password-option" hidden><summary>Use a passphrase instead</summary><form id="password-login"><h3>Sign in</h3><label>Email<input type="email" name="email" autocomplete="username" required></label><label>Passphrase<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label><button>Sign in</button></form></details>
 <div class="workspace-links"><a href="#workspace" data-intent="project">Plan a project</a><a href="https://askfortask.co.uk/contact/?topic=Project%20scoping%20call">Contact A4T Studio</a></div>

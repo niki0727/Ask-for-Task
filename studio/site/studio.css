@@ -61,6 +61,7 @@
 #password-option>summary{cursor:pointer;text-decoration:underline;text-underline-offset:4px;font-size:.95rem}
 #password-login{margin-top:16px;padding:24px}
 #notice:empty{display:none}
+#access-status{margin:12px 0 0}
 
 .workspace-nav{display:flex;gap:20px;border-bottom:1px solid var(--line);margin:22px 0 32px}
 .workspace-tab{background:transparent;border:0;border-bottom:3px solid transparent;border-radius:0;padding:12px 0;font-weight:600;color:#515e56}

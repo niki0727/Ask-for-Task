@@ -63,6 +63,41 @@ test('public Studio pages and signed-out session checks avoid the sleeping backe
  assert.equal(internal.status,404);
 });
 
+test('Studio email requests go directly to Auth and only confirm a successful send', async t => {
+ const {default:worker}=await import('./worker.js');
+ let attempts=0;
+ let allowed=true;
+ let providerStatus=200;
+ const env={
+  STUDIO_AUTH_URL:'https://example.supabase.co',
+  STUDIO_AUTH_PUBLISHABLE_KEY:'test-publishable-key',
+  STUDIO_ACCESS_LIMIT:{limit:async()=>({success:allowed})}
+ };
+ t.mock.method(globalThis,'fetch',async(url,options)=>{
+  attempts++;
+  assert.equal(url,'https://example.supabase.co/auth/v1/otp');
+  assert.equal(options.headers.apikey,'test-publishable-key');
+  assert.equal(JSON.parse(options.body).email,'creator@example.com');
+  return Response.json({}, {status:providerStatus});
+ });
+ const send=(email,origin='https://askfortask.co.uk')=>worker.fetch(
+  new Request('https://askfortask.co.uk/studio/api/access',{
+   method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({email})
+  }),env
+ );
+ assert.equal((await send('creator@example.com','https://example.org')).status,403);
+ assert.equal((await send('invalid')).status,400);
+ assert.equal(attempts,0);
+ assert.deepEqual(await (await send('Creator@example.com')).json(),{sent:true});
+ providerStatus=429;
+ const throttled=await send('creator@example.com');
+ assert.equal(throttled.status,429);
+ assert.equal(throttled.headers.get('Retry-After'),'60');
+ allowed=false;
+ assert.equal((await send('creator@example.com')).status,429);
+ assert.equal(attempts,2);
+});
+
 test('featured creator profiles load from public assets with or without a trailing slash',async()=>{
  const {default:worker}=await import('./worker.js');
  const env={ASSETS:{fetch:async req=>new Response(new URL(req.url).pathname)}};
