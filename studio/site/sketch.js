@@ -1,34 +1,41 @@
 // A4T line studies, drawn in a shuffled sequence.
 const palette={fine:'#778174',ink:'#3d4a40',accent:'#526044'};
-const angle=Math.random()-.5;
-const point=(x,y,z)=>[276+x*.95-y*(.65+angle*.12),222+x*(.28+angle*.08)+y*.38-z];
-const line=(points)=>points.map(([x,y],i)=>(i?'L':'M')+x.toFixed(2)+' '+y.toFixed(2)).join('');
-const segment=(a,b)=>line([a,b]);
-const sampled=(f,n=52)=>line(Array.from({length:n+1},(_,i)=>f(i/n)));
-function compose(){
- const out=[];
- const add=(d,tone='ink',width=1)=>out.push({d,tone,width});
- const edge=(a,b,tone,width)=>add(segment(point(...a),point(...b)),tone,width);
-  const ring=(x,r,a,b,tone,width)=>add(sampled(t=>{const theta=a+(b-a)*t;return point(x,Math.cos(theta)*r,Math.sin(theta)*r+10);}),tone,width);
-  const full=(x,r,tone,width)=>ring(x,r,0,Math.PI*2,tone,width);
-  const half=(x,r,tone,width)=>ring(x,r,Math.PI/2,3*Math.PI/2,tone,width);
-  for(const [x,r] of [[-115,60],[-107,63],[-91,63],[-86,60],[-55,57],[-24,57],[-18,53],[20,53],[34,48],[84,48],[91,44]])half(x,r,'fine',.8);
-  for(const a of [-Math.PI/2,Math.PI/2]){
-   const z=r=>Math.sin(a)*r+10;
-   add(line([[-115,60],[-107,63],[-91,63],[-86,60],[-55,57],[-24,57],[-18,53],[20,53],[34,48],[84,48],[91,44]].map(([x,r])=>point(x,0,z(r)))),'ink',1.2);
-  }
-  for(const r of [44,40,36,33,24,18])full(91,r,r===40?'accent':'ink',r===44?1.8:.85);
-  for(const [lo,hi,r] of [[-83,-58,59],[-17,17,53],[37,80,48]]){
-   for(let n=0;n<20;n++){const a=Math.PI*n/19+Math.PI/2,y=Math.cos(a)*r,z=Math.sin(a)*r+10;edge([lo,y,z],[hi,y,z],'fine',.55);}
-  }
-  ring(92,19,-2.4,-.8,'ink',2);ring(92,26,-2.1,-1.2,'fine',1);
- return out;
-}
 const study=(title, outlines, details=[])=>({
  title, strokes:[...outlines.map(d=>({d,tone:'ink',width:1.2})),...details.map(d=>({d,tone:'fine',width:.8}))]
 });
 const studies=[
- {title:'A camera lens in perspective',strokes:compose()},
+ study('A camera with a studio softbox and reflected light', [
+  // Camera body, grip and top controls.
+  'M98 198L98 277Q98 290 112 296L170 316Q178 319 189 315L267 290',
+  'M98 198L145 169L178 175L193 161L228 171Q234 174 235 182L266 192',
+  'M98 198L171 223L202 211M171 223V315M107 207V272Q107 282 117 286L159 300V226Z',
+  'M145 169V159L169 147L195 154V164M145 159L172 165L195 154',
+  'M115 196L132 185L153 192L136 203Z',
+  'M183 180L201 171L216 176L197 187Z',
+  'M102 225L162 245M102 235L162 255',
+  // Lens barrel, rim and glass.
+  'M203 211L265 185M230 296L296 271',
+  'M203 211C184 217 177 241 186 265C195 288 212 302 230 296',
+  'M216 205C195 211 192 237 200 259C209 282 224 296 244 290',
+  'M230 200C210 207 205 231 213 254C222 277 239 290 256 284',
+  'M265 185C288 175 313 192 323 216C334 240 321 263 296 271C273 280 248 264 238 240C228 216 241 194 265 185Z',
+  'M269 191C290 183 311 199 318 219C325 239 315 258 294 265C274 272 252 259 244 238C237 218 248 200 269 191Z',
+  'M271 198C288 191 305 201 313 221C319 239 310 252 291 259C274 265 256 254 250 236C244 221 253 205 271 198Z',
+  'M275 208C289 203 302 214 305 225C309 238 301 249 289 252C275 256 263 246 260 234C257 221 264 212 275 208Z',
+  // Softbox, bracket and stand.
+  'M343 120L410 104L460 134L395 167Z',
+  'M343 120L361 172L395 167M410 104L417 114L460 134',
+  'M348 124L395 161L452 135L410 109Z',
+  'M418 156L430 175L430 282M430 282L404 297M430 282L453 294M430 282V303',
+  'M426 175H434M427 217H433'
+ ], [
+  // Light direction, reflected highlights and shadows finish the composition.
+  'M345 149L320 173M358 164L331 191M375 175L342 202M387 178L351 215',
+  'M263 226Q267 214 280 211M269 235Q278 220 290 218M278 244L297 228',
+  'M214 209L235 201M212 217L232 209M212 226L231 218M214 236L233 228M217 246L234 239M221 257L239 248M226 267L244 258M233 275L250 267',
+  'M120 314Q173 333 241 320Q288 312 322 295M144 319L152 324M156 322L164 327M170 325L179 329M219 326L230 322M230 326L242 321M244 323L254 318',
+  'M395 304Q430 310 461 299'
+ ]),
  study('A heron at the water’s edge',[
   'M144 240C162 226 191 192 214 187C239 180 253 194 273 179C291 166 289 147 307 139C321 133 334 140 339 149L384 158L338 161C325 169 325 180 312 198C294 223 268 237 230 237C201 237 166 244 144 240',
   'M247 235L229 292L210 298M263 232L260 289L276 294',
@@ -55,17 +62,21 @@ const ink = document.querySelector('#ink');
 const title = document.querySelector('#drawing-title');
 const toggle = document.querySelector('#sketch-toggle');
 const motion = matchMedia('(prefers-reduced-motion: reduce)');
-const drawingTime = 7600;
-const holdTime = 3000;
+const drawingTime = 8800;
+const cameraDrawingTime = 12800;
+const holdTime = 3800;
 const fadeTime = 650;
-const cycleTime = drawingTime + holdTime + fadeTime;
-const sequence = [...studies];
+// Open with the complete camera composition, then vary the order of the other studies.
+const [camera, ...sequence] = studies;
 for (let index = sequence.length - 1; index > 0; index--) {
  const other = Math.floor(Math.random() * (index + 1));
  [sequence[index], sequence[other]] = [sequence[other], sequence[index]];
 }
 
+sequence.unshift(camera);
+
 let current = 0;
+let studyTime = drawingTime;
 let strokes = [];
 let elapsed = 0;
 let previousTime;
@@ -75,6 +86,7 @@ let paused = false;
 
 function renderStudy() {
  const study = sequence[current];
+ studyTime = study === camera ? cameraDrawingTime : drawingTime;
  title.textContent = study.title;
  const paths = study.strokes.flatMap(({d,tone,width}) => d.split(/(?=[Mm])/).map(segment => {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -87,7 +99,7 @@ function renderStudy() {
  const totalLength = lengths.reduce((sum,length) => sum + length, 0);
  let start = 0;
  strokes = paths.map((path,index) => {
-  const duration = lengths[index] / totalLength * drawingTime;
+  const duration = lengths[index] / totalLength * studyTime;
   const stroke = {path,length:lengths[index] + 1,start,duration,progress:null};
   start += duration;
   return stroke;
@@ -96,7 +108,7 @@ function renderStudy() {
 
 function paint(time) {
  for (const stroke of strokes) {
-  const progress = Math.max(0, Math.min(1, (time - stroke.start) / stroke.duration));
+  const progress = time >= studyTime ? 1 : Math.max(0, Math.min(1, (time - stroke.start) / stroke.duration));
   if (progress === stroke.progress) continue;
   stroke.progress = progress;
   if (progress === 1) {
@@ -107,14 +119,14 @@ function paint(time) {
    stroke.path.setAttribute('stroke-dashoffset', stroke.length * (1 - progress));
   }
  }
- ink.setAttribute('opacity', 1 - Math.max(0, time - drawingTime - holdTime) / fadeTime);
+ ink.setAttribute('opacity', 1 - Math.max(0, time - studyTime - holdTime) / fadeTime);
 }
 
 function advance(now) {
  frame = undefined;
  if (previousTime !== undefined) elapsed += Math.min(now - previousTime, 64);
  previousTime = now;
- if (elapsed >= cycleTime) {
+ if (elapsed >= studyTime + holdTime + fadeTime) {
   elapsed = 0;
   current = (current + 1) % sequence.length;
   renderStudy();
@@ -125,7 +137,8 @@ function advance(now) {
 
 function updatePlayback() {
  toggle.hidden = motion.matches;
- toggle.textContent = paused ? 'Resume drawing' : 'Pause drawing';
+ toggle.setAttribute('aria-label', paused ? 'Resume drawing' : 'Pause drawing');
+ toggle.dataset.paused = String(paused);
  if (!motion.matches && !paused && inView && !document.hidden) {
   if (frame === undefined) frame = requestAnimationFrame(advance);
   return;
@@ -134,11 +147,11 @@ function updatePlayback() {
  frame = undefined;
  previousTime = undefined;
  // Reduced motion shows a finished study without cycling.
- if (motion.matches) paint(drawingTime);
+ if (motion.matches) paint(studyTime);
 }
 
 renderStudy();
-paint(motion.matches ? drawingTime : 0);
+paint(motion.matches ? studyTime : 0);
 updatePlayback();
 toggle.addEventListener('click', () => {
  paused = !paused;
